@@ -143,6 +143,20 @@ class Verse extends StatelessWidget {
                                   ? Theme.of(context).textTheme.bodyLarge!.color
                                   : Theme.of(context).canvasColor
                                 : Theme.of(context).brightness == Brightness.light ? Color(0xffae7123) : Color(0xffe5c064)
+                            ),
+
+                            'f' : TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.normal,
+                              fontSize: this.fontSize - 7.0,
+                              backgroundColor: (this.highlight)
+                                ? colorHighlight
+                                : Colors.transparent,
+                              color: (this.highlight)
+                                ? Theme.of(context).brightness == Brightness.light
+                                  ? Theme.of(context).textTheme.bodyLarge!.color
+                                  : Theme.of(context).canvasColor
+                                : Theme.of(context).brightness == Brightness.light ? Color(0xffae7123) : Color(0xffe5c064)
                             )
                           }
                         )
