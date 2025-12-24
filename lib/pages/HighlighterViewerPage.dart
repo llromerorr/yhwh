@@ -17,6 +17,7 @@ class HighlighterViewerPage extends StatelessWidget {
       builder: (highlighterViewerController) => Scaffold(
         backgroundColor: Theme.of(context).canvasColor,
         appBar: AppBar(
+          scrolledUnderElevation: 0,
           backgroundColor: Theme.of(context).canvasColor,
           elevation: 0,
           title: RichText(

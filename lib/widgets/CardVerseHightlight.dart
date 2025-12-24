@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:simple_html_css/simple_html_css.dart';
 import 'package:yhwh/classes/BibleManager.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/data/Define.dart';
@@ -126,9 +127,46 @@ class _CardVerseHightlightState extends State<CardVerseHightlight> {
                         color: Theme.of(context).indicatorColor
                       ),
 
+                      // text: rootBundleSnapshot.data,
                       children: [
-                        TextSpan(
-                          text: rootBundleSnapshot.data
+                        HTML.toTextSpan(
+                          context,
+                          rootBundleSnapshot.data!.replaceAll('<p style="text-align:center;">', '').replaceAll('</p>', '').replaceAll('<p style="text-align:right;">', '').replaceAll('<br />', '').replaceAll('*', ''),//.replaceAll('Jehová', 'Yahweh'),
+                          defaultTextStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 15,
+                            color: Theme.of(context).indicatorColor
+                          ),
+
+                          overrideStyle: {
+
+                            'red' : TextStyle(
+                              color: Theme.of(context).brightness == Brightness.light ? Color(0xffe75649) : Color(0xffe06c75)
+                            ),
+
+                            // 'ctn' : TextStyle(
+                            //   fontWeight: FontWeight.normal,
+                            //   backgroundColor: (this.highlight)
+                            //     ? colorHighlight
+                            //     : Colors.transparent,
+                            //   color: (this.highlight)
+                            //     ? Theme.of(context).brightness == Brightness.light
+                            //       ? this.colorText
+                            //       : Theme.of(context).canvasColor
+                            //     : this.colorText
+                            // ),
+
+                            'i' : TextStyle(
+                              fontWeight: FontWeight.normal,
+                              fontStyle: FontStyle.italic,
+                              color: Theme.of(context).brightness == Brightness.light ? Color(0xffae7123) : Color(0xffe5c064)
+                            ),
+
+                            'f' : TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.normal,
+                              color: Theme.of(context).brightness == Brightness.light ? Color(0xffae7123) : Color(0xffe5c064)
+                            )
+                          }
                         )
                       ]
                     )

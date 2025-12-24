@@ -285,7 +285,7 @@ class BiblePageController extends GetxController {
   }
 
   void onReferenceButtonLongPress(){
-    Get.to(() => FloatingBible());
+    // Get.to(() => FloatingBible());
   }
 
   void TESTER(){
