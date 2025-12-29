@@ -13,7 +13,7 @@ class ContactPage extends StatefulWidget {
 }
 
 class _ContactPageState extends State<ContactPage> {
-  String version = '1.2.0'; // Versión actual de la aplicación
+  String version = '1.2.1'; // Versión actual de la aplicación
 
   Future<String> getLatestVersion() async {
     final url = 'https://api.github.com/repos/llromerorr/yhwh/releases/latest';
@@ -79,99 +79,146 @@ class _ContactPageState extends State<ContactPage> {
               ),
               
               Container(height: 20),
-              
-              InkWell(
-                onTap: () => launch('https://instagram.com/iglesiayhwh'),
-                child: Container(
-                  height: 50,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(FontAwesomeIcons.instagram, color: Theme.of(context).indicatorColor),
-                      Container(width: 5),
-                      Text(
-                      'Instagram',
-                      style: TextStyle(
-                        color: Theme.of(context).indicatorColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold
+                      InkWell(
+                        onTap: () => launch('https://instagram.com/iglesiayhwh'),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(FontAwesomeIcons.instagram, color: Theme.of(context).indicatorColor),
+                              Container(width: 5),
+                              Text(
+                              'Instagram',
+                              style: TextStyle(
+                                color: Theme.of(context).indicatorColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+
+                      InkWell(
+                        onTap: () => launch('https://www.youtube.com/@iglesiayhwh'),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(FontAwesomeIcons.youtube, color: Theme.of(context).indicatorColor),
+                              Container(width: 5),
+                              Text(
+                              'Youtube',
+                              style: TextStyle(
+                                color: Theme.of(context).indicatorColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      InkWell(
+                        onTap: () => launch('https://github.com/llromerorr/yhwh/releases'),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(FontAwesomeIcons.github, color: Theme.of(context).indicatorColor,),
+                              Container(width: 5),
+                              Text(
+                              'Github',
+                              style: TextStyle(
+                                color: Theme.of(context).indicatorColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
+
+                  Container(width: 15),
+
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      InkWell(
+                        onTap: () => launch('https://www.tiktok.com/@iglesia.yhwh'),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          height: 50,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(FontAwesomeIcons.tiktok, color: Theme.of(context).indicatorColor),
+                              Container(width: 5),
+                              Text(
+                              'Tiktok',
+                              style: TextStyle(
+                                color: Theme.of(context).indicatorColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      InkWell(
+                        onTap: () => launch('mailto:yhwh.principal@gmail.com'),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(FontAwesomeIcons.message, color: Theme.of(context).indicatorColor,),
+                              Container(width: 5),
+                              Text(
+                              'Email',
+                              style: TextStyle(
+                                color: Theme.of(context).indicatorColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                ]
               ),
 
-              InkWell(
-                onTap: () => launch('https://www.tiktok.com/@iglesia.yhwh'),
-                child: Container(
-                  height: 50,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(FontAwesomeIcons.tiktok, color: Theme.of(context).indicatorColor),
-                      Container(width: 5),
-                      Text(
-                      'Tiktok',
-                      style: TextStyle(
-                        color: Theme.of(context).indicatorColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold
-                      ),
-                    ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              InkWell(
-                onTap: () => launch('https://github.com/llromerorr/yhwh/releases'),
-                child: Container(
-                  height: 50,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(FontAwesomeIcons.github, color: Theme.of(context).indicatorColor,),
-                      Container(width: 5),
-                      Text(
-                      'Github',
-                      style: TextStyle(
-                        color: Theme.of(context).indicatorColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold
-                      ),
-                    ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              InkWell(
-                onTap: () => launch('mailto:yhwh.principal@gmail.com'),
-                child: Container(
-                  height: 50,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(FontAwesomeIcons.message, color: Theme.of(context).indicatorColor,),
-                      Container(width: 5),
-                      Text(
-                      'Email',
-                      style: TextStyle(
-                        color: Theme.of(context).indicatorColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold
-                      ),
-                    ),
-                    ],
-                  ),
-                ),
-              ),
-          
               Column(
                 children: <Widget>[
                   Divider(height: 25, color: Color(0x00)),

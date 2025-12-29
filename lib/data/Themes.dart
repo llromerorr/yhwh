@@ -52,7 +52,7 @@ Map<String, ColorPalette> themes = {
   
   "Verde Claro": ColorPalette( // 3
     brightness: Brightness.light,
-    background: const Color(0xffe9feb5),
+    background: const Color.fromARGB(255, 193, 254, 181),
     foreground: const Color.fromARGB(255, 25, 51, 31)
   ),
 
@@ -70,7 +70,7 @@ Map<String, ColorPalette> themes = {
 
   "Rosa oscuro": ColorPalette( // 5
     brightness: Brightness.dark,
-    background: const Color.fromARGB(255, 66, 7, 36),
+    background: const Color.fromARGB(255, 41, 6, 23),
     foreground: const Color.fromARGB(255, 247, 228, 238),
   ),
 

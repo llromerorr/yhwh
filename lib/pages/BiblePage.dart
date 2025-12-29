@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
@@ -236,7 +237,7 @@ class BiblePage extends StatelessWidget {
                                             text: TextSpan(
                                               text: '${intToBook[biblePageController.bookNumber]} ${biblePageController.chapterNumber}',
                                               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                                fontFamily: 'Roboto-Medium',
+                                                fontFamily: biblePageController.fontFamily,
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 18,
                                                 color: Theme.of(context).indicatorColor
@@ -272,7 +273,7 @@ class BiblePage extends StatelessWidget {
                                         ),
                                       );
                                     },
-                                    icon: Icon(Icons.text_fields_rounded, color: Theme.of(context).indicatorColor),
+                                    icon: Icon(Icons.menu_rounded, color: Theme.of(context).indicatorColor),
                                     iconSize: 26,
                                   ),
                             
