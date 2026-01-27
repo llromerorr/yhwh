@@ -5,7 +5,9 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:hive/hive.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
+import 'package:simple_html_css/simple_html_css.dart';
 import 'package:uuid/uuid.dart';
+import 'package:yhwh/bibles/RVR60/rvr60_commentaries.dart';
 import 'package:yhwh/bibles/RVR60/rvr60_titles.dart';
 import 'package:yhwh/classes/BibleManager.dart';
 import 'package:yhwh/classes/VerseRaw.dart';
@@ -282,6 +284,136 @@ class BiblePageController extends GetxController {
     // _floatingBibleController.setReferenceSafeScroll(book!, chapter!, verse_from!);
     // Get.to(() => FloatingBible());
     print('///////// hay que implementarlo //////////');
+  }
+
+  void onFootnoteTap({int? verse, String? footnote, required BuildContext context}){
+    String textoNotaParaMostrar = rvr60_commentaries['$bookNumber:$chapterNumber:$verse:$footnote'].toString();
+    print(textoNotaParaMostrar);
+
+    showModalBottomSheet(
+      context: context,
+      isDismissible: true, // Esto permite cerrar al tocar fuera
+      enableDrag: true,    // Permite cerrar deslizando hacia abajo
+      isScrollControlled: true, // Permite que la hoja se ajuste al contenido
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).canvasColor,
+            border: Border(
+              top: BorderSide(
+                color: Theme.of(context).indicatorColor.withAlpha(120),
+                width: 1.5
+              ),
+            )
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // Se ajusta al tamaño del texto
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              RichText(
+                text: TextSpan(
+                  text: '${intToBook[bookNumber]} $chapterNumber:$verse ',
+                  style: TextStyle(
+                    fontFamily: this.fontFamily,
+                    fontWeight: FontWeight.bold,
+                    fontSize: fontSize,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: footnote,
+                      style: TextStyle(
+                        fontFamily: this.fontFamily,
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.normal,
+                        fontSize: this.fontSize - 7.0,
+                        backgroundColor: Colors.transparent,
+                        decoration: TextDecoration.none,
+                        color: Theme.of(context).brightness == Brightness.light
+                          ? Color(0xffe36414)
+                          : Color(0xffe5c064),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 10),
+              
+              RichText(
+                textAlign: TextAlign.left,
+                text: HTML.toTextSpan(
+                  context,
+                  textoNotaParaMostrar,
+                  defaultTextStyle:
+                    Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      fontFamily: this.fontFamily,
+                      fontWeight: FontWeight.normal,
+                      height: fontHeight,
+                      fontSize: fontSize,
+                      fontStyle: FontStyle.normal,
+                      letterSpacing: fontLetterSeparation,
+                      color: Theme.of(context).indicatorColor
+                    ),
+                  overrideStyle: {
+                    'a': Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      fontFamily: this.fontFamily,
+                      fontWeight: FontWeight.bold,
+                      height: this.fontHeight,
+                      fontSize: fontSize - 1,
+                      fontStyle: FontStyle.italic,
+                      letterSpacing: this.fontLetterSeparation,
+                      color: Theme.of(context).brightness == Brightness.light
+                        ? Color(0xffe36414)
+                        : Color(0xffe5c064),
+                    ),
+
+                    'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      fontFamily: this.fontFamily,
+                      fontWeight: FontWeight.bold,
+                      height: this.fontHeight,
+                      fontSize: fontSize,
+                      fontStyle: FontStyle.italic,
+                      letterSpacing: this.fontLetterSeparation,
+                      color: Theme.of(context).indicatorColor),
+                  },
+                  linksCallback: (link) {
+                    // List<String> split = link.toString().split(':');
+                    // int book = int.parse(split[0]);
+                    // int chapter = (split.length >= 2) ? int.parse(split[1]) : 0;
+                    // int verse_from = (split.length >= 3)
+                    //     ? int.parse(split[2].split('-')[0])
+                    //     : 0;
+                    // int verse_to = (split.length >= 3)
+                    //     ? int.parse(split[2].split('-')[1])
+                    //     : 0;
+                    // this.onReferenceTap!(book, chapter, verse_from, verse_to);
+                  },
+                ),
+              ),
+
+              Container( // Espacio extra al final
+                height: MediaQuery.of(context).viewPadding.bottom,
+              )
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void onReferenceButtonLongPress(){

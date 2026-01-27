@@ -24,6 +24,7 @@ class Verse extends StatelessWidget {
   final Callback? onTap;
   final Callback? onLongPress;
   final Function? onReferenceTap;
+  final Function? onFootnoteTap;
 
   final bool isFirstVerseShowed;
 
@@ -45,6 +46,7 @@ class Verse extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.onReferenceTap,
+    this.onFootnoteTap,
   }) : super(key: key);
 
   @override
@@ -57,7 +59,15 @@ class Verse extends StatelessWidget {
           .replaceAll('</p>', '')
           .replaceAll('<p style="text-align:right;">', '')
           .replaceAll('<br />', '')
-          .replaceAll('*', ''),
+          .replaceAll('*', '')
+          .replaceAllMapped(
+            RegExp(r'<f>(.*?)</f>'), 
+            (match) {
+              final contenido = match.group(1); // El texto dentro de la etiqueta (ej: 1, a, nota)
+              // Creamos una etiqueta 'a' donde el href es IGUAL al contenido
+              return '<a href="$contenido">$contenido</a>';
+            }
+          ),
       defaultTextStyle: TextStyle(
         fontSize: this.fontSize,
         color: this.colorText,
@@ -110,11 +120,12 @@ class Verse extends StatelessWidget {
           //         : Color(0xffe5c064),
         ),
         
-        'f': TextStyle(
+        'a': TextStyle(
           fontWeight: FontWeight.bold,
           fontStyle: FontStyle.normal,
           fontSize: this.fontSize - 7.0,
           backgroundColor: Colors.transparent,
+          decoration: TextDecoration.none,
           color: (this.highlight)
               ? Theme.of(context).brightness == Brightness.light
                   ? Color(0xffe36414)
@@ -122,7 +133,10 @@ class Verse extends StatelessWidget {
               : Theme.of(context).brightness == Brightness.light
                   ? Color(0xffe36414)
                   : Color(0xffe5c064),
-        )
+        ),
+      },
+      linksCallback: (link) {
+        this.onFootnoteTap!('$link');
       },
     );
 
@@ -153,7 +167,6 @@ class Verse extends StatelessWidget {
                     onLongPress: this.onLongPress,
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(12, 0, 12, 0.7),
-                      // --- CORRECCIÓN AQUÍ: Eliminado LayoutBuilder ---
                       child: this.highlight
                           ? CustomPaint(
                               painter: _ModernHighlightPainter(
@@ -288,6 +301,7 @@ class Verse extends StatelessWidget {
                       height: height,
                       fontSize: fontSize - 3,
                       fontStyle: FontStyle.italic,
+                      decoration: TextDecoration.none,
                       letterSpacing: letterSeparation,
                       color: this.colorText),
                 },

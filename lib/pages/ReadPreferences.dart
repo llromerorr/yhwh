@@ -43,7 +43,7 @@ class ReadPreferences extends StatelessWidget {
                       child: Center(
                         child: Container(
                           height: 5,
-                          width: 60,
+                          width: 40,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(30),
                             color: Theme.of(context).indicatorColor.withValues(alpha: 0.5)

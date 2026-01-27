@@ -1,0 +1,398 @@
+[
+    {
+        "book_color": "#ccccff",
+        "book_number": 10,
+        "long_name": "Génesis",
+        "short_name": "Gn"
+    },
+    {
+        "book_color": "#ccccff",
+        "book_number": 20,
+        "long_name": "Éxodo",
+        "short_name": "Ex"
+    },
+    {
+        "book_color": "#ccccff",
+        "book_number": 30,
+        "long_name": "Levítico",
+        "short_name": "Lv"
+    },
+    {
+        "book_color": "#ccccff",
+        "book_number": 40,
+        "long_name": "Números",
+        "short_name": "Nm"
+    },
+    {
+        "book_color": "#ccccff",
+        "book_number": 50,
+        "long_name": "Deuteronomio",
+        "short_name": "Dt"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 60,
+        "long_name": "Josué",
+        "short_name": "Jos"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 70,
+        "long_name": "Jueces",
+        "short_name": "Jue"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 80,
+        "long_name": "Rut",
+        "short_name": "Rt"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 90,
+        "long_name": "1 Samuel",
+        "short_name": "1S"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 100,
+        "long_name": "2 Samuel",
+        "short_name": "2S"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 110,
+        "long_name": "1 Reyes",
+        "short_name": "1R"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 120,
+        "long_name": "2 Reyes",
+        "short_name": "2R"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 130,
+        "long_name": "1 Crónicas",
+        "short_name": "1Cr"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 140,
+        "long_name": "2 Crónicas",
+        "short_name": "2Cr"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 150,
+        "long_name": "Esdras",
+        "short_name": "Esd"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 160,
+        "long_name": "Nehemías",
+        "short_name": "Neh"
+    },
+    {
+        "book_color": "#ffcc99",
+        "book_number": 190,
+        "long_name": "Ester",
+        "short_name": "Est"
+    },
+    {
+        "book_color": "#66ff99",
+        "book_number": 220,
+        "long_name": "Job",
+        "short_name": "Job"
+    },
+    {
+        "book_color": "#66ff99",
+        "book_number": 230,
+        "long_name": "Salmos",
+        "short_name": "Sal"
+    },
+    {
+        "book_color": "#66ff99",
+        "book_number": 240,
+        "long_name": "Proverbios",
+        "short_name": "Pr"
+    },
+    {
+        "book_color": "#66ff99",
+        "book_number": 250,
+        "long_name": "Eclesiastés",
+        "short_name": "Ecl"
+    },
+    {
+        "book_color": "#66ff99",
+        "book_number": 260,
+        "long_name": "Cantares",
+        "short_name": "Cnt"
+    },
+    {
+        "book_color": "#ff9fb4",
+        "book_number": 290,
+        "long_name": "Isaías",
+        "short_name": "Is"
+    },
+    {
+        "book_color": "#ff9fb4",
+        "book_number": 300,
+        "long_name": "Jeremías",
+        "short_name": "Jer"
+    },
+    {
+        "book_color": "#ff9fb4",
+        "book_number": 310,
+        "long_name": "Lamentaciones",
+        "short_name": "Lm"
+    },
+    {
+        "book_color": "#ff9fb4",
+        "book_number": 330,
+        "long_name": "Ezequiel",
+        "short_name": "Ez"
+    },
+    {
+        "book_color": "#ff9fb4",
+        "book_number": 340,
+        "long_name": "Daniel",
+        "short_name": "Dn"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 350,
+        "long_name": "Oseas",
+        "short_name": "Os"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 360,
+        "long_name": "Joel",
+        "short_name": "Jl"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 370,
+        "long_name": "Amós",
+        "short_name": "Am"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 380,
+        "long_name": "Abdías",
+        "short_name": "Abd"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 390,
+        "long_name": "Jonás",
+        "short_name": "Jon"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 400,
+        "long_name": "Miqueas",
+        "short_name": "Miq"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 410,
+        "long_name": "Nahúm",
+        "short_name": "Nah"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 420,
+        "long_name": "Habacuc",
+        "short_name": "Hab"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 430,
+        "long_name": "Sofonías",
+        "short_name": "Sof"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 440,
+        "long_name": "Hageo",
+        "short_name": "Hag"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 450,
+        "long_name": "Zacarías",
+        "short_name": "Zac"
+    },
+    {
+        "book_color": "#ffff99",
+        "book_number": 460,
+        "long_name": "Malaquías",
+        "short_name": "Mal"
+    },
+    {
+        "book_color": "#ff6600",
+        "book_number": 470,
+        "long_name": "S. Mateo",
+        "short_name": "Mt"
+    },
+    {
+        "book_color": "#ff6600",
+        "book_number": 480,
+        "long_name": "S. Marcos",
+        "short_name": "Mc"
+    },
+    {
+        "book_color": "#ff6600",
+        "book_number": 490,
+        "long_name": "S. Lucas",
+        "short_name": "Lc"
+    },
+    {
+        "book_color": "#ff6600",
+        "book_number": 500,
+        "long_name": "S.Juan",
+        "short_name": "Jn"
+    },
+    {
+        "book_color": "#00ffff",
+        "book_number": 510,
+        "long_name": "Hechos",
+        "short_name": "Hch"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 520,
+        "long_name": "Romanos",
+        "short_name": "Ro"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 530,
+        "long_name": "1 Corintios",
+        "short_name": "1Co"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 540,
+        "long_name": "2 Corintios",
+        "short_name": "2Co"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 550,
+        "long_name": "Gálatas",
+        "short_name": "Gl"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 560,
+        "long_name": "Efesios",
+        "short_name": "Ef"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 570,
+        "long_name": "Filipenses",
+        "short_name": "Flp"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 580,
+        "long_name": "Colosenses",
+        "short_name": "Col"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 590,
+        "long_name": "1 Tesalonicenses",
+        "short_name": "1Ts"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 600,
+        "long_name": "2 Tesalonicenses",
+        "short_name": "2Ts"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 610,
+        "long_name": "1 Timoteo",
+        "short_name": "1Ti"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 620,
+        "long_name": "2 Timoteo",
+        "short_name": "2Ti"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 630,
+        "long_name": "Tito",
+        "short_name": "Tit"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 640,
+        "long_name": "Filemón",
+        "short_name": "Flm"
+    },
+    {
+        "book_color": "#ffff00",
+        "book_number": 650,
+        "long_name": "Hebreos",
+        "short_name": "Heb"
+    },
+    {
+        "book_color": "#00ff00",
+        "book_number": 660,
+        "long_name": "Santiago",
+        "short_name": "Stg"
+    },
+    {
+        "book_color": "#00ff00",
+        "book_number": 670,
+        "long_name": "1 Pedro",
+        "short_name": "1P"
+    },
+    {
+        "book_color": "#00ff00",
+        "book_number": 680,
+        "long_name": "2 Pedro",
+        "short_name": "2P"
+    },
+    {
+        "book_color": "#00ff00",
+        "book_number": 690,
+        "long_name": "1 Juan",
+        "short_name": "1Jn"
+    },
+    {
+        "book_color": "#00ff00",
+        "book_number": 700,
+        "long_name": "2 Juan",
+        "short_name": "2Jn"
+    },
+    {
+        "book_color": "#00ff00",
+        "book_number": 710,
+        "long_name": "3 Juan",
+        "short_name": "3Jn"
+    },
+    {
+        "book_color": "#00ff00",
+        "book_number": 720,
+        "long_name": "Judas",
+        "short_name": "Jud"
+    },
+    {
+        "book_color": "#ff7c80",
+        "book_number": 730,
+        "long_name": "Apocalipsis",
+        "short_name": "Ap"
+    }
+]

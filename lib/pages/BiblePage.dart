@@ -337,6 +337,10 @@ class BiblePage extends StatelessWidget {
                                     onLongPress: (){
                                       biblePageController.onVerseLongPress(index + 1);
                                     },
+
+                                    onFootnoteTap: (String footnote) {
+                                      biblePageController.onFootnoteTap(verse: index + 1, footnote: footnote, context: context);
+                                    },
                     
                                     onReferenceTap: (int book, int chapter, int verse_from, int verse_to){
                                       biblePageController.onReferenceTap(book: book, chapter: chapter, verse_from: verse_from, verse_to: verse_to);
