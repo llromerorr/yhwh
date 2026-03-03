@@ -60,14 +60,12 @@ class Verse extends StatelessWidget {
           .replaceAll('<p style="text-align:right;">', '')
           .replaceAll('<br />', '')
           .replaceAll('*', '')
-          .replaceAllMapped(
-            RegExp(r'<f>(.*?)</f>'), 
-            (match) {
-              final contenido = match.group(1); // El texto dentro de la etiqueta (ej: 1, a, nota)
-              // Creamos una etiqueta 'a' donde el href es IGUAL al contenido
-              return '<a href="$contenido">$contenido</a>';
-            }
-          ),
+          .replaceAllMapped(RegExp(r'<f>(.*?)</f>'), (match) {
+        final contenido =
+            match.group(1); // El texto dentro de la etiqueta (ej: 1, a, nota)
+        // Creamos una etiqueta 'a' donde el href es IGUAL al contenido
+        return '<a href="$contenido">$contenido</a>';
+      }),
       defaultTextStyle: TextStyle(
         fontSize: this.fontSize,
         color: this.colorText,
@@ -86,7 +84,9 @@ class Verse extends StatelessWidget {
                   : Color(0xffe06c75),
         ),
         'vn': TextStyle(
-          fontWeight: (this.selected || this.highlight) ? FontWeight.bold : FontWeight.normal,
+          fontWeight: (this.selected || this.highlight)
+              ? FontWeight.bold
+              : FontWeight.normal,
           color: this.colorNumber,
           // color:  (this.highlight || this.selected)
           //   ? Theme.of(context).brightness == Brightness.light
@@ -97,7 +97,8 @@ class Verse extends StatelessWidget {
         ),
         'ctn': TextStyle(
           fontWeight: FontWeight.normal,
-          backgroundColor: Colors.transparent, // Transparente para usar CustomPainter
+          backgroundColor:
+              Colors.transparent, // Transparente para usar CustomPainter
           color: this.colorText,
           // color: (this.highlight)
           //     ? Theme.of(context).brightness == Brightness.light
@@ -106,20 +107,19 @@ class Verse extends StatelessWidget {
           //     : this.colorText,
         ),
         'i': TextStyle(
-          fontWeight: FontWeight.normal,
-          fontStyle: FontStyle.italic,
-          fontSize: this.fontSize,
-          backgroundColor: Colors.transparent,
-          color: Theme.of(context).textTheme.bodyLarge!.color
-          // color: (this.highlight)
-          //     ? Theme.of(context).brightness == Brightness.light
-          //         ? Theme.of(context).textTheme.bodyLarge!.color
-          //         : Theme.of(context).canvasColor
-          //     : Theme.of(context).brightness == Brightness.light
-          //         ? Color(0xffae7123)
-          //         : Color(0xffe5c064),
-        ),
-        
+            fontWeight: FontWeight.normal,
+            fontStyle: FontStyle.italic,
+            fontSize: this.fontSize,
+            backgroundColor: Colors.transparent,
+            color: Theme.of(context).textTheme.bodyLarge!.color
+            // color: (this.highlight)
+            //     ? Theme.of(context).brightness == Brightness.light
+            //         ? Theme.of(context).textTheme.bodyLarge!.color
+            //         : Theme.of(context).canvasColor
+            //     : Theme.of(context).brightness == Brightness.light
+            //         ? Color(0xffae7123)
+            //         : Color(0xffe5c064),
+            ),
         'a': TextStyle(
           fontWeight: FontWeight.bold,
           fontStyle: FontStyle.normal,
@@ -171,9 +171,10 @@ class Verse extends StatelessWidget {
                           ? CustomPaint(
                               painter: _ModernHighlightPainter(
                                 textSpan: textSpan,
-                                highlightColor: Theme.of(context).brightness == Brightness.light
-                                  ? this.colorHighlight.withAlpha(80)
-                                  : this.colorHighlight.withAlpha(70),
+                                highlightColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? this.colorHighlight.withAlpha(80)
+                                    : this.colorHighlight.withAlpha(70),
                                 // highlightColor: this.colorHighlight.withAlpha(50),
 
                                 radius: 8.0,
@@ -210,8 +211,60 @@ class Verse extends StatelessWidget {
       double? height,
       double? fontSize,
       double? letterSeparation}) {
-    List<String> split = text!.split('\n');
+      
+    // 1. Reemplazamos la etiqueta <f> en todo el texto del título.
+    // Usamos el prefijo 'footnote_' para diferenciarlo de los enlaces de las referencias.
+    String processedText = text!.replaceAllMapped(
+      RegExp(r'<f>(.*?)</f>'),
+      (match) {
+        final contenido = match.group(1);
+        return '<a href="footnote_$contenido">$contenido</a>';
+      }
+    );
+
+    List<String> split = processedText.split('\n');
     List<Widget> widgets = [];
+
+    // 2. Definimos el estilo del enlace <a> para reutilizarlo en todo el título
+    final aStyle = Theme.of(context!).textTheme.bodyLarge!.copyWith(
+      fontFamily: this.fontFamily,
+      fontWeight: FontWeight.bold,
+      height: height,
+      fontSize: fontSize! - 3,
+      fontStyle: FontStyle.italic,
+      decoration: TextDecoration.none,
+      letterSpacing: letterSeparation,
+      color: (this.highlight)
+          ? Theme.of(context).brightness == Brightness.light
+              ? Color(0xffe36414)
+              : Color(0xffe5c064)
+          : Theme.of(context).brightness == Brightness.light
+              ? Color(0xffe36414)
+              : Color(0xffe5c064),
+    );
+
+    // 3. Centralizamos el callback de los links para manejar Notas al Pie vs Referencias
+    void handleLinks(dynamic link) {
+      if (link == null) return;
+      String linkStr = link.toString();
+      
+      if (linkStr.startsWith('footnote_')) {
+        // Es una nota al pie (<f>)
+        this.onFootnoteTap!(linkStr.replaceAll('footnote_', ''));
+      } else {
+        // Es una referencia bíblica (<x>)
+        List<String> splitRef = linkStr.split(':');
+        if (splitRef.isNotEmpty) {
+          int book = int.parse(splitRef[0]);
+          int chapter = (splitRef.length >= 2) ? int.parse(splitRef[1]) : 0;
+          int verse_from = (splitRef.length >= 3) ? int.parse(splitRef[2].split('-')[0]) : 0;
+          int verse_to = (splitRef.length >= 3) && splitRef[2].contains('-') 
+              ? int.parse(splitRef[2].split('-')[1]) 
+              : 0;
+          this.onReferenceTap!(book, chapter, verse_from, verse_to);
+        }
+      }
+    }
 
     split.forEach((element) {
       if (element.split(' ')[0] == '#title_big') {
@@ -220,15 +273,19 @@ class Verse extends StatelessWidget {
             width: double.infinity,
             child: RichText(
               textAlign: TextAlign.center,
-              text: TextSpan(
-                text: element.replaceAll('#title_big ', ''),
-                style: Theme.of(context!).textTheme.bodyLarge!.copyWith(
+              // Cambiamos TextSpan por HTML.toTextSpan
+              text: HTML.toTextSpan(
+                context,
+                element.replaceAll('#title_big ', ''),
+                defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     fontFamily: this.fontFamily,
                     fontWeight: FontWeight.bold,
                     height: height,
-                    fontSize: fontSize! + 10,
+                    fontSize: fontSize + 10,
                     letterSpacing: letterSeparation,
                     color: this.colorText),
+                overrideStyle: {'a': aStyle},
+                linksCallback: handleLinks,
               ),
             ),
           ),
@@ -239,15 +296,18 @@ class Verse extends StatelessWidget {
             width: double.infinity,
             child: RichText(
               textAlign: TextAlign.left,
-              text: TextSpan(
-                text: element.replaceAll('#subtitle ', ''),
-                style: Theme.of(context!).textTheme.bodyLarge!.copyWith(
+              text: HTML.toTextSpan(
+                context,
+                element.replaceAll('#subtitle ', ''),
+                defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     fontFamily: this.fontFamily,
                     fontStyle: FontStyle.italic,
                     height: height,
                     fontSize: fontSize,
                     letterSpacing: letterSeparation,
                     color: this.colorText),
+                overrideStyle: {'a': aStyle},
+                linksCallback: handleLinks,
               ),
             ),
           ),
@@ -282,41 +342,25 @@ class Verse extends StatelessWidget {
             child: RichText(
               textAlign: TextAlign.left,
               text: HTML.toTextSpan(
-                context!,
+                context,
                 element.replaceAll('#reference ', ''),
-                defaultTextStyle:
-                    Theme.of(context).textTheme.bodyLarge!.copyWith(
-                          fontFamily: this.fontFamily,
-                          fontWeight: FontWeight.normal,
-                          height: height,
-                          fontSize: fontSize! - 3,
-                          fontStyle: FontStyle.italic,
-                          letterSpacing: letterSeparation,
-                          color: this.colorText,
-                        ),
-                overrideStyle: {
-                  'a': Theme.of(context).textTheme.bodyLarge!.copyWith(
+                defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
                       fontFamily: this.fontFamily,
                       fontWeight: FontWeight.bold,
                       height: height,
                       fontSize: fontSize - 3,
                       fontStyle: FontStyle.italic,
-                      decoration: TextDecoration.none,
                       letterSpacing: letterSeparation,
-                      color: this.colorText),
-                },
-                linksCallback: (link) {
-                  List<String> split = link.toString().split(':');
-                  int book = int.parse(split[0]);
-                  int chapter = (split.length >= 2) ? int.parse(split[1]) : 0;
-                  int verse_from = (split.length >= 3)
-                      ? int.parse(split[2].split('-')[0])
-                      : 0;
-                  int verse_to = (split.length >= 3)
-                      ? int.parse(split[2].split('-')[1])
-                      : 0;
-                  this.onReferenceTap!(book, chapter, verse_from, verse_to);
-                },
+                      color: (this.highlight)
+                        ? Theme.of(context).brightness == Brightness.light
+                            ? Color(0xffe36414)
+                            : Color(0xffe5c064)
+                        : Theme.of(context).brightness == Brightness.light
+                            ? Color(0xffe36414)
+                            : Color(0xffe5c064),
+                    ),
+                overrideStyle: {'a': aStyle},
+                linksCallback: handleLinks,
               ),
             ),
           ),
@@ -326,14 +370,17 @@ class Verse extends StatelessWidget {
             width: double.infinity,
             child: RichText(
               textAlign: TextAlign.left,
-              text: TextSpan(
-                text: element.replaceAll('#center ', ''),
-                style: Theme.of(context!).textTheme.bodyLarge!.copyWith(
+              text: HTML.toTextSpan(
+                context,
+                element.replaceAll('#center ', ''),
+                defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     fontWeight: FontWeight.bold,
                     height: height,
                     fontSize: fontSize,
                     letterSpacing: letterSeparation,
                     color: this.colorText),
+                overrideStyle: {'a': aStyle},
+                linksCallback: handleLinks,
               ),
             )));
       } else {
@@ -342,9 +389,10 @@ class Verse extends StatelessWidget {
             width: double.infinity,
             child: RichText(
               textAlign: TextAlign.left,
-              text: TextSpan(
-                text: element,
-                style: Theme.of(context!).textTheme.bodyLarge!.copyWith(
+              text: HTML.toTextSpan(
+                context,
+                element,
+                defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     fontFamily: this.fontFamily,
                     fontWeight: FontWeight.w900,
                     fontStyle: FontStyle.italic,
@@ -352,6 +400,8 @@ class Verse extends StatelessWidget {
                     fontSize: fontSize,
                     letterSpacing: letterSeparation,
                     color: this.colorText),
+                overrideStyle: {'a': aStyle},
+                linksCallback: handleLinks,
               ),
             ),
           ),
@@ -400,8 +450,8 @@ class _ModernHighlightPainter extends CustomPainter {
       textAlign: TextAlign.start,
     )..layout(minWidth: 0, maxWidth: size.width);
 
-    // Configura el Paint. 
-    // IMPORTANTE: El color ya debe venir con la transparencia deseada 
+    // Configura el Paint.
+    // IMPORTANTE: El color ya debe venir con la transparencia deseada
     // o se la aplicas aquí: highlightColor.withOpacity(0.3)
     final paint = Paint()
       ..color = highlightColor
@@ -425,12 +475,12 @@ class _ModernHighlightPainter extends CustomPainter {
       final double maxWidthAllowed = size.width - left;
       final double width = targetWidth.clamp(0.0, maxWidthAllowed);
 
-      // TRUCO PRO: Agregamos un pequeñísimo overlap (0.5) vertical 
-      // para asegurar que el Path se fusione y no queden líneas finas blancas 
+      // TRUCO PRO: Agregamos un pequeñísimo overlap (0.5) vertical
+      // para asegurar que el Path se fusione y no queden líneas finas blancas
       // por el anti-aliasing entre renglones.
       final double trueTextHeight = line.ascent + line.descent;
       final double top = line.baseline - line.ascent - padding.top;
-      final double height = trueTextHeight + padding.vertical + 0.5; 
+      final double height = trueTextHeight + padding.vertical + 0.5;
 
       rects.add(Rect.fromLTWH(left, top, width, height));
     }
@@ -443,15 +493,16 @@ class _ModernHighlightPainter extends CustomPainter {
       if (rect == Rect.zero) continue;
 
       final bool isFirst = i == 0;
-      final bool isLast  = i == lines.length - 1;
+      final bool isLast = i == lines.length - 1;
 
       final double right = rect.right;
       final double prevRight = i > 0 ? rects[i - 1].right : right;
-      final double nextRight = i < lines.length - 1 ? rects[i + 1].right : right;
+      final double nextRight =
+          i < lines.length - 1 ? rects[i + 1].right : right;
 
-      final Radius topLeft     = isFirst ? Radius.circular(radius) : Radius.zero;
-      final Radius bottomLeft  = isLast  ? Radius.circular(radius) : Radius.zero;
-      
+      final Radius topLeft = isFirst ? Radius.circular(radius) : Radius.zero;
+      final Radius bottomLeft = isLast ? Radius.circular(radius) : Radius.zero;
+
       Radius topRight = Radius.zero;
       Radius bottomRight = Radius.zero;
 
