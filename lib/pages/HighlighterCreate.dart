@@ -7,9 +7,9 @@ class HihglighterCreate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var colors = [
-      0x0,
-      // 0x1, funcion de copiar
+    // Hemos sacado el color 0x0 de la lista, ya que ahora 
+    // "Eliminar" es un botón con icono propio y no un color falso.
+    final List<int> highlightColors = [
       0xff8ab4f8,
       0xfff28b82,
       0xfffdd663,
@@ -22,109 +22,79 @@ class HihglighterCreate extends StatelessWidget {
     return GetBuilder<BiblePageController>(
       init: BiblePageController(),
       builder: (biblePageController) {
-        
-        return ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: colors.length,
-          itemBuilder: (context, index){
-            Widget widget = Container();
-        
-            if(colors[index] == 0x0){
-              widget = Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      height: 38,
-                      width: 38,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).indicatorColor,
-                          width: 2.0,
+        return Row(
+          children: [
+            // --- 1. SECCIÓN DE ACCIONES (Fijas a la izquierda) ---
+            
+            // Botón: Eliminar Resaltado
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded),
+              iconSize: 26,
+              tooltip: 'Eliminar resaltado',
+              color: Theme.of(context).indicatorColor,
+              onPressed: () {
+                biblePageController.removeFromHighlighter();
+              },
+            ),
+            
+            // Botón: Copiar
+            IconButton(
+              icon: const Icon(Icons.copy_rounded),
+              iconSize: 24,
+              tooltip: 'Copiar versículos',
+              color: Theme.of(context).indicatorColor,
+              onPressed: () {
+                biblePageController.copyVersesToClipboard();
+              },
+            ),
+
+            // Línea divisoria sutil
+            Container(
+              height: 28,
+              width: 1.5,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              color: Theme.of(context).indicatorColor.withValues(alpha: 0.2),
+            ),
+            
+            // --- 2. SECCIÓN DE COLORES (Deslizable a la derecha) ---
+            Expanded(
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: highlightColors.length,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                itemBuilder: (context, index) {
+                  Color color = Color(highlightColors[index]);
+                  
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Center(
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () {
+                          biblePageController.addToHighlighter(color);
+                        },
+                        child: Container(
+                          height: 40,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: color,
+                            // Borde sutil para que el círculo resalte 
+                            // independientemente de si el fondo es blanco o negro
+                            border: Border.all(
+                              color: Theme.of(context).indicatorColor.withValues(alpha: 0.15),
+                              width: 1.5,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-        
-                    IconButton(
-                      icon: Icon(Icons.delete_outlined),
-                      iconSize: 25,
-                      tooltip: 'Eliminar relsaltado',
-                      color: Theme.of(context).indicatorColor,
-                      disabledColor: Theme.of(context).textTheme.bodyLarge!.color,
-                      onPressed: (){
-                        biblePageController.removeFromHighlighter();
-                        biblePageController.cancelSelectionModeOnTap();
-                      }
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            // FUNCION DE COPIAR VERSICULOS AL PORTAPAPELES
-            // else if(colors[index] == 0x1){
-            //   widget = Padding(
-            //     padding: const EdgeInsets.symmetric(horizontal: 5),
-            //     child: Stack(
-            //       alignment: Alignment.center,
-            //       children: [
-            //         Container(
-            //           height: 38,
-            //           width: 38,
-            //           decoration: BoxDecoration(
-            //             shape: BoxShape.circle,
-            //             border: Border.all(
-            //               color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.9),
-            //               width: 2.0,
-            //             ),
-            //           ),
-            //         ),
-        
-            //         IconButton(
-            //           icon: Icon(Icons.copy_rounded),
-            //           tooltip: 'Copiar',
-            //           iconSize: 25,
-            //           color: Theme.of(context).textTheme.bodyText1.color,
-            //           disabledColor: Theme.of(context).textTheme.bodyText1.color,
-            //           onPressed: (){
-            //             biblePageController.cancelSelectionModeOnTap();}
-            //         ),
-            //       ],
-            //     ),
-            //   );
-            // }
-
-            else {
-              widget = Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    height: 38,
-                    width: 38,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Theme.of(context).indicatorColor.withValues(alpha: 0.9),
-                    ),
-                  ),
-        
-                  IconButton(
-                    icon: Icon(Icons.circle),
-                    iconSize: 40,
-                    color: Color(colors[index]),
-                    onPressed: (){
-                      biblePageController.addToHighlighter(Color(colors[index]));
-                      Get.back();
-                    },
-                  ),
-                ],
-              );
-            }
-        
-            return widget;
-            return null;
-          }
+                  );
+                },
+              ),
+            ),
+          ],
         );
       },
     );

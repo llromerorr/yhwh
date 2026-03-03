@@ -259,22 +259,8 @@ class BiblePage extends StatelessWidget {
                                     tooltip: 'Ajustes visuales',
                                     onPressed: (){
                                       Get.to(()=> ReadPreferences());
-                                      // showModalBottomSheet(
-                                      //   context: context,
-                                      //   isScrollControlled: true,
-                                      //   backgroundColor: Colors.transparent,
-                                      //   barrierColor: Colors.transparent,
-                                      //   builder: (context) => StatefulBuilder(
-                                      //     builder: (context, setState) => BottomSheet(
-                                      //       backgroundColor: Colors.transparent,
-                                      //       enableDrag: false,
-                                      //       onClosing: (){},
-                                      //       builder: (context) => ReadPreferences(),
-                                      //     )
-                                      //   ),
-                                      // );
                                     },
-                                    icon: Icon(Icons.menu_rounded, color: Theme.of(context).indicatorColor),
+                                    icon: Icon(Icons.text_fields_rounded, color: Theme.of(context).indicatorColor),
                                     iconSize: 26,
                                   ),
                             

@@ -13,7 +13,7 @@ class ContactPage extends StatefulWidget {
 }
 
 class _ContactPageState extends State<ContactPage> {
-  String version = '1.2.2'; // Versión actual de la aplicación
+  String version = '1.2.3'; // Versión actual de la aplicación
 
   Future<String> getLatestVersion() async {
     final url = 'https://api.github.com/repos/llromerorr/yhwh/releases/latest';

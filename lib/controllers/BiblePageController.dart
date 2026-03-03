@@ -279,6 +279,59 @@ class BiblePageController extends GetxController {
     cancelSelectionModeOnTap();
   }
 
+  void copyVersesToClipboard() {
+    if (versesSelected.isEmpty) return;
+
+    // 1. Ordenamos los versículos de menor a mayor por si el usuario los seleccionó en desorden
+    versesSelected.sort();
+    String copiedText = "";
+
+    // 2. Extraemos el texto de cada versículo y lo limpiamos
+    for (int verseIndex in versesSelected) {
+      String rawText = versesRawList[verseIndex - 1].text ?? "";
+      
+      // Utilizamos una Expresión Regular (RegExp) para eliminar cualquier etiqueta HTML 
+      // como <red>, <f>, <i>, etc. y dejar solo el texto puro.
+      // 1. Elimina las etiquetas <f> completas junto con su contenido interno (ej: <f>[5†]</f> desaparece)
+      // 2. Elimina cualquier otra etiqueta HTML restante (ej: <red> o </red>) dejando el texto intacto
+      String cleanText = rawText
+          .replaceAll(RegExp(r'<f>.*?</f>'), '') 
+          .replaceAll(RegExp(r'<[^>]*>'), '');
+          
+      // (Opcional) Limpia posibles dobles espacios que queden al borrar la nota
+      cleanText = cleanText.replaceAll('  ', ' ').trim();
+      
+      copiedText += "$verseIndex $cleanText\n";
+    }
+
+    // 3. Armamos la referencia final (Ej: "Juan 3:16" o "Juan 3:16-18")
+    String bookName = intToBook[bookNumber] ?? "";
+    String reference = "$bookName $chapterNumber:${versesSelected.first}";
+    if (versesSelected.length > 1) {
+      reference += "-${versesSelected.last}"; 
+    }
+
+    copiedText += "\n$reference";
+
+    // 4. Guardamos en el portapapeles
+    Clipboard.setData(ClipboardData(text: copiedText));
+    
+    // 5. Salimos del modo selección
+    cancelSelectionModeOnTap();
+    
+    // 6. (Opcional) Mostramos un pequeño aviso de éxito
+    // Get.snackbar(
+    //   '¡Copiado!',
+    //   'Versículos copiados al portapapeles.',
+    //   snackPosition: SnackPosition.BOTTOM,
+    //   backgroundColor: Get.theme.indicatorColor.withValues(alpha: 0.9),
+    //   colorText: Get.theme.canvasColor,
+    //   margin: const EdgeInsets.all(16),
+    //   borderRadius: 12,
+    //   duration: const Duration(seconds: 2),
+    // );
+  }
+
   void onReferenceTap({int? book, int? chapter, int? verse_from, int? verse_to}){
     // FloatingBibleController _floatingBibleController = Get.put(FloatingBibleController());
     // _floatingBibleController.setReferenceSafeScroll(book!, chapter!, verse_from!);
