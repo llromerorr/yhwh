@@ -258,20 +258,21 @@ class BiblePage extends StatelessWidget {
                                   IconButton(
                                     tooltip: 'Ajustes visuales',
                                     onPressed: (){
-                                      showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        backgroundColor: Colors.transparent,
-                                        barrierColor: Colors.transparent,
-                                        builder: (context) => StatefulBuilder(
-                                          builder: (context, setState) => BottomSheet(
-                                            backgroundColor: Colors.transparent,
-                                            enableDrag: false,
-                                            onClosing: (){},
-                                            builder: (context) => ReadPreferences(),
-                                          )
-                                        ),
-                                      );
+                                      Get.to(()=> ReadPreferences());
+                                      // showModalBottomSheet(
+                                      //   context: context,
+                                      //   isScrollControlled: true,
+                                      //   backgroundColor: Colors.transparent,
+                                      //   barrierColor: Colors.transparent,
+                                      //   builder: (context) => StatefulBuilder(
+                                      //     builder: (context, setState) => BottomSheet(
+                                      //       backgroundColor: Colors.transparent,
+                                      //       enableDrag: false,
+                                      //       onClosing: (){},
+                                      //       builder: (context) => ReadPreferences(),
+                                      //     )
+                                      //   ),
+                                      // );
                                     },
                                     icon: Icon(Icons.menu_rounded, color: Theme.of(context).indicatorColor),
                                     iconSize: 26,

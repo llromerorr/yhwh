@@ -1,80 +1,80 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:yhwh/classes/AppTheme.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 
-class ReadPreferencesController extends GetxController{
-
+class ReadPreferencesController extends GetxController {
   BiblePageController _biblePageController = Get.find();
   GetStorage getStorage = GetStorage();
 
+  String activeTypographyPreset = 'normal';
+  String currentThemeName = 'Blanco'; // <-- NUEVO: Sabe qué tema está activo
+
+  @override
+  void onInit() {
+    super.onInit();
+    activeTypographyPreset = getStorage.read('typographyPreset') ?? 'normal';
+    currentThemeName = getStorage.read('currentTheme') ?? 'Blanco'; // <-- NUEVO
+  }
+
   void setTheme(String themeName) {
+    currentThemeName = themeName; // <-- NUEVO
     getStorage.write('currentTheme', themeName);
     Get.changeTheme(AppTheme.getTheme(themeName));
-    // Get.back();
+    update(); // <-- NUEVO: Le avisa a la UI que redibuje el checkmark (✓)
   }
 
-  void onFontSizeUpdate(double fontSize) {
-    _biblePageController.fontSize = fontSize;
-    _biblePageController.update();
-  }
+  void setTypographyPreset(String preset) {
+    activeTypographyPreset = preset;
+    getStorage.write('typographyPreset', preset);
 
-  void onFontSizeChangeEnd(double _fontSize) {
-    
-    for (var verseRaw in _biblePageController.versesRawList) {
-      verseRaw.fontSize = _fontSize;
+    double newFontSize = 20.0;
+    double newFontHeight = 1.8;
+    double newLetterSeparation = 0.0;
+
+    switch (preset) {
+      case 'small':
+        newFontSize = 16.0;
+        newFontHeight = 1.5;
+        newLetterSeparation = 0.0;
+        break;
+      case 'normal':
+        newFontSize = 20.0;
+        newFontHeight = 1.8;
+        newLetterSeparation = 0.0;
+        break;
+      case 'large':
+        newFontSize = 24.0;
+        newFontHeight = 2.0;
+        newLetterSeparation = 0.0;
+        break;
+      case 'presbyopia':
+        newFontSize = 22.0;
+        newFontHeight = 2.2;
+        newLetterSeparation = 0.5;
+        break;
+      case 'visual_impairment':
+        newFontSize = 30.0;
+        newFontHeight = 2.5;
+        newLetterSeparation = 1.0;
+        break;
     }
 
-    _biblePageController.update();
-    getStorage.write("fontSize", _fontSize);
-  }
-
-  void onFontHeightUpdate(double _fontHeight) {
-    _biblePageController.fontHeight = _fontHeight;
-    _biblePageController.update();
-  }
-
-  void onFontHeightChangeEnd(double _fontHeight) {
-    
-    for (var verseRaw in _biblePageController.versesRawList) {
-      verseRaw.fontHeight = _fontHeight;      
-    }
-
-    _biblePageController.update();
-    getStorage.write("fontHeight", _fontHeight);
-  }
-
-  void onFontLetterSeparationUpdate(double _fontLetterSeparation) {
-    _biblePageController.fontLetterSeparation = _fontLetterSeparation;
-    _biblePageController.update();
-  }
-
-  void onFontLetterSeparationChangeEnd(double _fontLetterSeparation) {
-    
-    for (var verseRaw in _biblePageController.versesRawList) {
-      verseRaw.fontLetterSeparation = _fontLetterSeparation;      
-    }
-
-    _biblePageController.update();
-    getStorage.write("fontLetterSeparation", _fontLetterSeparation);
-  }
-
-  void restoreSettingOnTap(){
-    _biblePageController.fontSize = 20.0;
-    _biblePageController.fontHeight = 1.8;
-    _biblePageController.fontLetterSeparation = 0.0;
+    _biblePageController.fontSize = newFontSize;
+    _biblePageController.fontHeight = newFontHeight;
+    _biblePageController.fontLetterSeparation = newLetterSeparation;
 
     for (var verseRaw in _biblePageController.versesRawList) {
-      verseRaw.fontSize = _biblePageController.fontSize;
-      verseRaw.fontHeight = _biblePageController.fontHeight;
-      verseRaw.fontLetterSeparation = _biblePageController.fontLetterSeparation;
+      verseRaw.fontSize = newFontSize;
+      verseRaw.fontHeight = newFontHeight;
+      verseRaw.fontLetterSeparation = newLetterSeparation;
     }
 
-    _biblePageController.update();
+    getStorage.write("fontSize", newFontSize);
+    getStorage.write("fontHeight", newFontHeight);
+    getStorage.write("fontLetterSeparation", newLetterSeparation);
 
-    getStorage.write("fontSize", _biblePageController.fontSize);
-    getStorage.write("fontHeight", _biblePageController.fontHeight);
-    getStorage.write("fontLetterSeparation", _biblePageController.fontLetterSeparation);
+    _biblePageController.update();
+    update(); 
   }
 }
