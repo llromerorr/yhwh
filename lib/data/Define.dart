@@ -310,3 +310,72 @@ Map<String, String> versionToName =
   'V1602P' : "Valera 1602 Purificada",
   'RVC' : "Reina Valera Contemporánea",
 };
+
+Map<int, int> linkIdToBook = {
+  10: 1,   // Génesis
+  20: 2,   // Éxodo
+  30: 3,   // Levítico
+  40: 4,   // Números
+  50: 5,   // Deuteronomio
+  60: 6,   // Josué
+  70: 7,   // Jueces
+  80: 8,   // Rut
+  90: 9,   // 1 Samuel
+  100: 10, // 2 Samuel
+  110: 11, // 1 Reyes
+  120: 12, // 2 Reyes
+  130: 13, // 1 Crónicas
+  140: 14, // 2 Crónicas
+  150: 15, // Esdras
+  160: 16, // Nehemías
+  190: 17, // Ester
+  220: 18, // Job
+  230: 19, // Salmos
+  240: 20, // Proverbios
+  250: 21, // Eclesiastés
+  260: 22, // Cantares
+  290: 23, // Isaías
+  300: 24, // Jeremías
+  310: 25, // Lamentaciones
+  330: 26, // Ezequiel
+  340: 27, // Daniel
+  350: 28, // Oseas
+  360: 29, // Joel
+  370: 30, // Amós
+  380: 31, // Abdías
+  390: 32, // Jonás
+  400: 33, // Miqueas
+  410: 34, // Nahum
+  420: 35, // Habacuc
+  430: 36, // Sofonías
+  440: 37, // Hageo
+  450: 38, // Zacarías
+  460: 39, // Malaquías
+  470: 40, // Mateo
+  480: 41, // Marcos
+  490: 42, // Lucas
+  500: 43, // Juan
+  510: 44, // Hechos
+  520: 45, // Romanos
+  530: 46, // 1 Corintios
+  540: 47, // 2 Corintios
+  550: 48, // Gálatas
+  560: 49, // Efesios
+  570: 50, // Filipenses
+  580: 51, // Colosenses
+  590: 52, // 1 Tesalonicenses
+  600: 53, // 2 Tesalonicenses
+  610: 54, // 1 Timoteo
+  620: 55, // 2 Timoteo
+  630: 56, // Tito
+  640: 57, // Filemón
+  650: 58, // Hebreos
+  660: 59, // Santiago
+  670: 60, // 1 Pedro
+  680: 61, // 2 Pedro
+  690: 62, // 1 Juan
+  700: 63, // 2 Juan
+  710: 64, // 3 Juan
+  720: 65, // Judas
+  730: 66  // Apocalipsis
+};

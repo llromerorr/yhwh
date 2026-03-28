@@ -19,6 +19,20 @@ class BiblePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Obtenemos el ancho total de la pantalla
+    double screenWidth = MediaQuery.of(context).size.width;
+    
+    // 2. Definimos el ancho máximo ideal para una lectura cómoda
+    // Un valor entre 650.0 y 750.0 es perfecto para textos largos.
+    double maxReadingWidth = 700.0;
+    
+    // 3. Calculamos el padding dinámico
+    // Si la pantalla es más ancha que nuestro límite, centramos el texto
+    // añadiendo padding sobrante a los lados. Si es móvil, usamos 24.0.
+    double dynamicPadding = screenWidth > maxReadingWidth 
+        ? (screenWidth - maxReadingWidth) / 2 
+        : 24.0;
+
     return GetBuilder<BiblePageController>(
       init: BiblePageController(),
       builder: (mainController) => !mainController.isScreenReady ? Center(child: CircularProgressIndicator(color: Theme.of(context).indicatorColor)) : WillPopScope(
@@ -301,7 +315,7 @@ class BiblePage extends StatelessWidget {
                                 index: index,
                     
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 25),
+                                  padding: EdgeInsets.symmetric(horizontal: dynamicPadding),
                                   child: Verse(
                                     highlight: biblePageController.versesRawList[index].highlight!,
                                     selected: biblePageController.versesSelected.contains(index + 1),
@@ -326,11 +340,17 @@ class BiblePage extends StatelessWidget {
                                     },
 
                                     onFootnoteTap: (String footnote) {
-                                      biblePageController.onFootnoteTap(verse: index + 1, footnote: footnote, context: context);
+                                      biblePageController.onFootnoteTap(book: biblePageController.bookNumber, chapter: biblePageController.chapterNumber, verse: index + 1, footnote: footnote, context: context);
                                     },
                     
                                     onReferenceTap: (int book, int chapter, int verse_from, int verse_to){
-                                      biblePageController.onReferenceTap(book: book, chapter: chapter, verse_from: verse_from, verse_to: verse_to);
+                                      biblePageController.onReferenceTap(
+                                        book: book, 
+                                        chapter: chapter, 
+                                        verse_from: verse_from, 
+                                        verse_to: verse_to, 
+                                        context: context
+                                      );
                                     },
                                   ),
                                 )

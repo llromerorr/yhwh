@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.2.3
+version: 2.0.0
 
 environment:
   sdk: ">=3.0.0"
@@ -31,13 +31,16 @@ dependencies:
   font_awesome_flutter: ^10.0.0
   hive: ^2.0.0
   hive_flutter: ^1.0.0
-  path_provider: ^2.0.0
   diacritic: ^0.1.0
   uuid: ^4.5.1
   lazy_load_scrollview: ^1.0.0
   simple_html_css: ^5.0.0
   url_launcher: ^6.1.5
   google_fonts: ^6.2.1
+  package_info_plus: ^8.0.0
+  dio: ^5.4.0
+  path_provider: ^2.1.2
+  open_filex: ^4.4.0
 
 dev_dependencies:
   flutter_test:
@@ -74,9 +77,22 @@ flutter:
     - assets/portrait_logo.png
 
   fonts:
-    - family: Nunito
+    - family: Crimson Text
       fonts:
-        - asset: fonts/Nunito.ttf
-    - family: Playfair
+        - asset: assets/fonts/CrimsonText-Regular.ttf
+        - asset: assets/fonts/CrimsonText-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/CrimsonText-Italic.ttf
+          style: italic
+
+    - family: Lato
       fonts:
-        - asset: fonts/Playfair.ttf
+        - asset: assets/fonts/Lato-Regular.ttf
+        - asset: assets/fonts/Lato-Bold.ttf
+          weight: 700
+
+    - family: Atkinson Hyperlegible
+      fonts:
+        - asset: assets/fonts/AtkinsonHyperlegible-Regular.ttf
+        - asset: assets/fonts/AtkinsonHyperlegible-Bold.ttf
+          weight: 700

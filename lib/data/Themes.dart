@@ -16,10 +16,5 @@ Map<String, ColorPalette> themes = {
     brightness: Brightness.dark,
     background: const Color(0xff000000), // Negro puro para ahorrar batería
     foreground: const Color(0xffcccccc),
-  ),
-  "Noche": ColorPalette(
-    brightness: Brightness.dark,
-    background: const Color(0xff1c1917),
-    foreground: const Color(0xffd6d3d1),
-  ),
+  )
 };

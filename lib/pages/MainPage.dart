@@ -5,8 +5,7 @@ import 'package:get/get.dart';
 import 'package:yhwh/controllers/MainPageController.dart';
 import 'package:yhwh/pages/BiblePage.dart';
 import 'package:animate_do/animate_do.dart' as animateDo;
-import 'package:yhwh/pages/ContactPage.dart';
-
+import 'package:yhwh/pages/ContactPage.dart'; // Import original recuperado
 
 class MainPage extends StatelessWidget {
   @override
@@ -25,17 +24,15 @@ class MainPage extends StatelessWidget {
             case 0:
               return BiblePage();
             case 1:
-              return ContactPage();
+              return const ContactPage(); // Regresamos al ContactPage
             default:
-              return animateDo.FadeIn(child: Center(child: Text("En desarrollo")), duration: Duration(milliseconds: 150),);
+              return animateDo.FadeIn(child: const Center(child: Text("En desarrollo")), duration: const Duration(milliseconds: 150));
           }        
         },
       ),
 
-
-      bottomNavigationBar: Container( //ClipRect(
-        child: Container( //BackdropFilter(
-          // filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24, tileMode: TileMode.mirror),
+      bottomNavigationBar: Container( 
+        child: Container( 
           child: Container(
             foregroundDecoration: BoxDecoration(
               border: Border(
@@ -53,18 +50,24 @@ class MainPage extends StatelessWidget {
                   currentIndex: _.mainPagetabIndex,
                   elevation: 0,
                   type: BottomNavigationBarType.fixed,
-                  backgroundColor: Theme.of(context).canvasColor, //.withValues(alpha: 0.8),
+                  backgroundColor: Theme.of(context).canvasColor, 
                   selectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.9),
                   unselectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.6),
               
                   items: [
-                    BottomNavigationBarItem(
+                    const BottomNavigationBarItem(
                       icon: Icon(Icons.book),
                       label: 'Biblia',
                     ),
               
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.alternate_email_rounded),
+                      // EL WIDGET BADGE EXACTO DE TU VERSIÓN ESTABLE
+                      icon: Badge(
+                        isLabelVisible: _.isDownloadCompleted, 
+                        backgroundColor: Colors.red, 
+                        label: const Text('1', style: TextStyle(color: Colors.white, fontSize: 10)), 
+                        child: const Icon(Icons.alternate_email_rounded),
+                      ),
                       label: 'Contacto',
                     ),
                   ],

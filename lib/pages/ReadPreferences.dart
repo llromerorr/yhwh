@@ -9,6 +9,12 @@ import 'package:yhwh/data/Themes.dart';
 class ReadPreferences extends StatelessWidget {
   const ReadPreferences({Key? key}) : super(key: key);
 
+  final List<String> availableFonts = const [
+    'Lato',
+    'Crimson Text',
+    'Atkinson Hyperlegible'
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +25,6 @@ class ReadPreferences extends StatelessWidget {
           fontWeight: FontWeight.bold,
           color: Theme.of(context).indicatorColor
         )),
-        // centerTitle: true,
         backgroundColor: Theme.of(context).canvasColor,
         scrolledUnderElevation: 0,
         elevation: 0,
@@ -37,99 +42,94 @@ class ReadPreferences extends StatelessWidget {
               children: [
                 const SizedBox(height: 24),
             
-                // Selector de Temas
+                // --- 1. Selector de Temas (Minimalista) ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
-                    "Tema de lectura",
+                    "Tema visual",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).indicatorColor.withValues(alpha: 0.7),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: themes.keys.map((themeName) {
-                      bool isSelected = controller.currentThemeName == themeName;
-                      
+                    children: themes.keys.map((themeKey) {
+                      // Nombres más limpios para la UI
+                      String displayName = themeKey;
+                      IconData icon = FontAwesomeIcons.sun;
+
+                      if (themeKey == 'Blanco') { displayName = 'Claro'; icon = FontAwesomeIcons.sun; }
+                      if (themeKey == 'Negro') { displayName = 'Oscuro'; icon = FontAwesomeIcons.moon; }
+                      if (themeKey == 'OLED') { displayName = 'Negro'; icon = FontAwesomeIcons.solidMoon; }
+
                       return Padding(
-                        padding: const EdgeInsets.only(right: 20.0),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => controller.setTheme(themeName),
-                          child: Column(
-                            children: [
-                              Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  // Anillo exterior de selección
-                                  Container(
-                                    height: 58,
-                                    width: 58,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: isSelected ? Theme.of(context).indicatorColor : Colors.transparent,
-                                        width: 2,
-                                      ),
-                                    ),
-                                  ),
-                                  // Color de fondo del tema
-                                  Container(
-                                    height: 48,
-                                    width: 48,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: AppTheme.getTheme(themeName).canvasColor,
-                                      border: Border.all(
-                                        color: Theme.of(context).indicatorColor.withValues(alpha: 0.2),
-                                        width: 1,
-                                      )
-                                    ),
-                                  ),
-                                  // Checkmark si está seleccionado, de lo contrario el color de texto del tema
-                                  if (isSelected)
-                                    Icon(FontAwesomeIcons.check, size: 20, color: AppTheme.getTheme(themeName).indicatorColor)
-                                  else
-                                    Container(
-                                      height: 20,
-                                      width: 20,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: AppTheme.getTheme(themeName).indicatorColor,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              // Etiqueta de texto debajo del círculo
-                              Text(
-                                themeName,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  color: isSelected 
-                                      ? Theme.of(context).indicatorColor 
-                                      : Theme.of(context).indicatorColor.withValues(alpha: 0.6),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: _buildThemeSimpleButton(context, controller, themeKey, displayName, icon),
                       );
                     }).toList(),
                   ),
                 ),
             
                 const SizedBox(height: 32),
+
+                // --- 2. Selector de Tipografía ---
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "Tipografía",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).indicatorColor.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: availableFonts.map((fontName) {
+                      bool isActive = controller.currentFontFamily == fontName;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: InkWell(
+                          onTap: () => controller.setFontFamily(fontName),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: isActive ? Theme.of(context).indicatorColor.withValues(alpha: 0.15) : Colors.transparent,
+                              border: Border.all(
+                                color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.2),
+                                width: isActive ? 1.5 : 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              fontName == 'Atkinson Hyperlegible' ? 'Atkinson' : fontName,
+                              style: TextStyle(
+                                fontFamily: fontName,
+                                fontSize: 16,
+                                color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
             
-                // Selector de Tamaño de Letra
+                // --- 3. Selector de Tamaño de Letra ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
@@ -145,39 +145,39 @@ class ReadPreferences extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Row(
                     children: [
-                      Expanded(child: _buildPresetButton(context, controller, 'small', 'Pequeña', FontAwesomeIcons.font, 14)),
+                      Expanded(child: _buildPresetButton(context, controller, 'small', 'Pequeña', FontAwesomeIcons.font, 18)),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildPresetButton(context, controller, 'normal', 'Normal', FontAwesomeIcons.font, 18)),
+                      Expanded(child: _buildPresetButton(context, controller, 'normal', 'Normal', FontAwesomeIcons.font, 22)),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildPresetButton(context, controller, 'large', 'Grande', FontAwesomeIcons.font, 22)),
+                      Expanded(child: _buildPresetButton(context, controller, 'large', 'Grande', FontAwesomeIcons.font, 26)),
                     ],
                   ),
                 ),
             
-                const SizedBox(height: 32),
+                // const SizedBox(height: 32),
             
-                // Accesibilidad
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      Icon(FontAwesomeIcons.glasses, size: 16, color: Theme.of(context).indicatorColor.withValues(alpha: 0.5)),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Accesibilidad",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Divider(color: Theme.of(context).indicatorColor.withValues(alpha: 0.2), thickness: 1),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
+                // --- 4. Accesibilidad ---
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                //   child: Row(
+                //     children: [
+                //       Icon(FontAwesomeIcons.glasses, size: 16, color: Theme.of(context).indicatorColor.withValues(alpha: 0.5)),
+                //       const SizedBox(width: 8),
+                //       Text(
+                //         "Accesibilidad",
+                //         style: TextStyle(
+                //           fontWeight: FontWeight.bold,
+                //           color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                //         ),
+                //       ),
+                //       const SizedBox(width: 12),
+                //       Expanded(
+                //         child: Divider(color: Theme.of(context).indicatorColor.withValues(alpha: 0.2), thickness: 1),
+                //       ),
+                //     ],
+                //   ),
+                // ),
+                const SizedBox(height: 10),
             
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -186,17 +186,17 @@ class ReadPreferences extends StatelessWidget {
                       _buildAccessibilityButton(
                         context,
                         controller,
-                        'presbyopia',
-                        'Presbicia',
-                        'Letra grande con mayor espacio entre líneas para no perder la lectura.',
+                        'presbyopia', 
+                        'Extra Grande',
+                        'Ideal para descansar la vista en lecturas largas o para quienes usan lentes de lectura.',
                       ),
                       const SizedBox(height: 12),
                       _buildAccessibilityButton(
                         context,
                         controller,
-                        'visual_impairment',
-                        'Discapacidad Visual',
-                        'Letra gigante y máxima separación. (Te recomendamos usar el tema "OLED" para maximizar el contraste).',
+                        'visual_impairment', 
+                        'Gigante',
+                        'Recomendado para personas con dificultades visuales severas que necesitan el texto al tamaño máximo.',
                       ),
                     ],
                   ),
@@ -213,26 +213,62 @@ class ReadPreferences extends StatelessWidget {
     );
   }
 
+  // Nuevo widget de botón simple para los temas
+  Widget _buildThemeSimpleButton(BuildContext context, ReadPreferencesController controller, String themeId, String label, IconData icon) {
+    bool isActive = controller.currentThemeName == themeId;
+    return InkWell(
+      onTap: () => controller.setTheme(themeId),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: isActive ? Theme.of(context).indicatorColor.withValues(alpha: 0.15) : Colors.transparent,
+          border: Border.all(
+            color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.2),
+            width: isActive ? 1.5 : 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.6)),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPresetButton(BuildContext context, ReadPreferencesController controller, String presetId, String label, IconData icon, double iconSize) {
     bool isActive = controller.activeTypographyPreset == presetId;
-    
     return InkWell(
       onTap: () => controller.setTypographyPreset(presetId),
       borderRadius: BorderRadius.circular(12),
       child: Container(
+        height: 75,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: isActive ? Theme.of(context).indicatorColor.withValues(alpha: 0.15) : Colors.transparent,
           border: Border.all(
             color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.2),
-            width: isActive ? 1.5 : 1.0,
+            width: isActive ? 1.5 : 1.5,
           ),
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: iconSize, color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.6)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             Text(
               label,
               style: TextStyle(
@@ -249,18 +285,18 @@ class ReadPreferences extends StatelessWidget {
 
   Widget _buildAccessibilityButton(BuildContext context, ReadPreferencesController controller, String presetId, String title, String subtitle) {
     bool isActive = controller.activeTypographyPreset == presetId;
-
     return InkWell(
       onTap: () => controller.setTypographyPreset(presetId),
       borderRadius: BorderRadius.circular(12),
       child: Container(
+        height: 100,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: isActive ? Theme.of(context).indicatorColor.withValues(alpha: 0.15) : Colors.transparent,
           border: Border.all(
             color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.2),
-            width: isActive ? 1.5 : 1.0,
+            width: isActive ? 1.5 : 1.5,
           ),
         ),
         child: Row(

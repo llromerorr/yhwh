@@ -67,7 +67,7 @@ class Verse extends StatelessWidget {
         return '<a href="$contenido">$contenido</a>';
       }),
       defaultTextStyle: TextStyle(
-        fontSize: this.fontSize,
+        fontSize: this.fontSize, 
         color: this.colorText,
         fontFamily: this.fontFamily,
         height: this.fontHeight,
@@ -93,7 +93,7 @@ class Verse extends StatelessWidget {
           //     ? this.colorNumber
           //     : Theme.of(context).canvasColor
           //   : this.colorNumber,
-          fontSize: this.fontSize - 7.0,
+          fontSize: this.fontSize - 5,
         ),
         'ctn': TextStyle(
           fontWeight: FontWeight.normal,
@@ -123,7 +123,7 @@ class Verse extends StatelessWidget {
         'a': TextStyle(
           fontWeight: FontWeight.bold,
           fontStyle: FontStyle.normal,
-          fontSize: this.fontSize - 7.0,
+          fontSize: this.fontSize - 5,
           backgroundColor: Colors.transparent,
           decoration: TextDecoration.none,
           color: (this.highlight)

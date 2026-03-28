@@ -86,6 +86,9 @@ class HighlighterViewerPage extends StatelessWidget {
                     title: titles[highlighterViewerController.highlighterItem!.book][highlighterViewerController.highlighterItem!.chapter].containsKey(highlighterViewerController.verses[index][0]) == true ? titles[highlighterViewerController.highlighterItem!.book][highlighterViewerController.highlighterItem!.chapter][highlighterViewerController.verses[index][0]] : "",
                     colorNumber: Theme.of(context).indicatorColor.withAlpha(145),
                     colorText: Theme.of(context).indicatorColor,
+                    onFootnoteTap: (String footnote) {
+                      // biblePageController.onFootnoteTap(book: highlighterViewerController.highlighterItem!.book, chapter: highlighterViewerController.highlighterItem!.chapter, verse: highlighterViewerController.verses[index][0], footnote: footnote, context: context);
+                    },
                     fontSize: biblePageController.fontSize,
                     fontHeight: biblePageController.fontHeight,
                     fontLetterSeparation: biblePageController.fontLetterSeparation,
