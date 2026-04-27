@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:yhwh/controllers/MainPageController.dart';
+import 'package:yhwh/controllers/ReadPreferencesController.dart';
 import 'package:yhwh/data/Define.dart';
 import 'package:yhwh/pages/HighlighterCreate.dart';
 import 'package:yhwh/pages/HighlighterPage.dart';
@@ -84,14 +85,14 @@ class BiblePage extends StatelessWidget {
                         height: 45.0,
                         child: Tooltip(
                           message: 'Capitulo anterior',
-                          child: Container( //ClipRRect(
-                            // borderRadius: BorderRadius.circular(300.0),
-                            child: Container( //BackdropFilter(
-                              //filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8, tileMode: TileMode.mirror),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(300.0),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
                               child: MaterialButton(
                                 elevation: 0,
                                 onPressed: biblePageController.previusChapter,
-                                color: Theme.of(context).canvasColor, //.withValues(alpha: 0.5),
+                                color: Theme.of(context).canvasColor.withValues(alpha: 0.2),
                             
                                 child: Icon(
                                   Icons.keyboard_arrow_left,
@@ -123,14 +124,14 @@ class BiblePage extends StatelessWidget {
                         height: 45.0,
                         child: Tooltip(
                           message: 'Capitulo siguiente',
-                          child: Container( //ClipRRect(
-                            // borderRadius: BorderRadius.circular(300.0),
-                            child: Container( //BackdropFilter(
-                              //filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8, tileMode: TileMode.mirror),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(300.0),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
                               child: MaterialButton(
                                 elevation: 0,
                                 onPressed: biblePageController.nextChapter,
-                                color: Theme.of(context).canvasColor, //.withValues(alpha: 0.5),
+                                color: Theme.of(context).canvasColor.withValues(alpha: 0.2),
                                                           
                                 child: Icon(
                                   Icons.keyboard_arrow_right,
@@ -176,7 +177,7 @@ class BiblePage extends StatelessWidget {
                       slivers: [
                         // AppBar
                         SliverAppBar(
-                          backgroundColor: Theme.of(context).canvasColor, //.withValues(alpha: 0.8),
+                          backgroundColor: Theme.of(context).canvasColor.withValues(alpha: 0.3),
                           primary: true,
                           floating: false,
                           pinned: true,
@@ -192,16 +193,16 @@ class BiblePage extends StatelessWidget {
                             preferredSize: Size.fromHeight(0)
                           ),
                     
-                          flexibleSpace: Container( //ClipRRect(
-                            child: Container( //BackdropFilter(
-                              // filter: ImageFilter.blur(
-                              //   sigmaX: 24,
-                              //   sigmaY: 24,
-                              //   tileMode: TileMode.mirror
-                              // ),
-                              // child: Container(
-                              //   color: Colors.transparent,
-                              // ),
+                          flexibleSpace: ClipRRect(
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(
+                                sigmaX: 35,
+                                sigmaY: 35,
+                                tileMode: TileMode.mirror
+                              ),
+                              child: Container(
+                                color: Colors.transparent,
+                              ),
                             ),
                           ),
                           
@@ -235,36 +236,45 @@ class BiblePage extends StatelessWidget {
                     
                                   Spacer(flex: 10),
                     
-                                  Tooltip(
-                                    message: 'Referencias',
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.all(Radius.circular(30)),
-                                      child: Container(
-                                        height: 55,
-                                        alignment: Alignment.center,
-                                        child: Padding(
-                                          padding: EdgeInsets.fromLTRB(24, 0, 24, 0),
-                                          child: RichText(
-                                            textAlign: TextAlign.left,
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                            text: TextSpan(
-                                              text: '${intToBook[biblePageController.bookNumber]} ${biblePageController.chapterNumber}',
-                                              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                                fontFamily: biblePageController.fontFamily,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18,
-                                                color: Theme.of(context).indicatorColor
+                                  GetBuilder<ReadPreferencesController>(
+                                    init: ReadPreferencesController(),
+                                    builder: (readPreferencesController) {
+                                      return Tooltip(
+                                        message: 'Referencias',
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                                          child: Container(
+                                            height: 55,
+                                            alignment: Alignment.center,
+                                            child: Padding(
+                                              padding: EdgeInsets.fromLTRB(24, 0, 24, 0),
+                                              child: RichText(
+                                                textAlign: TextAlign.left,
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                                text: TextSpan(
+                                                  text: (readPreferencesController.activeTypographyPreset == 'visual_impairment' || readPreferencesController.activeTypographyPreset == 'presbyopia')
+                                                  ? '${intToAbreviatura[biblePageController.bookNumber]} ${biblePageController.chapterNumber}'
+                                                  : '${intToBook[biblePageController.bookNumber]} ${biblePageController.chapterNumber}',
+                                                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                                    fontFamily: biblePageController.fontFamily,
+                                                    letterSpacing: biblePageController.fontLetterSeparation,
+                                                    fontWeight: FontWeight.bold,
+                                                    height: biblePageController.fontHeight,
+                                                    fontSize: biblePageController.fontSize,
+                                                    color: Theme.of(context).indicatorColor
+                                                  ),
+                                                )
                                               ),
-                                            )
+                                            ),
                                           ),
+                                                                  
+                                          onTap: biblePageController.referenceButtonOnTap,
+                                          onLongPress: biblePageController.onReferenceButtonLongPress,
+                                          
                                         ),
-                                      ),
-                            
-                                      onTap: biblePageController.referenceButtonOnTap,
-                                      onLongPress: biblePageController.onReferenceButtonLongPress,
-                                      
-                                    ),
+                                      );
+                                    }
                                   ),
                     
                                   Spacer(flex: 10),
@@ -323,7 +333,7 @@ class BiblePage extends StatelessWidget {
                                     title: biblePageController.versesRawList[index].title!,
                                     text: biblePageController.versesRawList[index].text!,
                                     colorHighlight: biblePageController.versesRawList[index].colorHighlight!,
-                                    colorNumber: Theme.of(context).indicatorColor.withAlpha(145),
+                                    colorNumber: Theme.of(context).indicatorColor.withAlpha(180),
                                     colorText: Theme.of(context).indicatorColor,
                                     fontSize: biblePageController.fontSize,
                                     fontHeight: biblePageController.fontHeight,

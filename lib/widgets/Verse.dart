@@ -77,11 +77,11 @@ class Verse extends StatelessWidget {
         'red': TextStyle(
           color: (this.highlight)
               ? Theme.of(context).brightness == Brightness.light
-                  ? Color(0xffe75649)
-                  : Color(0xffe06c75)
+                  ? Color.fromARGB(223, 156, 28, 32)
+                  : Color.fromARGB(240, 229, 166, 171)
               : Theme.of(context).brightness == Brightness.light
-                  ? Color(0xffe75649)
-                  : Color(0xffe06c75),
+                  ? Color.fromARGB(252, 136, 19, 23)
+                  : Color.fromARGB(255, 248, 147, 156),
         ),
         'vn': TextStyle(
           fontWeight: (this.selected || this.highlight)
@@ -128,10 +128,10 @@ class Verse extends StatelessWidget {
           decoration: TextDecoration.none,
           color: (this.highlight)
               ? Theme.of(context).brightness == Brightness.light
-                  ? Color(0xffe36414)
+                  ? Color.fromARGB(202, 251, 84, 7)
                   : Color(0xffe5c064)
               : Theme.of(context).brightness == Brightness.light
-                  ? Color(0xffe36414)
+                  ? Color.fromARGB(209, 251, 84, 7)
                   : Color(0xffe5c064),
         ),
       },
@@ -171,10 +171,9 @@ class Verse extends StatelessWidget {
                           ? CustomPaint(
                               painter: _ModernHighlightPainter(
                                 textSpan: textSpan,
-                                highlightColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? this.colorHighlight.withAlpha(80)
-                                    : this.colorHighlight.withAlpha(70),
+                                highlightColor: Theme.of(context).brightness == Brightness.light
+                                    ? this.colorHighlight.withAlpha(50)
+                                    : this.colorHighlight.withAlpha(50),
                                 // highlightColor: this.colorHighlight.withAlpha(50),
 
                                 radius: 8.0,

@@ -32,51 +32,53 @@ class MainPage extends StatelessWidget {
       ),
 
       bottomNavigationBar: Container( 
-        child: Container( 
-          child: Container(
-            foregroundDecoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
-                  width: 1.5
-                )
+        child: Container(
+          foregroundDecoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                width: 1.5
               )
-            ),
-              
-            child: GetBuilder<MainPageController>(
-              init: MainPageController(),
-              builder: (_){
-                return BottomNavigationBar(
-                  currentIndex: _.mainPagetabIndex,
-                  elevation: 0,
-                  type: BottomNavigationBarType.fixed,
-                  backgroundColor: Theme.of(context).canvasColor, 
-                  selectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.9),
-                  unselectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.6),
-              
-                  items: [
-                    const BottomNavigationBarItem(
-                      icon: Icon(Icons.book),
-                      label: 'Biblia',
-                    ),
-              
-                    BottomNavigationBarItem(
-                      // EL WIDGET BADGE EXACTO DE TU VERSIÓN ESTABLE
-                      icon: Badge(
-                        isLabelVisible: _.isDownloadCompleted, 
-                        backgroundColor: Colors.red, 
-                        label: const Text('1', style: TextStyle(color: Colors.white, fontSize: 10)), 
-                        child: const Icon(Icons.alternate_email_rounded),
-                      ),
-                      label: 'Contacto',
-                    ),
-                  ],
-              
-                  onTap: _.bottomNavigationBarOnTap
-                );
-              },
             )
           ),
+            
+          child: GetBuilder<MainPageController>(
+            init: MainPageController(),
+            builder: (_){
+              return ClipRRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 36, sigmaY: 36, tileMode: TileMode.mirror),
+                  child: BottomNavigationBar(
+                    currentIndex: _.mainPagetabIndex,
+                    elevation: 0,
+                    type: BottomNavigationBarType.fixed,
+                    backgroundColor: Theme.of(context).canvasColor.withValues(alpha: 0.3),
+                    selectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.9),
+                    unselectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.6),
+                              
+                    items: [
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.book),
+                        label: 'Biblia',
+                      ),
+                              
+                      BottomNavigationBarItem(
+                        icon: Badge(
+                          isLabelVisible: _.isDownloadCompleted, 
+                          backgroundColor: Colors.red,
+                          label: const Text('1', style: TextStyle(color: Colors.white, fontSize: 10)), 
+                          child: const Icon(Icons.alternate_email_rounded),
+                        ),
+                        label: 'Contacto',
+                      ),
+                    ],
+                              
+                    onTap: _.bottomNavigationBarOnTap
+                  ),
+                ),
+              );
+            },
+          )
         ),
       )
     );
