@@ -248,12 +248,12 @@ class BiblePageController extends GetxController {
     autoScrollController!.scrollToIndex(verseNumber - 1, duration: Duration(milliseconds: 500), preferPosition: AutoScrollPosition.begin);
   }
 
-  void addToHighlighter(Color color) async {
+  void addToHighlighter(int colorIndex) async {
     var newHighlighterItem = HighlighterItem(
       book: bookNumber,
       chapter: chapterNumber,
       id: Uuid().v1(),
-      color: color.value,
+      color: colorIndex,
       verses: versesSelected,
       dateTime: DateTime.now()
     );
@@ -264,7 +264,8 @@ class BiblePageController extends GetxController {
     // update RawVerses
     for(int verse in versesSelected){
       versesRawList[verse - 1].highlight = true;
-      versesRawList[verse - 1].colorHighlight = Color(newHighlighterItem.color);
+      // Guardamos directamente el índice. El widget Verse se encargará de decodificarlo.
+      versesRawList[verse - 1].colorHighlight = Color(colorIndex);
     }
 
     update();

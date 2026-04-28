@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get_rx/src/rx_typedefs/rx_typedefs.dart';
 import 'package:simple_html_css/simple_html_css.dart';
 import 'package:yhwh/data/Define.dart';
+import 'package:yhwh/classes/ColorPalette.dart';
 
 class Verse extends StatelessWidget {
   final int verseNumber;
@@ -51,6 +52,11 @@ class Verse extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<ColorPalette>();
+    final resolvedColorText = this.colorText == Colors.transparent ? Colors.transparent : (palette?.verseText ?? this.colorText);
+    final resolvedColorNumber = this.colorNumber == Colors.transparent ? Colors.transparent : (palette?.verseNumber ?? this.colorNumber);
+    final resolvedColorHighlight = !this.highlight ? Colors.transparent : ColorPalette.getDynamicHighlightColor(context, this.colorHighlight.value);
+
     // 1. Preparamos el TextSpan
     final textSpan = HTML.toTextSpan(
       context,
@@ -68,43 +74,28 @@ class Verse extends StatelessWidget {
       }),
       defaultTextStyle: TextStyle(
         fontSize: this.fontSize, 
-        color: this.colorText,
+        color: resolvedColorText,
         fontFamily: this.fontFamily,
         height: this.fontHeight,
         letterSpacing: this.fontLetterSeparation,
       ),
       overrideStyle: {
         'red': TextStyle(
-          color: (this.highlight)
-              ? Theme.of(context).brightness == Brightness.light
-                  ? Color.fromARGB(223, 156, 28, 32)
-                  : Color.fromARGB(240, 229, 166, 171)
-              : Theme.of(context).brightness == Brightness.light
-                  ? Color.fromARGB(252, 136, 19, 23)
-                  : Color.fromARGB(255, 248, 147, 156),
+          color: this.highlight
+              ? (palette?.wordsOfJesusHighlighted ?? const Color.fromARGB(223, 156, 28, 32))
+              : (palette?.wordsOfJesus ?? const Color.fromARGB(252, 136, 19, 23)),
         ),
         'vn': TextStyle(
           fontWeight: (this.selected || this.highlight)
               ? FontWeight.bold
               : FontWeight.normal,
-          color: this.colorNumber,
-          // color:  (this.highlight || this.selected)
-          //   ? Theme.of(context).brightness == Brightness.light
-          //     ? this.colorNumber
-          //     : Theme.of(context).canvasColor
-          //   : this.colorNumber,
+          color: resolvedColorNumber,
           fontSize: this.fontSize - 5,
         ),
         'ctn': TextStyle(
           fontWeight: FontWeight.normal,
-          backgroundColor:
-              Colors.transparent, // Transparente para usar CustomPainter
-          color: this.colorText,
-          // color: (this.highlight)
-          //     ? Theme.of(context).brightness == Brightness.light
-          //         ? this.colorText
-          //         : Theme.of(context).canvasColor
-          //     : this.colorText,
+          backgroundColor: Colors.transparent,
+          color: resolvedColorText,
         ),
         'i': TextStyle(
             fontWeight: FontWeight.normal,
@@ -112,13 +103,6 @@ class Verse extends StatelessWidget {
             fontSize: this.fontSize,
             backgroundColor: Colors.transparent,
             color: Theme.of(context).textTheme.bodyLarge!.color
-            // color: (this.highlight)
-            //     ? Theme.of(context).brightness == Brightness.light
-            //         ? Theme.of(context).textTheme.bodyLarge!.color
-            //         : Theme.of(context).canvasColor
-            //     : Theme.of(context).brightness == Brightness.light
-            //         ? Color(0xffae7123)
-            //         : Color(0xffe5c064),
             ),
         'a': TextStyle(
           fontWeight: FontWeight.bold,
@@ -126,13 +110,9 @@ class Verse extends StatelessWidget {
           fontSize: this.fontSize - 5,
           backgroundColor: Colors.transparent,
           decoration: TextDecoration.none,
-          color: (this.highlight)
-              ? Theme.of(context).brightness == Brightness.light
-                  ? Color.fromARGB(202, 251, 84, 7)
-                  : Color(0xffe5c064)
-              : Theme.of(context).brightness == Brightness.light
-                  ? Color.fromARGB(209, 251, 84, 7)
-                  : Color(0xffe5c064),
+          color: this.highlight
+              ? (palette?.referenceTextHighlighted ?? const Color.fromARGB(202, 251, 84, 7))
+              : (palette?.referenceText ?? const Color.fromARGB(209, 251, 84, 7)),
         ),
       },
       linksCallback: (link) {
@@ -171,11 +151,7 @@ class Verse extends StatelessWidget {
                           ? CustomPaint(
                               painter: _ModernHighlightPainter(
                                 textSpan: textSpan,
-                                highlightColor: Theme.of(context).brightness == Brightness.light
-                                    ? this.colorHighlight.withAlpha(50)
-                                    : this.colorHighlight.withAlpha(50),
-                                // highlightColor: this.colorHighlight.withAlpha(50),
-
+                                highlightColor: resolvedColorHighlight,
                                 radius: 8.0,
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 4.0, vertical: 0.0),
@@ -211,6 +187,9 @@ class Verse extends StatelessWidget {
       double? fontSize,
       double? letterSeparation}) {
       
+    final palette = Theme.of(context!).extension<ColorPalette>();
+    final resolvedColorText = palette?.verseText ?? this.colorText;
+
     // 1. Reemplazamos la etiqueta <f> en todo el texto del título.
     // Usamos el prefijo 'footnote_' para diferenciarlo de los enlaces de las referencias.
     String processedText = text!.replaceAllMapped(
@@ -225,7 +204,7 @@ class Verse extends StatelessWidget {
     List<Widget> widgets = [];
 
     // 2. Definimos el estilo del enlace <a> para reutilizarlo en todo el título
-    final aStyle = Theme.of(context!).textTheme.bodyLarge!.copyWith(
+    final aStyle = Theme.of(context).textTheme.bodyLarge!.copyWith(
       fontFamily: this.fontFamily,
       fontWeight: FontWeight.bold,
       height: height,
@@ -233,13 +212,9 @@ class Verse extends StatelessWidget {
       fontStyle: FontStyle.italic,
       decoration: TextDecoration.none,
       letterSpacing: letterSeparation,
-      color: (this.highlight)
-          ? Theme.of(context).brightness == Brightness.light
-              ? Color(0xffe36414)
-              : Color(0xffe5c064)
-          : Theme.of(context).brightness == Brightness.light
-              ? Color(0xffe36414)
-              : Color(0xffe5c064),
+      color: this.highlight
+          ? (palette?.referenceTextHighlighted ?? const Color(0xffe36414))
+          : (palette?.referenceText ?? const Color(0xffe36414)),
     );
 
     // 3. Centralizamos el callback de los links para manejar Notas al Pie vs Referencias
@@ -282,7 +257,7 @@ class Verse extends StatelessWidget {
                     height: height,
                     fontSize: fontSize + 10,
                     letterSpacing: letterSeparation,
-                    color: this.colorText),
+                    color: resolvedColorText),
                 overrideStyle: {'a': aStyle},
                 linksCallback: handleLinks,
               ),
@@ -304,7 +279,7 @@ class Verse extends StatelessWidget {
                     height: height,
                     fontSize: fontSize,
                     letterSpacing: letterSeparation,
-                    color: this.colorText),
+                    color: resolvedColorText),
                 overrideStyle: {'a': aStyle},
                 linksCallback: handleLinks,
               ),
@@ -350,13 +325,9 @@ class Verse extends StatelessWidget {
                       fontSize: fontSize - 3,
                       fontStyle: FontStyle.italic,
                       letterSpacing: letterSeparation,
-                      color: (this.highlight)
-                        ? Theme.of(context).brightness == Brightness.light
-                            ? Color(0xffe36414)
-                            : Color(0xffe5c064)
-                        : Theme.of(context).brightness == Brightness.light
-                            ? Color(0xffe36414)
-                            : Color(0xffe5c064),
+                      color: this.highlight
+                        ? (palette?.referenceTextHighlighted ?? const Color(0xffe36414))
+                        : (palette?.referenceText ?? const Color(0xffe36414)),
                     ),
                 overrideStyle: {'a': aStyle},
                 linksCallback: handleLinks,
@@ -377,7 +348,7 @@ class Verse extends StatelessWidget {
                     height: height,
                     fontSize: fontSize,
                     letterSpacing: letterSeparation,
-                    color: this.colorText),
+                    color: resolvedColorText),
                 overrideStyle: {'a': aStyle},
                 linksCallback: handleLinks,
               ),
@@ -398,7 +369,7 @@ class Verse extends StatelessWidget {
                     height: height,
                     fontSize: fontSize,
                     letterSpacing: letterSeparation,
-                    color: this.colorText),
+                    color: resolvedColorText),
                 overrideStyle: {'a': aStyle},
                 linksCallback: handleLinks,
               ),

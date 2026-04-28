@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yhwh/data/Themes.dart';
+import 'package:yhwh/classes/ColorPalette.dart';
 
 class AppTheme
 {
@@ -23,19 +24,26 @@ class AppTheme
 
     if(themes.containsKey(themeName))
     {
+      final palette = themes[themeName]!;
       // para temas claros
-      if(themes[themeName]?.brightness == Brightness.light){
+      if(palette.brightness == Brightness.light){
         theme = ThemeData.light().copyWith(
-          canvasColor: themes[themeName]!.background,
-          indicatorColor: themes[themeName]!.foreground,
+          canvasColor: palette.background,
+          indicatorColor: palette.foreground,
+          extensions: <ThemeExtension<dynamic>>[
+            palette,
+          ],
         );
       }
       
       // para temas oscuros
       else {
         theme = ThemeData.dark().copyWith(
-          canvasColor: themes[themeName]!.background,
-          indicatorColor: themes[themeName]!.foreground,
+          canvasColor: palette.background,
+          indicatorColor: palette.foreground,
+          extensions: <ThemeExtension<dynamic>>[
+            palette,
+          ],
         );
       }
     }

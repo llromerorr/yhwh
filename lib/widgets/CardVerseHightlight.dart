@@ -5,6 +5,7 @@ import 'package:yhwh/classes/BibleManager.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/data/Define.dart';
 import 'package:yhwh/models/highlighterItem.dart';
+import 'package:yhwh/classes/ColorPalette.dart';
 
 class CardVerseHightlight extends StatefulWidget {
   CardVerseHightlight({
@@ -93,7 +94,7 @@ class _CardVerseHightlightState extends State<CardVerseHightlight> {
                         padding: EdgeInsets.only(left: 2),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Color(widget.highlighterItem.color),
+                            color: ColorPalette.getDynamicHighlightColor(context, widget.highlighterItem.color),
                             borderRadius: BorderRadius.circular(3)
                           ),
                           width: 13,
@@ -118,6 +119,8 @@ class _CardVerseHightlightState extends State<CardVerseHightlight> {
               builder: (context, rootBundleSnapshot){
                 if(rootBundleSnapshot.hasData){
 
+                  final palette = Theme.of(context).extension<ColorPalette>();
+
                   return RichText(
                     overflow: TextOverflow.fade,
                     softWrap: false,
@@ -140,31 +143,19 @@ class _CardVerseHightlightState extends State<CardVerseHightlight> {
                           overrideStyle: {
 
                             'red' : TextStyle(
-                              color: Theme.of(context).brightness == Brightness.light ? Color(0xffe75649) : Color(0xffe06c75)
+                              color: palette?.wordsOfJesus ?? const Color(0xffe75649)
                             ),
-
-                            // 'ctn' : TextStyle(
-                            //   fontWeight: FontWeight.normal,
-                            //   backgroundColor: (this.highlight)
-                            //     ? colorHighlight
-                            //     : Colors.transparent,
-                            //   color: (this.highlight)
-                            //     ? Theme.of(context).brightness == Brightness.light
-                            //       ? this.colorText
-                            //       : Theme.of(context).canvasColor
-                            //     : this.colorText
-                            // ),
 
                             'i' : TextStyle(
                               fontWeight: FontWeight.normal,
                               fontStyle: FontStyle.italic,
-                              color: Theme.of(context).brightness == Brightness.light ? Color(0xffae7123) : Color(0xffe5c064)
+                              color: palette?.referenceText ?? const Color(0xffae7123)
                             ),
 
                             'f' : TextStyle(
                               fontWeight: FontWeight.bold,
                               fontStyle: FontStyle.normal,
-                              color: Theme.of(context).brightness == Brightness.light ? Color(0xffae7123) : Color(0xffe5c064)
+                              color: palette?.referenceText ?? const Color(0xffae7123)
                             )
                           }
                         )

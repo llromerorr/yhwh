@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
+import 'package:yhwh/classes/ColorPalette.dart';
 
 class HihglighterCreate extends StatelessWidget {
   const HihglighterCreate({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Hemos sacado el color 0x0 de la lista, ya que ahora 
-    // "Eliminar" es un botón con icono propio y no un color falso.
-    final List<int> highlightColors = [
-      0xff8ab4f8,
-      0xfff28b82,
-      0xfffdd663,
-      0xff81c995,
-      0xffff8bcb,
-      0xffd7aefb,
-      0xff78d9ec
+    final palette = Theme.of(context).extension<ColorPalette>();
+    final List<Color> highlightColors = palette?.highlights ?? [
+      const Color(0xff8ab4f8),
+      const Color(0xfff28b82),
+      const Color(0xfffdd663),
+      const Color(0xff81c995),
+      const Color(0xffff8bcb),
+      const Color(0xffd7aefb),
+      const Color(0xff78d9ec)
     ];
 
     return GetBuilder<BiblePageController>(
@@ -64,7 +64,7 @@ class HihglighterCreate extends StatelessWidget {
                 itemCount: highlightColors.length,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 itemBuilder: (context, index) {
-                  Color color = Color(highlightColors[index]);
+                  Color color = highlightColors[index].withAlpha(150);
                   
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -72,7 +72,7 @@ class HihglighterCreate extends StatelessWidget {
                       child: InkWell(
                         customBorder: const CircleBorder(),
                         onTap: () {
-                          biblePageController.addToHighlighter(color);
+                          biblePageController.addToHighlighter(index);
                         },
                         child: Container(
                           height: 40,

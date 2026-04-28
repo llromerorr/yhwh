@@ -53,4 +53,3 @@ class MyBehavior extends ScrollBehavior {
     return child;
   }
 }
-
