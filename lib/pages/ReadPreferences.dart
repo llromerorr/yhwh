@@ -10,6 +10,7 @@ class ReadPreferences extends StatelessWidget {
   const ReadPreferences({Key? key}) : super(key: key);
 
   final List<String> availableFonts = const [
+    'Roboto',
     'Lato',
     'Crimson Text',
     'Atkinson Hyperlegible'
@@ -76,6 +77,72 @@ class ReadPreferences extends StatelessWidget {
                   ),
                 ),
             
+                const SizedBox(height: 32),
+
+                // --- 1.5 Efecto Acrílico ---
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "Efectos visuales",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).indicatorColor.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Theme.of(context).indicatorColor.withValues(alpha: 0.05),
+                      border: Border.all(
+                        color: Theme.of(context).indicatorColor.withValues(alpha: 0.1),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Efecto cristal (Acrílico)",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Theme.of(context).indicatorColor,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Transparencias en los menús. Apágalo si notas lentitud al deslizar.",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).indicatorColor.withValues(alpha: 0.7),
+                                  height: 1.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: controller.enableAcrylicEffect,
+                          onChanged: (value) => controller.toggleAcrylicEffect(value),
+                          activeColor: Theme.of(context).canvasColor,
+                          activeTrackColor: Theme.of(context).indicatorColor,
+                          inactiveThumbColor: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                          inactiveTrackColor: Theme.of(context).indicatorColor.withValues(alpha: 0.1),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 32),
 
                 // --- 2. Selector de Tipografía ---

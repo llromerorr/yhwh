@@ -63,8 +63,10 @@ class BiblePage extends StatelessWidget {
               floatingActionButton: GetBuilder<BiblePageController>(
                 id: 'floatingActionButton',
                 init: BiblePageController(),
-                builder: (biblePageController) => Padding(
-                padding: EdgeInsets.fromLTRB(12, 0, 12, MediaQuery.of(context).viewPadding.bottom + MediaQuery.of(context).padding.bottom),
+                builder: (biblePageController) => GetBuilder<ReadPreferencesController>(
+                  init: ReadPreferencesController(),
+                  builder: (readPrefs) => Padding(
+                  padding: EdgeInsets.fromLTRB(12, 0, 12, MediaQuery.of(context).viewPadding.bottom + MediaQuery.of(context).padding.bottom),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   
@@ -87,7 +89,7 @@ class BiblePage extends StatelessWidget {
                           message: 'Capitulo anterior',
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(300.0),
-                            child: BackdropFilter(
+                            child: readPrefs.enableAcrylicEffect ? BackdropFilter(
                               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
                               child: MaterialButton(
                                 elevation: 0,
@@ -107,7 +109,24 @@ class BiblePage extends StatelessWidget {
                                   )
                                 ),
                               ),
-                            ),
+                            ) : MaterialButton(
+                                elevation: 0,
+                                onPressed: biblePageController.previusChapter,
+                                color: Theme.of(context).canvasColor,
+                            
+                                child: Icon(
+                                  Icons.keyboard_arrow_left,
+                                  color: Theme.of(context).indicatorColor,
+                                  size: 24,
+                                ),
+                                padding: EdgeInsets.all(0),
+                                shape: CircleBorder(
+                                  side: BorderSide(
+                                    color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                                    width: 1.5
+                                  )
+                                ),
+                              ),
                           ),
                         ),
                       )
@@ -126,7 +145,7 @@ class BiblePage extends StatelessWidget {
                           message: 'Capitulo siguiente',
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(300.0),
-                            child: BackdropFilter(
+                            child: readPrefs.enableAcrylicEffect ? BackdropFilter(
                               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
                               child: MaterialButton(
                                 elevation: 0,
@@ -146,7 +165,24 @@ class BiblePage extends StatelessWidget {
                                   )
                                 ),
                               ),
-                            ),
+                            ) : MaterialButton(
+                                elevation: 0,
+                                onPressed: biblePageController.nextChapter,
+                                color: Theme.of(context).canvasColor,
+                                                          
+                                child: Icon(
+                                  Icons.keyboard_arrow_right,
+                                  color: Theme.of(context).indicatorColor,
+                                  size: 24,
+                                ),
+                                padding: EdgeInsets.all(0),
+                                shape: CircleBorder(
+                                  side: BorderSide(
+                                    color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                                    width: 1.5
+                                  )
+                                ),
+                              ),
                           ),
                         ),
                       ),
@@ -162,8 +198,11 @@ class BiblePage extends StatelessWidget {
                 ),
               ),
             ),
+            ),
 
-              body: GetBuilder<BiblePageController>(
+              body: GetBuilder<ReadPreferencesController>(
+                init: ReadPreferencesController(),
+                builder: (readPrefs) => GetBuilder<BiblePageController>(
                 init: BiblePageController(),
                 builder: (biblePageController) => NotificationListener<ScrollNotification>(
                   onNotification: biblePageController.scrollNotification,
@@ -177,7 +216,7 @@ class BiblePage extends StatelessWidget {
                       slivers: [
                         // AppBar
                         SliverAppBar(
-                          backgroundColor: Theme.of(context).canvasColor.withValues(alpha: 0.3),
+                          backgroundColor: readPrefs.enableAcrylicEffect ? Theme.of(context).canvasColor.withValues(alpha: 0.3) : Theme.of(context).canvasColor,
                           primary: true,
                           floating: false,
                           pinned: true,
@@ -193,7 +232,7 @@ class BiblePage extends StatelessWidget {
                             preferredSize: Size.fromHeight(0)
                           ),
                     
-                          flexibleSpace: ClipRRect(
+                          flexibleSpace: readPrefs.enableAcrylicEffect ? ClipRRect(
                             child: BackdropFilter(
                               filter: ImageFilter.blur(
                                 sigmaX: 35,
@@ -204,7 +243,7 @@ class BiblePage extends StatelessWidget {
                                 color: Colors.transparent,
                               ),
                             ),
-                          ),
+                          ) : null,
                           
                           title: AnimatedCrossFade(
                             sizeCurve: Curves.easeInOut,
@@ -385,6 +424,6 @@ class BiblePage extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }

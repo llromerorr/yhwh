@@ -2,7 +2,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/MainPageController.dart';
+import 'package:yhwh/controllers/ReadPreferencesController.dart';
 import 'package:yhwh/pages/BiblePage.dart';
 import 'package:animate_do/animate_do.dart' as animateDo;
 import 'package:yhwh/pages/ContactPage.dart'; // Import original recuperado
@@ -11,6 +13,7 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    Get.lazyPut(() => BiblePageController());
 
     return Scaffold(
       extendBody: true,
@@ -45,14 +48,16 @@ class MainPage extends StatelessWidget {
           child: GetBuilder<MainPageController>(
             init: MainPageController(),
             builder: (_){
-              return ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 36, sigmaY: 36, tileMode: TileMode.mirror),
-                  child: BottomNavigationBar(
+              return GetBuilder<ReadPreferencesController>(
+                init: ReadPreferencesController(),
+                builder: (readPrefs) {
+                  Widget navBar = BottomNavigationBar(
                     currentIndex: _.mainPagetabIndex,
                     elevation: 0,
                     type: BottomNavigationBarType.fixed,
-                    backgroundColor: Theme.of(context).canvasColor.withValues(alpha: 0.3),
+                    backgroundColor: readPrefs.enableAcrylicEffect 
+                        ? Theme.of(context).canvasColor.withValues(alpha: 0.3) 
+                        : Theme.of(context).canvasColor,
                     selectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.9),
                     unselectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.6),
                               
@@ -74,8 +79,17 @@ class MainPage extends StatelessWidget {
                     ],
                               
                     onTap: _.bottomNavigationBarOnTap
-                  ),
-                ),
+                  );
+
+                  return ClipRRect(
+                    child: readPrefs.enableAcrylicEffect
+                      ? BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 36, sigmaY: 36, tileMode: TileMode.mirror),
+                          child: navBar,
+                        )
+                      : navBar,
+                  );
+                }
               );
             },
           )

@@ -11,6 +11,7 @@ class ReadPreferencesController extends GetxController {
   String activeTypographyPreset = 'normal';
   String currentThemeName = 'Blanco';
   String currentFontFamily = 'Crimson Text';
+  bool enableAcrylicEffect = false;
 
   @override
   void onInit() {
@@ -19,6 +20,13 @@ class ReadPreferencesController extends GetxController {
     activeTypographyPreset = getStorage.read('typographyPreset') ?? 'normal';
     currentThemeName = getStorage.read('currentTheme') ?? 'Blanco'; 
     currentFontFamily = getStorage.read('fontFamily') ?? 'Crimson Text';
+    enableAcrylicEffect = getStorage.read('enableAcrylicEffect') ?? false;
+  }
+
+  void toggleAcrylicEffect(bool value) {
+    enableAcrylicEffect = value;
+    getStorage.write('enableAcrylicEffect', value);
+    update();
   }
 
   void setTheme(String themeName) {
