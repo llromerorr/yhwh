@@ -21,6 +21,7 @@ class Verse extends StatelessWidget {
 
   final bool highlight;
   final bool selected;
+  final bool isJustified;
 
   final Callback? onTap;
   final Callback? onLongPress;
@@ -37,6 +38,7 @@ class Verse extends StatelessWidget {
     required this.highlight,
     required this.fontFamily,
     required this.isFirstVerseShowed,
+    this.isJustified = false,
     this.fontSize = 20.0,
     this.fontHeight = 1.8,
     this.fontLetterSeparation = 0,
@@ -159,14 +161,14 @@ class Verse extends StatelessWidget {
                               child: RichText(
                                 softWrap: true,
                                 overflow: TextOverflow.visible,
-                                textAlign: TextAlign.start,
+                                textAlign: this.isJustified ? TextAlign.justify : TextAlign.start,
                                 text: textSpan,
                               ),
                             )
                           : RichText(
                               softWrap: true,
                               overflow: TextOverflow.visible,
-                              textAlign: TextAlign.start,
+                              textAlign: this.isJustified ? TextAlign.justify : TextAlign.start,
                               text: textSpan,
                             ),
                     ),

@@ -48,6 +48,7 @@ class BiblePageController extends GetxController {
   double fontHeight = 1.55;
   double fontLetterSeparation = 0.0;
   String fontFamily = "Crimson Text";
+  bool isJustified = false;
 
   @override
   void onInit() {
@@ -67,6 +68,7 @@ class BiblePageController extends GetxController {
     fontHeight = getStorage.read("fontHeight") ?? 1.55;
     fontLetterSeparation = getStorage.read("fontLetterSeparation") ?? 0;
     fontFamily = getStorage.read("fontFamily") ?? "Crimson Text";
+    isJustified = getStorage.read("isJustified") ?? false;
 
     await updateVerseList();
     isScreenReady = true;
@@ -147,7 +149,8 @@ class BiblePageController extends GetxController {
           fontHeight: fontHeight,
           fontLetterSeparation: fontLetterSeparation,
           highlight: highlightVerses.containsKey(index + 1) ? true : false,
-          colorHighlight: highlightVerses.containsKey(index + 1) ? Color(highlightVerses[index + 1]!.color) : Colors.transparent
+          colorHighlight: highlightVerses.containsKey(index + 1) ? Color(highlightVerses[index + 1]!.color) : Colors.transparent,
+          isJustified: isJustified,
         )
       );
     }
@@ -384,6 +387,7 @@ class BiblePageController extends GetxController {
                       fontLetterSeparation: fontLetterSeparation,
                       fontFamily: fontFamily,
                       isFirstVerseShowed: true, 
+                      isJustified: isJustified,
                       
                       onFootnoteTap: (String footnote) {
                         // this.onFootnoteTap(book: book, chapter: chapter, verse: i, footnote: footnote, context: context);
@@ -669,9 +673,8 @@ class BiblePageController extends GetxController {
                 // 1. Buscamos el controlador de preferencias con GetX
                 final readPreferencesController = Get.find<ReadPreferencesController>();
 
-                // 2. Evaluamos la condición (asumo que la parte cortada de tu imagen era 'presbyopia')
-                bool isVisualImpaired = readPreferencesController.activeTypographyPreset == 'visual_impairment' || 
-                                        readPreferencesController.activeTypographyPreset == 'presbyopia';
+                // 2. Evaluamos la condición
+                bool isVisualImpaired = readPreferencesController.isVisualImpaired;
 
                 // 3. Asignamos el título dinámicamente
                 previewTitle = isVisualImpaired

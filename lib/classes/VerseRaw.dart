@@ -17,6 +17,7 @@ class VerseRaw {
 
   bool? highlight;
   bool? selected;
+  bool? isJustified;
 
   VerseRaw({
     required this.verseNumber,
@@ -30,6 +31,7 @@ class VerseRaw {
     required this.colorNumber,
     required this.colorHighlight,
     required this.highlight,
-    required this.selected
+    required this.selected,
+    this.isJustified = false,
   });
 }

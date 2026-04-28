@@ -3,24 +3,43 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:yhwh/classes/AppTheme.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class ReadPreferencesController extends GetxController {
   BiblePageController _biblePageController = Get.find();
   GetStorage getStorage = GetStorage();
 
-  String activeTypographyPreset = 'normal';
   String currentThemeName = 'Blanco';
-  String currentFontFamily = 'Crimson Text';
+  String currentFontFamily = 'Roboto';
   bool enableAcrylicEffect = false;
+  
+  double currentFontSize = 22.0;
+  bool isJustified = false;
+  bool keepScreenOn = false;
+
+  bool get isVisualImpaired => currentFontSize >= 28.0;
 
   @override
   void onInit() {
     super.onInit();
     // Cargamos los valores guardados o usamos los "normales" por defecto
-    activeTypographyPreset = getStorage.read('typographyPreset') ?? 'normal';
     currentThemeName = getStorage.read('currentTheme') ?? 'Blanco'; 
-    currentFontFamily = getStorage.read('fontFamily') ?? 'Crimson Text';
+    currentFontFamily = getStorage.read('fontFamily') ?? 'Roboto';
     enableAcrylicEffect = getStorage.read('enableAcrylicEffect') ?? false;
+    
+    currentFontSize = getStorage.read('fontSize') ?? 22.0;
+    isJustified = getStorage.read('isJustified') ?? false;
+    keepScreenOn = getStorage.read('keepScreenOn') ?? false;
+
+    _applyWakelock();
+  }
+
+  void _applyWakelock() {
+    if (keepScreenOn) {
+      WakelockPlus.enable();
+    } else {
+      WakelockPlus.disable();
+    }
   }
 
   void toggleAcrylicEffect(bool value) {
@@ -36,77 +55,68 @@ class ReadPreferencesController extends GetxController {
     update();
   }
 
-  void setTypographyPreset(String preset) {
-    activeTypographyPreset = preset;
-    getStorage.write('typographyPreset', preset);
+  void setFontSize(double size) {
+    currentFontSize = size;
+    getStorage.write('fontSize', size);
 
-    double newFontSize;
-    double newFontHeight;
-    double newLetterSeparation;
-    // Empezamos asumiendo que conservaremos la fuente que el usuario ya tiene seleccionada
-    String newFontFamily = currentFontFamily; 
+    // Ajustamos la altura y separación dinámicamente
+    double newFontHeight = 1.55;
+    double newLetterSeparation = 0.0;
 
-    switch (preset) {
-      case 'small':
-        newFontSize = 18.0;
-        newFontHeight = 1.6;
-        newLetterSeparation = 0.2;
-        break;
-      case 'normal':
-        newFontSize = 22.0;
-        newFontHeight = 1.55;
-        newLetterSeparation = 0.0;
-        break;
-      case 'large':
-        newFontSize = 26.0;
-        newFontHeight = 1.45;
-        newLetterSeparation = 0.0;
-        break;
-      case 'presbyopia':
-        newFontSize = 30.0;
-        newFontHeight = 1.4; 
-        newLetterSeparation = 0.5;
-        break;
-      case 'visual_impairment':
-        newFontSize = 38.0;
-        newFontHeight = 1.6;
-        newLetterSeparation = 1.0;
-        break;
-      default:
-        newFontSize = 22.0;
-        newFontHeight = 1.55;
-        newLetterSeparation = 0.0;
+    if (size >= 38.0) {
+      newFontHeight = 1.6;
+      newLetterSeparation = 1.0;
+    } else if (size >= 30.0) {
+      newFontHeight = 1.4; 
+      newLetterSeparation = 0.5;
+    } else if (size <= 18.0) {
+      newFontHeight = 1.6;
+      newLetterSeparation = 0.2;
     }
 
-    // Si un preset de accesibilidad cambió la fuente, actualizamos la variable global
-    if (currentFontFamily != newFontFamily) {
-      currentFontFamily = newFontFamily;
-      getStorage.write('fontFamily', newFontFamily);
-    }
+    getStorage.write('fontHeight', newFontHeight);
+    getStorage.write('fontLetterSeparation', newLetterSeparation);
 
-    _biblePageController.fontSize = newFontSize;
+    _biblePageController.fontSize = currentFontSize;
     _biblePageController.fontHeight = newFontHeight;
     _biblePageController.fontLetterSeparation = newLetterSeparation;
-    _biblePageController.fontFamily = currentFontFamily;
 
     for (var verseRaw in _biblePageController.versesRawList) {
-      verseRaw.fontSize = newFontSize;
+      verseRaw.fontSize = currentFontSize;
       verseRaw.fontHeight = newFontHeight;
       verseRaw.fontLetterSeparation = newLetterSeparation;
-      verseRaw.fontFamily = currentFontFamily;
     }
 
-    getStorage.write("fontSize", newFontSize);
-    getStorage.write("fontHeight", newFontHeight);
-    getStorage.write("fontLetterSeparation", newLetterSeparation);
+    _biblePageController.update();
+    update();
+  }
+
+  void setJustified(bool value) {
+    isJustified = value;
+    getStorage.write('isJustified', value);
+
+    _biblePageController.isJustified = value;
+
+    for (var verseRaw in _biblePageController.versesRawList) {
+      verseRaw.isJustified = value;
+    }
 
     _biblePageController.update();
-    update(); 
+    update();
+  }
+
+  void setKeepScreenOn(bool value) {
+    keepScreenOn = value;
+    getStorage.write('keepScreenOn', value);
+    _applyWakelock();
+    update();
   }
 
   void setFontFamily(String font) {
     currentFontFamily = font;
     getStorage.write('fontFamily', font);
+
+    Get.changeTheme(AppTheme.getTheme(currentThemeName));
 
     _biblePageController.fontFamily = font;
 
@@ -116,5 +126,14 @@ class ReadPreferencesController extends GetxController {
 
     _biblePageController.update();
     update();
+  }
+
+  void resetToDefaults() {
+    setTheme('Blanco');
+    setFontFamily('Roboto');
+    setFontSize(22.0);
+    setJustified(false);
+    toggleAcrylicEffect(false);
+    setKeepScreenOn(false);
   }
 }

@@ -40,6 +40,7 @@ class FloatingBibleController extends GetxController {
   double fontHeight = 1.8;
   double fontLetterSeparation = 0.0;
   String fontFamily = "Nunito";
+  bool isJustified = false;
 
   @override
   void onInit() {
@@ -60,6 +61,8 @@ class FloatingBibleController extends GetxController {
     fontSize = getStorage.read("fontSize") ?? 20.0;
     fontHeight = getStorage.read("fontHeight") ?? 1.8;
     fontLetterSeparation = getStorage.read("fontLetterSeparation") ?? 0;
+    fontFamily = getStorage.read("fontFamily") ?? "Nunito";
+    isJustified = getStorage.read("isJustified") ?? false;
 
     if(chapterNumber == 0) chapterNumber = 1;
     if(verseNumber == 0) verseNumber = 1;
@@ -143,7 +146,8 @@ class FloatingBibleController extends GetxController {
             fontHeight: fontHeight,
             fontLetterSeparation: fontLetterSeparation,
             highlight: highlightVerses.containsKey(index + 1) ? true : false,
-            colorHighlight: highlightVerses.containsKey(index + 1) ? Color(highlightVerses[index + 1]!.color) : Colors.transparent
+            colorHighlight: highlightVerses.containsKey(index + 1) ? Color(highlightVerses[index + 1]!.color) : Colors.transparent,
+            isJustified: isJustified,
           )
         );
       // }

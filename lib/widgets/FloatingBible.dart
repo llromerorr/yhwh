@@ -291,6 +291,7 @@ class FloatingBible extends StatelessWidget {
                                       fontHeight: floatingBibleController.fontHeight,
                                       fontLetterSeparation: floatingBibleController.fontLetterSeparation,
                                       fontFamily: floatingBibleController.fontFamily,
+                                      isJustified: floatingBibleController.isJustified,
                                       isFirstVerseShowed: (index == 0) ? true : false,
                                       onReferenceTap: (int book, int chapter, int verse_from, int verse_to){
                                         floatingBibleController.setReference(book, chapter, verse_from, verse_to);

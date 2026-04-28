@@ -292,7 +292,7 @@ class BiblePage extends StatelessWidget {
                                                 overflow: TextOverflow.ellipsis,
                                                 maxLines: 1,
                                                 text: TextSpan(
-                                                  text: (readPreferencesController.activeTypographyPreset == 'visual_impairment' || readPreferencesController.activeTypographyPreset == 'presbyopia')
+                                                  text: (readPreferencesController.isVisualImpaired)
                                                   ? '${intToAbreviatura[biblePageController.bookNumber]} ${biblePageController.chapterNumber}'
                                                   : '${intToBook[biblePageController.bookNumber]} ${biblePageController.chapterNumber}',
                                                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(
@@ -378,8 +378,8 @@ class BiblePage extends StatelessWidget {
                                     fontHeight: biblePageController.fontHeight,
                                     fontLetterSeparation: biblePageController.fontLetterSeparation,
                                     fontFamily: biblePageController.fontFamily,
-                                    isFirstVerseShowed: (index == 0) ? true : false,
-                    
+                                    isJustified: biblePageController.isJustified,
+                                    isFirstVerseShowed: (index == 0) ? true : false,                    
                                     onTap: ( ) {
                                       biblePageController.onVerseTap(index + 1);
                                     },
