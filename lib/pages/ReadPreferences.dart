@@ -35,18 +35,18 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Tokens de diseño vanguardista (100% armonizados en Claro, Oscuro y OLED):
-          final acrylicAlpha = isDark ? 0.30 : 0.82;
+          // Tokens de diseño vanguardista (100% nítidos y calibrados en Modo Claro y Oscuro):
+          final acrylicAlpha = isDark ? 0.30 : 0.85;
           final neutralBg = isDark
               ? indicatorColor.withValues(alpha: 0.12)
-              : Colors.white.withValues(alpha: 0.95);
+              : const Color(0xffF1F2F6); // Cerámica suave con contraste real sobre el panel blanco
           final activeBg = isDark ? indicatorColor : const Color(0xff18181B);
           final borderColor = isDark
               ? indicatorColor.withValues(alpha: 0.16)
-              : Colors.black.withValues(alpha: 0.08);
+              : Colors.black.withValues(alpha: 0.14); // Borde nítido y bien definido
           final topBorderColor = isDark
               ? indicatorColor.withValues(alpha: 0.50)
-              : Colors.white.withValues(alpha: 0.85);
+              : indicatorColor.withValues(alpha: 0.22); // Borde superior visible que enmarca el panel
           final inactiveIconColor = isDark
               ? indicatorColor.withValues(alpha: 0.70)
               : const Color(0xff27272A);
