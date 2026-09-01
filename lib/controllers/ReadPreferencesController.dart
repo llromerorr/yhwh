@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -19,10 +20,14 @@ class ReadPreferencesController extends GetxController {
 
   bool get isVisualImpaired => currentFontSize >= 28.0;
 
+  // Sistema de notificación HUD estilo cápsula iOS / Dynamic Island
+  String? toastMessage;
+  IconData? toastIcon;
+  Timer? _toastTimer;
+
   @override
   void onInit() {
     super.onInit();
-    // Cargamos los valores guardados o usamos los "normales" por defecto
     currentThemeName = getStorage.read('currentTheme') ?? 'Blanco'; 
     currentFontFamily = getStorage.read('fontFamily') ?? 'Roboto';
     enableAcrylicEffect = getStorage.read('enableAcrylicEffect') ?? false;
@@ -40,6 +45,19 @@ class ReadPreferencesController extends GetxController {
     } else {
       WakelockPlus.disable();
     }
+  }
+
+  void showToast(String message, IconData icon) {
+    _toastTimer?.cancel();
+    toastMessage = message;
+    toastIcon = icon;
+    update();
+
+    _toastTimer = Timer(const Duration(milliseconds: 1800), () {
+      toastMessage = null;
+      toastIcon = null;
+      update();
+    });
   }
 
   void toggleAcrylicEffect(bool value) {
@@ -128,6 +146,62 @@ class ReadPreferencesController extends GetxController {
     update();
   }
 
+  void cycleTheme() {
+    const themeList = ['Blanco', 'Negro', 'OLED'];
+    int currentIndex = themeList.indexOf(currentThemeName);
+    if (currentIndex == -1) currentIndex = 0;
+    int nextIndex = (currentIndex + 1) % themeList.length;
+    String nextTheme = themeList[nextIndex];
+    setTheme(nextTheme);
+
+    switch (nextTheme) {
+      case 'Blanco':
+        showToast("Tema Claro", Icons.wb_sunny_rounded);
+        break;
+      case 'Negro':
+        showToast("Tema Oscuro", Icons.wb_twilight_rounded);
+        break;
+      case 'OLED':
+      default:
+        showToast("Tema Negro OLED", Icons.dark_mode_rounded);
+        break;
+    }
+  }
+
+  void cycleFontFamily() {
+    const fontList = ['Roboto', 'Lato', 'Crimson Text', 'Atkinson Hyperlegible'];
+    int currentIndex = fontList.indexOf(currentFontFamily);
+    if (currentIndex == -1) currentIndex = 0;
+    int nextIndex = (currentIndex + 1) % fontList.length;
+    String nextFont = fontList[nextIndex];
+    setFontFamily(nextFont);
+    showToast("Fuente: $nextFont", Icons.text_fields_rounded);
+  }
+
+  void toggleJustified() {
+    setJustified(!isJustified);
+    showToast(
+      isJustified ? "Texto justificado" : "Texto a la izquierda",
+      isJustified ? Icons.format_align_justify_rounded : Icons.format_align_left_rounded,
+    );
+  }
+
+  void toggleKeepScreenOn() {
+    setKeepScreenOn(!keepScreenOn);
+    showToast(
+      keepScreenOn ? "Pantalla siempre activa" : "Pantalla: apagado automático",
+      Icons.smartphone_rounded,
+    );
+  }
+
+  void toggleAcrylic() {
+    toggleAcrylicEffect(!enableAcrylicEffect);
+    showToast(
+      enableAcrylicEffect ? "Efecto cristal activado" : "Efecto cristal desactivado",
+      enableAcrylicEffect ? Icons.blur_on_rounded : Icons.blur_off_rounded,
+    );
+  }
+
   void resetToDefaults() {
     setTheme('Blanco');
     setFontFamily('Roboto');
@@ -135,5 +209,6 @@ class ReadPreferencesController extends GetxController {
     setJustified(false);
     toggleAcrylicEffect(false);
     setKeepScreenOn(false);
+    showToast("Ajustes restablecidos", Icons.restart_alt_rounded);
   }
 }

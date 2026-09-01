@@ -1,278 +1,386 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
-import 'package:yhwh/data/Themes.dart';
 
-class ReadPreferences extends StatelessWidget {
-  const ReadPreferences({Key? key}) : super(key: key);
+/// Centro de Control de Lectura Flotante (Estilo iOS / Android Control Center con Efecto Acrílico idéntico al AppBar)
+class ReadPreferencesControlCenter extends StatelessWidget {
+  const ReadPreferencesControlCenter({Key? key}) : super(key: key);
 
-  final List<String> availableFonts = const [
-    'Roboto',
-    'Lato',
-    'Crimson Text',
-    'Atkinson Hyperlegible'
-  ];
+  /// Abre el Centro de Control directamente sobre la lectura
+  static Future<void> show(BuildContext context) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      enableDrag: true,
+      isDismissible: true,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
+      builder: (context) => const ReadPreferencesControlCenter(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).canvasColor,
-      appBar: AppBar(
-        title: Text("Preferencias visuales", style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-          fontSize: 21,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).indicatorColor
-        )),
-        backgroundColor: Theme.of(context).canvasColor,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        foregroundColor: Theme.of(context).indicatorColor,
-      ),
-      body: GetBuilder<BiblePageController>(
-        init: BiblePageController(),
-        builder: (biblePageController) => GetBuilder<ReadPreferencesController>(
-          init: ReadPreferencesController(),
-          builder: (controller) => Column(
-            children: [
-              // PREVISUALIZACIÓN FIJA ARRIBA
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24.0),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).canvasColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).indicatorColor.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    )
-                  ],
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).indicatorColor.withValues(alpha: 0.1),
-                      width: 1,
-                    )
-                  )
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.",
-                      textAlign: controller.isJustified ? TextAlign.justify : TextAlign.start,
-                      style: TextStyle(
-                        fontFamily: controller.currentFontFamily,
-                        fontSize: controller.currentFontSize,
-                        height: biblePageController.fontHeight,
-                        letterSpacing: biblePageController.fontLetterSeparation,
-                        color: Theme.of(context).indicatorColor,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        "Juan 3:16",
-                        style: TextStyle(
-                          fontFamily: controller.currentFontFamily,
-                          fontSize: controller.currentFontSize * 0.7,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).indicatorColor.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ),
-                  ],
+    return GetBuilder<BiblePageController>(
+      init: BiblePageController(),
+      builder: (biblePageController) => GetBuilder<ReadPreferencesController>(
+        init: ReadPreferencesController(),
+        builder: (controller) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final indicatorColor = Theme.of(context).indicatorColor;
+          final canvasColor = Theme.of(context).canvasColor;
+
+          // Tokens de diseño coherentes y armónicos con el tema activo
+          final neutralBg = indicatorColor.withValues(alpha: isDark ? 0.12 : 0.08);
+          final activeBg = indicatorColor;
+          final borderColor = indicatorColor.withValues(alpha: 0.12);
+          final inactiveIconColor = indicatorColor.withValues(alpha: 0.60);
+          final activeIconColor = canvasColor;
+
+          // CONTENIDO INTERNO DEL PANEL
+          Widget panelContent = Container(
+            constraints: const BoxConstraints(maxWidth: 480),
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
+            decoration: BoxDecoration(
+              color: controller.enableAcrylicEffect
+                  ? canvasColor.withValues(alpha: 0.30)
+                  : canvasColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              border: Border(
+                top: BorderSide(
+                  color: indicatorColor.withValues(alpha: 0.5),
+                  width: 1.5,
                 ),
               ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Tirador de arrastre superior (Drag Handle)
+                  Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 18),
+                    decoration: BoxDecoration(
+                      color: indicatorColor.withValues(alpha: 0.30),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
 
-              // CONTENIDO SCROLLABLE
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // BLOQUE 1: CONTROLES DE APARIENCIA Y FORMATO (Altura emparejada: 140px)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // SECCIÓN TIPOGRAFÍA
-                      _buildSectionTitle(context, "Tipografía y Formato"),
-                      const SizedBox(height: 16),
-                      
-                      // Slider de tamaño
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
+                      // Cápsula vertical deslizante para el tamaño de letra (Estilo Brillo iOS)
+                      Expanded(
+                        flex: 5,
+                        child: _FontSizeCapsuleSlider(
+                          controller: controller,
+                          moduleBg: neutralBg,
+                          indicatorColor: indicatorColor,
+                          canvasColor: canvasColor,
+                        ),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      // Columna derecha: Selectores y Alineación (64px + 12px + 64px = 140px)
+                      Expanded(
+                        flex: 7,
+                        child: Column(
                           children: [
-                            Icon(Icons.text_fields, size: 18, color: Theme.of(context).indicatorColor.withValues(alpha: 0.5)),
-                            Expanded(
-                              child: Slider(
-                                value: controller.currentFontSize,
-                                min: 14.0,
-                                max: 45.0,
-                                activeColor: Theme.of(context).indicatorColor,
-                                inactiveColor: Theme.of(context).indicatorColor.withValues(alpha: 0.2),
-                                onChanged: (value) => controller.setFontSize(value),
+                            // FILA 1: Tema (☀️/🌙/🌑) y Tipografía (A)
+                            Row(
+                              children: [
+                                // Botón 1: Tema visual cíclico con morphing animado
+                                Expanded(
+                                  child: _BouncyControlModule(
+                                    height: 64,
+                                    onTap: controller.cycleTheme,
+                                    backgroundColor: neutralBg,
+                                    borderColor: borderColor,
+                                    child: AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 250),
+                                      transitionBuilder: (child, anim) => ScaleTransition(
+                                        scale: anim,
+                                        child: RotationTransition(
+                                          turns: Tween<double>(begin: 0.85, end: 1.0).animate(anim),
+                                          child: child,
+                                        ),
+                                      ),
+                                      child: _buildThemeIcon(
+                                        controller.currentThemeName,
+                                        indicatorColor,
+                                        key: ValueKey(controller.currentThemeName),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+
+                                // Botón 2: Tipografía cíclica con morphing animado de la letra 'A'
+                                Expanded(
+                                  child: _BouncyControlModule(
+                                    height: 64,
+                                    onTap: controller.cycleFontFamily,
+                                    backgroundColor: neutralBg,
+                                    borderColor: borderColor,
+                                    child: AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 250),
+                                      transitionBuilder: (child, anim) => ScaleTransition(
+                                        scale: anim,
+                                        child: FadeTransition(opacity: anim, child: child),
+                                      ),
+                                      child: Text(
+                                        "A",
+                                        key: ValueKey(controller.currentFontFamily),
+                                        style: TextStyle(
+                                          fontFamily: controller.currentFontFamily,
+                                          fontSize: 30,
+                                          fontWeight: FontWeight.bold,
+                                          color: indicatorColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // FILA 2: Segmento de Alineación (Izquierda | Justificado)
+                            Container(
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: neutralBg,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: borderColor, width: 1.2),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Alineación Izquierda
+                                  Expanded(
+                                    child: _BouncyControlModule(
+                                      height: 56,
+                                      margin: const EdgeInsets.all(4),
+                                      onTap: () {
+                                        if (controller.isJustified) {
+                                          controller.setJustified(false);
+                                        }
+                                      },
+                                      backgroundColor: !controller.isJustified ? activeBg : Colors.transparent,
+                                      borderColor: Colors.transparent,
+                                      child: Icon(
+                                        Icons.format_align_left_rounded,
+                                        size: 24,
+                                        color: !controller.isJustified ? activeIconColor : inactiveIconColor,
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Alineación Justificada
+                                  Expanded(
+                                    child: _BouncyControlModule(
+                                      height: 56,
+                                      margin: const EdgeInsets.all(4),
+                                      onTap: () {
+                                        if (!controller.isJustified) {
+                                          controller.setJustified(true);
+                                        }
+                                      },
+                                      backgroundColor: controller.isJustified ? activeBg : Colors.transparent,
+                                      borderColor: Colors.transparent,
+                                      child: Icon(
+                                        Icons.format_align_justify_rounded,
+                                        size: 24,
+                                        color: controller.isJustified ? activeIconColor : inactiveIconColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            Icon(Icons.text_fields, size: 28, color: Theme.of(context).indicatorColor),
                           ],
                         ),
                       ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Chips de Fuentes
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
-                          children: availableFonts.map((font) {
-                            bool isSelected = controller.currentFontFamily == font;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: ChoiceChip(
-                                label: Text(font, style: TextStyle(fontFamily: font, fontSize: 16, color: isSelected ? Theme.of(context).canvasColor : Theme.of(context).indicatorColor)),
-                                selected: isSelected,
-                                selectedColor: Theme.of(context).indicatorColor,
-                                backgroundColor: Theme.of(context).indicatorColor.withValues(alpha: 0.05),
-                                onSelected: (bool selected) {
-                                  if (selected) controller.setFontFamily(font);
-                                },
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 24),
-
-                      // Alineación
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).indicatorColor.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: InkWell(
-                                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
-                                  onTap: () => controller.setJustified(false),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: !controller.isJustified ? Theme.of(context).indicatorColor.withValues(alpha: 0.1) : Colors.transparent,
-                                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
-                                    ),
-                                    child: Icon(Icons.format_align_left, color: Theme.of(context).indicatorColor),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: InkWell(
-                                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
-                                  onTap: () => controller.setJustified(true),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: controller.isJustified ? Theme.of(context).indicatorColor.withValues(alpha: 0.1) : Colors.transparent,
-                                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
-                                    ),
-                                    child: Icon(Icons.format_align_justify, color: Theme.of(context).indicatorColor),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // SECCIÓN TEMAS
-                      _buildSectionTitle(context, "Tema Visual"),
-                      const SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
-                          children: themes.keys.map((themeKey) {
-                            String displayName = themeKey;
-                            IconData icon = FontAwesomeIcons.sun;
-
-                            if (themeKey == 'Blanco') { displayName = 'Claro'; icon = FontAwesomeIcons.sun; }
-                            if (themeKey == 'Negro') { displayName = 'Oscuro'; icon = FontAwesomeIcons.moon; }
-                            if (themeKey == 'OLED') { displayName = 'Negro'; icon = FontAwesomeIcons.solidMoon; }
-
-                            return Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.only(right: themeKey == 'OLED' ? 0 : 8.0),
-                                child: _buildThemeSimpleButton(context, controller, themeKey, displayName, icon),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // SECCIÓN AVANZADO
-                      _buildSectionTitle(context, "Ajustes Avanzados"),
-                      const SizedBox(height: 12),
-                      
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: Theme.of(context).indicatorColor.withValues(alpha: 0.05),
-                            border: Border.all(
-                              color: Theme.of(context).indicatorColor.withValues(alpha: 0.1),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              _buildSwitchTile(
-                                context: context,
-                                title: "Efecto cristal (Acrílico)",
-                                subtitle: "Transparencias en menús. Apágalo si hay lentitud.",
-                                value: controller.enableAcrylicEffect,
-                                onChanged: controller.toggleAcrylicEffect,
-                              ),
-                              Divider(height: 1, color: Theme.of(context).indicatorColor.withValues(alpha: 0.1)),
-                              _buildSwitchTile(
-                                context: context,
-                                title: "Mantener pantalla encendida",
-                                subtitle: "Evita que la pantalla se apague mientras lees.",
-                                value: controller.keepScreenOn,
-                                onChanged: controller.setKeepScreenOn,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 48),
-
-                      // BOTÓN RESET
-                      Center(
-                        child: TextButton.icon(
-                          onPressed: () {
-                            controller.resetToDefaults();
-                          },
-                          icon: Icon(Icons.restore, color: Theme.of(context).indicatorColor.withValues(alpha: 0.6)),
-                          label: Text("Restablecer ajustes", style: TextStyle(color: Theme.of(context).indicatorColor.withValues(alpha: 0.6))),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          ),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 40),
                     ],
                   ),
+
+                  const SizedBox(height: 12),
+
+                  // BLOQUE 2: TOGGLES DE ACTIVACIÓN AGRUPADOS + RESET
+                  Row(
+                    children: [
+                      // TOGGLE 1: Pantalla Siempre Activa (Ícono de teléfono despierto)
+                      Expanded(
+                        child: _BouncyControlModule(
+                          height: 56,
+                          onTap: controller.toggleKeepScreenOn,
+                          backgroundColor: controller.keepScreenOn ? activeBg : neutralBg,
+                          borderColor: controller.keepScreenOn ? activeBg : borderColor,
+                          child: AnimatedScale(
+                            scale: controller.keepScreenOn ? 1.08 : 1.0,
+                            duration: const Duration(milliseconds: 180),
+                            child: Icon(
+                              Icons.smartphone_rounded,
+                              size: 26,
+                              color: controller.keepScreenOn ? activeIconColor : inactiveIconColor,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      // TOGGLE 2: Efecto Cristal / Acrílico (Ícono de desenfoque / blur)
+                      Expanded(
+                        child: _BouncyControlModule(
+                          height: 56,
+                          onTap: controller.toggleAcrylic,
+                          backgroundColor: controller.enableAcrylicEffect ? activeBg : neutralBg,
+                          borderColor: controller.enableAcrylicEffect ? activeBg : borderColor,
+                          child: AnimatedScale(
+                            scale: controller.enableAcrylicEffect ? 1.08 : 1.0,
+                            duration: const Duration(milliseconds: 180),
+                            child: Icon(
+                              controller.enableAcrylicEffect
+                                  ? Icons.blur_on_rounded
+                                  : Icons.blur_off_rounded,
+                              size: 26,
+                              color: controller.enableAcrylicEffect ? activeIconColor : inactiveIconColor,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      // BOTÓN 3: Restablecer valores iniciales
+                      Expanded(
+                        child: _BouncyControlModule(
+                          height: 56,
+                          onTap: controller.resetToDefaults,
+                          backgroundColor: neutralBg,
+                          borderColor: borderColor,
+                          child: Icon(
+                            Icons.restart_alt_rounded,
+                            size: 26,
+                            color: inactiveIconColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+
+          // EFECTO ACRÍLICO NATIVO (BackdropFilter estilo AppBar)
+          Widget finalPanel = ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            child: controller.enableAcrylicEffect
+                ? BackdropFilter(
+                    filter: ImageFilter.blur(
+                      sigmaX: 35,
+                      sigmaY: 35,
+                      tileMode: TileMode.mirror,
+                    ),
+                    child: panelContent,
+                  )
+                : panelContent,
+          );
+
+          // ESTRUCTURA CON AVISO FLOTANDO POR ENCIMA DEL PANEL (Control Center)
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // AVISO HUD FLOTANTE (Flota sobre la lectura de fondo sin empujar el panel)
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOutBack,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 0.85, end: 1.0).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: controller.toastMessage != null
+                    ? Container(
+                        key: ValueKey(controller.toastMessage),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(300.0),
+                          child: controller.enableAcrylicEffect
+                              ? BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
+                                  child: _buildToastCard(context, controller, indicatorColor, isDark),
+                                )
+                              : _buildToastCard(context, controller, indicatorColor, isDark),
+                        ),
+                      )
+                    : const SizedBox(height: 0),
+              ),
+
+              // EL PANEL DEL CENTRO DE CONTROL
+              finalPanel,
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildToastCard(BuildContext context, ReadPreferencesController controller, Color indicatorColor, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      decoration: BoxDecoration(
+        color: controller.enableAcrylicEffect
+            ? Theme.of(context).canvasColor.withValues(alpha: 0.2)
+            : Theme.of(context).canvasColor,
+        borderRadius: BorderRadius.circular(300.0),
+        border: Border.all(
+          color: indicatorColor.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
+      ),
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.noScaling,
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (controller.toastIcon != null) ...[
+                Icon(
+                  controller.toastIcon,
+                  size: 16,
+                  color: indicatorColor,
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                controller.toastMessage!,
+                maxLines: 1,
+                style: TextStyle(
+                  color: indicatorColor,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.2,
                 ),
               ),
             ],
@@ -282,108 +390,211 @@ class ReadPreferences extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).indicatorColor.withValues(alpha: 0.7),
-          fontSize: 14,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
+  Widget _buildThemeIcon(String themeName, Color indicatorColor, {Key? key}) {
+    switch (themeName) {
+      case 'Blanco':
+        return Icon(
+          Icons.wb_sunny_rounded,
+          key: key,
+          size: 28,
+          color: indicatorColor,
+        );
+      case 'Negro':
+        return Icon(
+          Icons.wb_twilight_rounded,
+          key: key,
+          size: 28,
+          color: indicatorColor,
+        );
+      case 'OLED':
+      default:
+        return Icon(
+          Icons.dark_mode_rounded,
+          key: key,
+          size: 26,
+          color: indicatorColor,
+        );
+    }
+  }
+}
+
+/// Cápsula Vertical Táctil para el Tamaño de Letra (Estilo Brillo iOS con 1 solo icono)
+class _FontSizeCapsuleSlider extends StatefulWidget {
+  final ReadPreferencesController controller;
+  final Color moduleBg;
+  final Color indicatorColor;
+  final Color canvasColor;
+
+  const _FontSizeCapsuleSlider({
+    Key? key,
+    required this.controller,
+    required this.moduleBg,
+    required this.indicatorColor,
+    required this.canvasColor,
+  }) : super(key: key);
+
+  @override
+  State<_FontSizeCapsuleSlider> createState() => _FontSizeCapsuleSliderState();
+}
+
+class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
+  static const double minFont = 14.0;
+  static const double maxFont = 45.0;
+  static const double sliderHeight = 140.0;
+  bool _isPressed = false;
+
+  void _updateFontSizeFromY(double localY, double height) {
+    double percent = (1.0 - (localY / height)).clamp(0.0, 1.0);
+    double newSize = minFont + percent * (maxFont - minFont);
+    widget.controller.setFontSize(newSize);
+    widget.controller.showToast("${newSize.round()} pt", Icons.format_size_rounded);
   }
 
-  Widget _buildSwitchTile({
-    required BuildContext context,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required Function(bool) onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  @override
+  Widget build(BuildContext context) {
+    double fillPercent = ((widget.controller.currentFontSize - minFont) / (maxFont - minFont)).clamp(0.0, 1.0);
+
+    return GestureDetector(
+      onVerticalDragStart: (_) => setState(() => _isPressed = true),
+      onVerticalDragUpdate: (details) {
+        _updateFontSizeFromY(details.localPosition.dy, sliderHeight);
+      },
+      onVerticalDragEnd: (_) => setState(() => _isPressed = false),
+      onVerticalDragCancel: () => setState(() => _isPressed = false),
+      onTapDown: (details) {
+        setState(() => _isPressed = true);
+        HapticFeedback.selectionClick();
+        _updateFontSizeFromY(details.localPosition.dy, sliderHeight);
+      },
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutBack,
+        child: Container(
+          height: sliderHeight,
+          decoration: BoxDecoration(
+            color: widget.moduleBg,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: widget.indicatorColor.withValues(alpha: 0.12),
+              width: 1.2,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Stack(
+              alignment: Alignment.bottomCenter,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Theme.of(context).indicatorColor,
+                // Relleno dinámico de abajo hacia arriba
+                FractionallySizedBox(
+                  heightFactor: fillPercent,
+                  widthFactor: 1.0,
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    color: widget.indicatorColor,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).indicatorColor.withValues(alpha: 0.7),
-                    height: 1.3,
+
+                // UN SOLO Ícono en la parte inferior (estilo iOS Control Center)
+                Positioned(
+                  bottom: 18,
+                  child: Icon(
+                    Icons.format_size_rounded,
+                    size: 28,
+                    color: fillPercent > 0.35
+                        ? widget.canvasColor
+                        : widget.indicatorColor.withValues(alpha: 0.70),
                   ),
                 ),
               ],
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: Theme.of(context).canvasColor,
-            activeTrackColor: Theme.of(context).indicatorColor,
-            inactiveThumbColor: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
-            inactiveTrackColor: Theme.of(context).indicatorColor.withValues(alpha: 0.1),
-          ),
-        ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildThemeSimpleButton(BuildContext context, ReadPreferencesController controller, String themeKey, String displayName, IconData icon) {
-    bool isActive = controller.currentThemeName == themeKey;
-    
-    return InkWell(
-      onTap: () => controller.setTheme(themeKey),
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: isActive 
-              ? Theme.of(context).indicatorColor.withValues(alpha: 0.1)
-              : Colors.transparent,
-          border: Border.all(
-            color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.2),
-            width: 1.5,
+/// Módulo Táctil con Animación de Rebote Elástico (Spring Physics)
+class _BouncyControlModule extends StatefulWidget {
+  final VoidCallback onTap;
+  final Widget child;
+  final Color backgroundColor;
+  final Color borderColor;
+  final double height;
+  final EdgeInsetsGeometry? margin;
+
+  const _BouncyControlModule({
+    Key? key,
+    required this.onTap,
+    required this.child,
+    required this.backgroundColor,
+    required this.borderColor,
+    this.height = 64.0,
+    this.margin,
+  }) : super(key: key);
+
+  @override
+  State<_BouncyControlModule> createState() => _BouncyControlModuleState();
+}
+
+class _BouncyControlModuleState extends State<_BouncyControlModule> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() => _isPressed = true);
+        HapticFeedback.lightImpact();
+      },
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutBack,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeInOut,
+          height: widget.height,
+          margin: widget.margin,
+          decoration: BoxDecoration(
+            color: widget.backgroundColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: widget.borderColor,
+              width: 1.2,
+            ),
           ),
+          child: Center(child: widget.child),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon, 
-              color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.6),
-              size: 20,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              displayName,
-              style: TextStyle(
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: isActive ? Theme.of(context).indicatorColor : Theme.of(context).indicatorColor.withValues(alpha: 0.6),
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
+      ),
+    );
+  }
+}
+
+/// Envoltorio de compatibilidad para navegación directa
+class ReadPreferences extends StatelessWidget {
+  const ReadPreferences({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).canvasColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        foregroundColor: Theme.of(context).indicatorColor,
+      ),
+      body: const Center(
+        child: ReadPreferencesControlCenter(),
       ),
     );
   }

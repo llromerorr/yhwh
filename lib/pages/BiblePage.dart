@@ -321,7 +321,8 @@ class BiblePage extends StatelessWidget {
                                   IconButton(
                                     tooltip: 'Ajustes visuales',
                                     onPressed: (){
-                                      Get.to(()=> ReadPreferences());
+                                      biblePageController.cancelSelectionModeOnTap();
+                                      ReadPreferencesControlCenter.show(context);
                                     },
                                     icon: Icon(Icons.text_fields_rounded, color: Theme.of(context).indicatorColor),
                                     iconSize: 26,
