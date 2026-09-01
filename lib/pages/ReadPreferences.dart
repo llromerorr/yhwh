@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 
-/// Centro de Control de Lectura Flotante (Estilo iOS / Android Control Center con Efecto Acrílico idéntico al AppBar)
+/// Centro de Control de Lectura Flotante (Diseño Vanguardista Apple Glassmorphism & Cerámica Neumórfica)
 class ReadPreferencesControlCenter extends StatelessWidget {
   const ReadPreferencesControlCenter({Key? key}) : super(key: key);
 
@@ -19,7 +19,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
       isDismissible: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.15),
       builder: (context) => const ReadPreferencesControlCenter(),
     );
   }
@@ -35,22 +35,22 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Tokens de diseño vanguardista (Apple Porcelain Glass):
-          // En modo claro: Pastillas cerámicas blanco puro (0.90) con micro-sombras sobre vidrio esmerilado.
-          // En modo oscuro/OLED: Carbón/negro translúcido (0.12) para luminiscencia profunda.
-          final acrylicAlpha = isDark ? 0.30 : 0.78;
+          // Tokens de diseño vanguardista (Apple Frosted Glass & Ceramic Cards):
+          final acrylicAlpha = isDark ? 0.30 : 0.82;
           final neutralBg = isDark
               ? indicatorColor.withValues(alpha: 0.12)
-              : Colors.white.withValues(alpha: 0.90);
-          final activeBg = indicatorColor;
+              : Colors.white.withValues(alpha: 0.94);
+          final activeBg = isDark ? indicatorColor : const Color(0xff18181B);
           final borderColor = isDark
               ? indicatorColor.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.07);
+              : Colors.black.withValues(alpha: 0.08);
           final topBorderColor = isDark
               ? indicatorColor.withValues(alpha: 0.50)
-              : indicatorColor.withValues(alpha: 0.18);
-          final inactiveIconColor = indicatorColor.withValues(alpha: 0.65);
-          final activeIconColor = canvasColor;
+              : Colors.white.withValues(alpha: 0.80);
+          final inactiveIconColor = isDark
+              ? indicatorColor.withValues(alpha: 0.65)
+              : const Color(0xff3F3F46);
+          final activeIconColor = isDark ? canvasColor : Colors.white;
 
           // CONTENIDO INTERNO DEL PANEL
           Widget panelContent = Container(
@@ -67,19 +67,26 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   width: 1.5,
                 ),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.12),
+                  blurRadius: 32,
+                  offset: const Offset(0, -6),
+                ),
+              ],
             ),
             child: SafeArea(
               top: false,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Tirador de arrastre superior (Drag Handle)
+                  // Tirador de arrastre superior (Drag Handle estilo iOS)
                   Container(
-                    width: 40,
+                    width: 42,
                     height: 5,
                     margin: const EdgeInsets.only(bottom: 18),
                     decoration: BoxDecoration(
-                      color: indicatorColor.withValues(alpha: 0.30),
+                      color: indicatorColor.withValues(alpha: isDark ? 0.30 : 0.20),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -88,7 +95,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Cápsula vertical deslizante para el tamaño de letra (Estilo Brillo iOS)
+                      // Cápsula vertical deslizante para el tamaño de letra (Apple Dual-Clip Slider)
                       Expanded(
                         flex: 5,
                         child: _FontSizeCapsuleSlider(
@@ -107,7 +114,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                         flex: 7,
                         child: Column(
                           children: [
-                            // FILA 1: Tema (☀️/🌙/🌑) y Tipografía (A)
+                            // FILA 1: Tema (☀️/🌅/🌙) y Tipografía (A)
                             Row(
                               children: [
                                 // Botón 1: Tema visual cíclico con morphing animado
@@ -128,7 +135,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                       ),
                                       child: _buildThemeIcon(
                                         controller.currentThemeName,
-                                        indicatorColor,
+                                        inactiveIconColor,
                                         key: ValueKey(controller.currentThemeName),
                                       ),
                                     ),
@@ -156,7 +163,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                           fontFamily: controller.currentFontFamily,
                                           fontSize: 30,
                                           fontWeight: FontWeight.bold,
-                                          color: indicatorColor,
+                                          color: inactiveIconColor,
                                         ),
                                       ),
                                     ),
@@ -175,12 +182,18 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(color: borderColor, width: 1.2),
                                 boxShadow: [
-                                  if (!isDark)
+                                  if (!isDark) ...[
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.04),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2.5),
+                                      color: Colors.black.withValues(alpha: 0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 3),
                                     ),
+                                    BoxShadow(
+                                      color: Colors.white.withValues(alpha: 0.9),
+                                      blurRadius: 2,
+                                      offset: const Offset(0, -1),
+                                    ),
+                                  ],
                                 ],
                               ),
                               child: Row(
@@ -244,7 +257,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           height: 56,
                           onTap: controller.toggleKeepScreenOn,
                           backgroundColor: controller.keepScreenOn ? activeBg : neutralBg,
-                          borderColor: controller.keepScreenOn ? activeBg : borderColor,
+                          borderColor: controller.keepScreenOn ? Colors.transparent : borderColor,
                           child: AnimatedScale(
                             scale: controller.keepScreenOn ? 1.08 : 1.0,
                             duration: const Duration(milliseconds: 180),
@@ -265,7 +278,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           height: 56,
                           onTap: controller.toggleAcrylic,
                           backgroundColor: controller.enableAcrylicEffect ? activeBg : neutralBg,
-                          borderColor: controller.enableAcrylicEffect ? activeBg : borderColor,
+                          borderColor: controller.enableAcrylicEffect ? Colors.transparent : borderColor,
                           child: AnimatedScale(
                             scale: controller.enableAcrylicEffect ? 1.08 : 1.0,
                             duration: const Duration(milliseconds: 180),
@@ -417,21 +430,21 @@ class ReadPreferencesControlCenter extends StatelessWidget {
     );
   }
 
-  Widget _buildThemeIcon(String themeName, Color indicatorColor, {Key? key}) {
+  Widget _buildThemeIcon(String themeName, Color iconColor, {Key? key}) {
     switch (themeName) {
       case 'Blanco':
         return Icon(
           Icons.wb_sunny_rounded,
           key: key,
           size: 28,
-          color: indicatorColor,
+          color: iconColor,
         );
       case 'Negro':
         return Icon(
           Icons.wb_twilight_rounded,
           key: key,
           size: 28,
-          color: indicatorColor,
+          color: iconColor,
         );
       case 'OLED':
       default:
@@ -439,13 +452,13 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           Icons.dark_mode_rounded,
           key: key,
           size: 26,
-          color: indicatorColor,
+          color: iconColor,
         );
     }
   }
 }
 
-/// Cápsula Vertical Táctil para el Tamaño de Letra (Estilo Brillo iOS con 1 solo icono)
+/// Cápsula Vertical Táctil con Máscara de Recorte Dual Apple (El icono nunca se tapa)
 class _FontSizeCapsuleSlider extends StatefulWidget {
   final ReadPreferencesController controller;
   final Color moduleBg;
@@ -481,6 +494,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     double fillPercent = ((widget.controller.currentFontSize - minFont) / (maxFont - minFont)).clamp(0.0, 1.0);
 
     return GestureDetector(
@@ -511,12 +525,18 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
               width: 1.2,
             ),
             boxShadow: [
-              if (Theme.of(context).brightness == Brightness.light)
+              if (!isDark) ...[
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
                 ),
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.90),
+                  blurRadius: 2,
+                  offset: const Offset(0, -1),
+                ),
+              ],
             ],
           ),
           child: ClipRRect(
@@ -524,25 +544,53 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
-                // Relleno dinámico de abajo hacia arriba
-                FractionallySizedBox(
-                  heightFactor: fillPercent,
-                  widthFactor: 1.0,
-                  alignment: Alignment.bottomCenter,
-                  child: Container(
-                    color: widget.indicatorColor,
-                  ),
-                ),
-
-                // UN SOLO Ícono en la parte inferior (estilo iOS Control Center)
+                // 1. CAPA BASE INACTIVA: Icono base en la pista vacía
                 Positioned(
                   bottom: 18,
                   child: Icon(
                     Icons.format_size_rounded,
                     size: 28,
-                    color: fillPercent > 0.35
-                        ? widget.canvasColor
-                        : widget.indicatorColor.withValues(alpha: 0.70),
+                    color: isDark
+                        ? widget.indicatorColor.withValues(alpha: 0.45)
+                        : const Color(0xff71717A),
+                  ),
+                ),
+
+                // 2. CAPA RELLENA ACTIVA: Recortada dinámicamente con el icono en color activo invertido
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  heightFactor: fillPercent,
+                  child: Container(
+                    height: sliderHeight,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: isDark
+                            ? [
+                                widget.indicatorColor,
+                                widget.indicatorColor.withValues(alpha: 0.85),
+                              ]
+                            : [
+                                const Color(0xff3F3F46), // Zinc 700
+                                const Color(0xff18181B), // Zinc 900
+                              ],
+                      ),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        Positioned(
+                          bottom: 18,
+                          child: Icon(
+                            Icons.format_size_rounded,
+                            size: 28,
+                            color: isDark ? widget.canvasColor : Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -554,7 +602,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
   }
 }
 
-/// Módulo Táctil con Animación de Rebote Elástico (Spring Physics)
+/// Módulo Táctil con Animación de Rebote Elástico y Sombra Neumórfica de Vanguardia
 class _BouncyControlModule extends StatefulWidget {
   final VoidCallback onTap;
   final Widget child;
@@ -582,7 +630,7 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
 
   @override
   Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTapDown: (_) {
@@ -611,12 +659,18 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
               width: 1.2,
             ),
             boxShadow: [
-              if (isLight && widget.backgroundColor != Colors.transparent)
+              if (!isDark && widget.backgroundColor != Colors.transparent) ...[
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2.5),
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  blurRadius: 2,
+                  offset: const Offset(0, -1),
+                ),
+              ],
             ],
           ),
           child: Center(child: widget.child),
