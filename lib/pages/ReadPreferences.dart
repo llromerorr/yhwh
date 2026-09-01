@@ -35,21 +35,21 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Tokens de diseño óptico adaptativos (Fórmula Apple Frosted Glass):
-          // En modo claro: 0.78 de blanco esmerilado para refractar la luz sin manchar de gris ceniza.
-          // En modo oscuro/OLED: 0.30 de carbón/negro para luminiscencia profunda.
+          // Tokens de diseño vanguardista (Apple Porcelain Glass):
+          // En modo claro: Pastillas cerámicas blanco puro (0.90) con micro-sombras sobre vidrio esmerilado.
+          // En modo oscuro/OLED: Carbón/negro translúcido (0.12) para luminiscencia profunda.
           final acrylicAlpha = isDark ? 0.30 : 0.78;
           final neutralBg = isDark
               ? indicatorColor.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.05);
+              : Colors.white.withValues(alpha: 0.90);
           final activeBg = indicatorColor;
           final borderColor = isDark
               ? indicatorColor.withValues(alpha: 0.12)
-              : indicatorColor.withValues(alpha: 0.08);
+              : Colors.black.withValues(alpha: 0.07);
           final topBorderColor = isDark
               ? indicatorColor.withValues(alpha: 0.50)
-              : indicatorColor.withValues(alpha: 0.20);
-          final inactiveIconColor = indicatorColor.withValues(alpha: 0.60);
+              : indicatorColor.withValues(alpha: 0.18);
+          final inactiveIconColor = indicatorColor.withValues(alpha: 0.65);
           final activeIconColor = canvasColor;
 
           // CONTENIDO INTERNO DEL PANEL
@@ -96,6 +96,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           moduleBg: neutralBg,
                           indicatorColor: indicatorColor,
                           canvasColor: canvasColor,
+                          borderColor: borderColor,
                         ),
                       ),
 
@@ -173,6 +174,14 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                 color: neutralBg,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(color: borderColor, width: 1.2),
+                                boxShadow: [
+                                  if (!isDark)
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.04),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2.5),
+                                    ),
+                                ],
                               ),
                               child: Row(
                                 children: [
@@ -442,6 +451,7 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
   final Color moduleBg;
   final Color indicatorColor;
   final Color canvasColor;
+  final Color borderColor;
 
   const _FontSizeCapsuleSlider({
     Key? key,
@@ -449,6 +459,7 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
     required this.moduleBg,
     required this.indicatorColor,
     required this.canvasColor,
+    required this.borderColor,
   }) : super(key: key);
 
   @override
@@ -496,9 +507,17 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
             color: widget.moduleBg,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: widget.indicatorColor.withValues(alpha: 0.12),
+              color: widget.borderColor,
               width: 1.2,
             ),
+            boxShadow: [
+              if (Theme.of(context).brightness == Brightness.light)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+            ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
@@ -563,6 +582,8 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return GestureDetector(
       onTapDown: (_) {
         setState(() => _isPressed = true);
@@ -589,6 +610,14 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
               color: widget.borderColor,
               width: 1.2,
             ),
+            boxShadow: [
+              if (isLight && widget.backgroundColor != Colors.transparent)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2.5),
+                ),
+            ],
           ),
           child: Center(child: widget.child),
         ),

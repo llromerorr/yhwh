@@ -4,14 +4,14 @@ import 'package:yhwh/classes/ColorPalette.dart';
 Map<String, ColorPalette> themes = {
   "Blanco": ColorPalette(
     brightness: Brightness.light,
-    background: const Color(0xffffffff), // Blanco puro
-    foreground: const Color(0xff2c2c2c),
-    verseText: const Color.fromARGB(255, 56, 56, 56),
-    verseNumber: const Color(0xaf37474F),
-    wordsOfJesus: const Color.fromARGB(249, 163, 33, 38),
-    wordsOfJesusHighlighted: const Color.fromARGB(223, 156, 28, 32),
-    referenceText: const Color(0xffF28A2E),
-    referenceTextHighlighted: const Color(0xffF28A2E),
+    background: const Color(0xffFBFBFD), // Blanco porcelana cálida (Apple editorial / cero deslumbramiento)
+    foreground: const Color(0xff18181B), // Negro tinta azabache profundo
+    verseText: const Color(0xff27272A),   // Zinc 800 alta legibilidad
+    verseNumber: const Color(0xff71717A), // Zinc 500 elegante
+    wordsOfJesus: const Color(0xffB91C1C), // Rubí refinado
+    wordsOfJesusHighlighted: const Color(0xffDC2626),
+    referenceText: const Color(0xffD97706), // Ámbar dorado cálido
+    referenceTextHighlighted: const Color(0xffD97706),
     highlights: [
       const Color(0x25D9320D),
       const Color(0x25F28A2E),
