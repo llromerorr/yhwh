@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 
-/// Centro de Control de Lectura Flotante (Diseño Vanguardista Apple Glassmorphism & Cerámica 3D Neumórfica en Todos los Temas)
+/// Centro de Control de Lectura Flotante (Diseño iOS 18 Liquid Glass & Neumorfismo Gradiente 3D)
 class ReadPreferencesControlCenter extends StatelessWidget {
   const ReadPreferencesControlCenter({Key? key}) : super(key: key);
 
@@ -35,18 +35,53 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Tokens de diseño vanguardista (100% nítidos y calibrados en Modo Claro y Oscuro):
+          // Tokens de diseño iOS 18 (Gradientes 3D, Iluminación especular y Vidrio líquido):
           final acrylicAlpha = isDark ? 0.30 : 0.85;
-          final neutralBg = isDark
-              ? indicatorColor.withValues(alpha: 0.12)
-              : const Color(0xffF1F2F6); // Cerámica suave con contraste real sobre el panel blanco
-          final activeBg = isDark ? indicatorColor : const Color(0xff18181B);
+
+          // Gradiente 3D para módulos en reposo (Luz diagonal de esquina a esquina)
+          final neutralGradient = isDark
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    indicatorColor.withValues(alpha: 0.18),
+                    indicatorColor.withValues(alpha: 0.08),
+                  ],
+                )
+              : const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFFFFFFF),
+                    Color(0xFFE2E4EA),
+                  ],
+                );
+
+          // Gradiente 3D para módulos activos (Negro azabache profundo con reflejo o Platino en oscuro)
+          final activeGradient = isDark
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    indicatorColor,
+                    indicatorColor.withValues(alpha: 0.85),
+                  ],
+                )
+              : const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF2E2E34),
+                    Color(0xFF111114),
+                  ],
+                );
+
           final borderColor = isDark
-              ? indicatorColor.withValues(alpha: 0.16)
-              : Colors.black.withValues(alpha: 0.14); // Borde nítido y bien definido
+              ? indicatorColor.withValues(alpha: 0.18)
+              : Colors.black.withValues(alpha: 0.12);
           final topBorderColor = isDark
               ? indicatorColor.withValues(alpha: 0.50)
-              : indicatorColor.withValues(alpha: 0.22); // Borde superior visible que enmarca el panel
+              : indicatorColor.withValues(alpha: 0.22);
           final inactiveIconColor = isDark
               ? indicatorColor.withValues(alpha: 0.70)
               : const Color(0xff27272A);
@@ -95,13 +130,13 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Cápsula vertical deslizante para el tamaño de letra (Apple Dual-Clip Slider 3D)
+                      // Cápsula vertical deslizante para el tamaño de letra (Apple iOS 18 Slider)
                       Expanded(
                         flex: 5,
                         child: _FontSizeCapsuleSlider(
                           controller: controller,
-                          moduleBg: neutralBg,
-                          activeBg: activeBg,
+                          neutralGradient: neutralGradient,
+                          activeGradient: activeGradient,
                           indicatorColor: indicatorColor,
                           canvasColor: canvasColor,
                           borderColor: borderColor,
@@ -123,7 +158,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                   child: _BouncyControlModule(
                                     height: 64,
                                     onTap: controller.cycleTheme,
-                                    backgroundColor: neutralBg,
+                                    gradient: neutralGradient,
                                     borderColor: borderColor,
                                     child: AnimatedSwitcher(
                                       duration: const Duration(milliseconds: 250),
@@ -149,7 +184,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                   child: _BouncyControlModule(
                                     height: 64,
                                     onTap: controller.cycleFontFamily,
-                                    backgroundColor: neutralBg,
+                                    gradient: neutralGradient,
                                     borderColor: borderColor,
                                     child: AnimatedSwitcher(
                                       duration: const Duration(milliseconds: 250),
@@ -175,11 +210,11 @@ class ReadPreferencesControlCenter extends StatelessWidget {
 
                             const SizedBox(height: 12),
 
-                            // FILA 2: Segmento de Alineación (Izquierda | Justificado)
+                            // FILA 2: Segmento de Alineación 3D (Izquierda | Justificado)
                             Container(
                               height: 64,
                               decoration: BoxDecoration(
-                                color: neutralBg,
+                                gradient: neutralGradient,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(color: borderColor, width: 1.2),
                                 boxShadow: [
@@ -220,7 +255,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                           controller.setJustified(false);
                                         }
                                       },
-                                      backgroundColor: !controller.isJustified ? activeBg : Colors.transparent,
+                                      gradient: !controller.isJustified ? activeGradient : null,
+                                      isActive: !controller.isJustified,
                                       borderColor: Colors.transparent,
                                       child: Icon(
                                         Icons.format_align_left_rounded,
@@ -240,7 +276,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                           controller.setJustified(true);
                                         }
                                       },
-                                      backgroundColor: controller.isJustified ? activeBg : Colors.transparent,
+                                      gradient: controller.isJustified ? activeGradient : null,
+                                      isActive: controller.isJustified,
                                       borderColor: Colors.transparent,
                                       child: Icon(
                                         Icons.format_align_justify_rounded,
@@ -260,7 +297,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
-                  // BLOQUE 2: TOGGLES DE ACTIVACIÓN AGRUPADOS + RESET (Con estética 3D unificada en todos los temas)
+                  // BLOQUE 2: TOGGLES DE ACTIVACIÓN AGRUPADOS + RESET (Gradientes 3D iOS 18)
                   Row(
                     children: [
                       // TOGGLE 1: Pantalla Siempre Activa (Ícono de teléfono despierto)
@@ -268,7 +305,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                         child: _BouncyControlModule(
                           height: 56,
                           onTap: controller.toggleKeepScreenOn,
-                          backgroundColor: controller.keepScreenOn ? activeBg : neutralBg,
+                          gradient: controller.keepScreenOn ? activeGradient : neutralGradient,
+                          isActive: controller.keepScreenOn,
                           borderColor: controller.keepScreenOn ? Colors.transparent : borderColor,
                           child: AnimatedScale(
                             scale: controller.keepScreenOn ? 1.08 : 1.0,
@@ -289,7 +327,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                         child: _BouncyControlModule(
                           height: 56,
                           onTap: controller.toggleAcrylic,
-                          backgroundColor: controller.enableAcrylicEffect ? activeBg : neutralBg,
+                          gradient: controller.enableAcrylicEffect ? activeGradient : neutralGradient,
+                          isActive: controller.enableAcrylicEffect,
                           borderColor: controller.enableAcrylicEffect ? Colors.transparent : borderColor,
                           child: AnimatedScale(
                             scale: controller.enableAcrylicEffect ? 1.08 : 1.0,
@@ -312,7 +351,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                         child: _BouncyControlModule(
                           height: 56,
                           onTap: controller.resetToDefaults,
-                          backgroundColor: neutralBg,
+                          gradient: neutralGradient,
                           borderColor: borderColor,
                           child: Icon(
                             Icons.restart_alt_rounded,
@@ -477,11 +516,11 @@ class ReadPreferencesControlCenter extends StatelessWidget {
   }
 }
 
-/// Cápsula Vertical Táctil con Máscara de Recorte Dual Apple (El icono nunca se tapa y responde al arrastre)
+/// Cápsula Vertical Táctil con Máscara de Recorte Dual Apple y Gradientes 3D iOS 18
 class _FontSizeCapsuleSlider extends StatefulWidget {
   final ReadPreferencesController controller;
-  final Color moduleBg;
-  final Color activeBg;
+  final Gradient neutralGradient;
+  final Gradient activeGradient;
   final Color indicatorColor;
   final Color canvasColor;
   final Color borderColor;
@@ -489,8 +528,8 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
   const _FontSizeCapsuleSlider({
     Key? key,
     required this.controller,
-    required this.moduleBg,
-    required this.activeBg,
+    required this.neutralGradient,
+    required this.activeGradient,
     required this.indicatorColor,
     required this.canvasColor,
     required this.borderColor,
@@ -539,7 +578,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
         child: Container(
           height: sliderHeight,
           decoration: BoxDecoration(
-            color: widget.moduleBg,
+            gradient: widget.neutralGradient,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: widget.borderColor,
@@ -588,7 +627,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
                   ),
                 ),
 
-                // 2. CAPA RELLENA ACTIVA: Mismo color activo unificado y recorte ClipRect exacto
+                // 2. CAPA RELLENA ACTIVA: Gradiente 3D activo y recorte ClipRect exacto
                 ClipRect(
                   child: Align(
                     alignment: Alignment.bottomCenter,
@@ -597,7 +636,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
                       height: sliderHeight,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: widget.activeBg,
+                        gradient: widget.activeGradient,
                       ),
                       child: Stack(
                         alignment: Alignment.bottomCenter,
@@ -624,11 +663,13 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
   }
 }
 
-/// Módulo Táctil con Animación de Rebote Elástico y Sombra Neumórfica 3D de Vanguardia en Todos los Botones
+/// Módulo Táctil con Animación de Rebote Elástico y Sombra Neumórfica 3D con Gradientes iOS 18
 class _BouncyControlModule extends StatefulWidget {
   final VoidCallback onTap;
   final Widget child;
-  final Color backgroundColor;
+  final Gradient? gradient;
+  final Color? backgroundColor;
+  final bool isActive;
   final Color borderColor;
   final double height;
   final EdgeInsetsGeometry? margin;
@@ -637,7 +678,9 @@ class _BouncyControlModule extends StatefulWidget {
     Key? key,
     required this.onTap,
     required this.child,
-    required this.backgroundColor,
+    this.gradient,
+    this.backgroundColor,
+    this.isActive = false,
     required this.borderColor,
     this.height = 64.0,
     this.margin,
@@ -653,7 +696,7 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isTransparent = widget.backgroundColor == Colors.transparent;
+    final isTransparent = widget.gradient == null && widget.backgroundColor == Colors.transparent;
 
     return GestureDetector(
       onTapDown: (_) {
@@ -675,7 +718,8 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
           height: widget.height,
           margin: widget.margin,
           decoration: BoxDecoration(
-            color: widget.backgroundColor,
+            gradient: widget.gradient,
+            color: widget.gradient == null ? widget.backgroundColor : null,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: widget.borderColor,
@@ -683,29 +727,46 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
             ),
             boxShadow: [
               if (!isTransparent) ...[
-                if (!isDark) ...[
+                if (widget.isActive) ...[
+                  // Botón Activo: Sombra profunda y halo de acento
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
+                    color: isDark
+                        ? widget.borderColor.withValues(alpha: 0.25)
+                        : Colors.black.withValues(alpha: 0.26),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    blurRadius: 2,
-                    offset: const Offset(0, -1),
-                  ),
+                  if (!isDark)
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.20),
+                      blurRadius: 1,
+                      offset: const Offset(0, -1),
+                    ),
                 ] else ...[
-                  // Modo Oscuro / OLED: Bisel de cristal superior + sombra de oclusión
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    blurRadius: 1,
-                    offset: const Offset(0, -1),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.40),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
+                  if (!isDark) ...[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.95),
+                      blurRadius: 2,
+                      offset: const Offset(0, -1),
+                    ),
+                  ] else ...[
+                    // Modo Oscuro / OLED: Bisel de cristal superior + sombra de oclusión
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      blurRadius: 1,
+                      offset: const Offset(0, -1),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.40),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ],
               ],
             ],
