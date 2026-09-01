@@ -35,21 +35,21 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Tokens de diseño vanguardista (Apple Frosted Glass & Ceramic 3D Cards):
+          // Tokens de diseño vanguardista (100% armonizados y unificados):
           final acrylicAlpha = isDark ? 0.30 : 0.82;
           final neutralBg = isDark
               ? indicatorColor.withValues(alpha: 0.12)
-              : Colors.white.withValues(alpha: 0.94);
+              : Colors.white.withValues(alpha: 0.95);
           final activeBg = isDark ? indicatorColor : const Color(0xff18181B);
           final borderColor = isDark
               ? indicatorColor.withValues(alpha: 0.12)
               : Colors.black.withValues(alpha: 0.08);
           final topBorderColor = isDark
               ? indicatorColor.withValues(alpha: 0.50)
-              : Colors.white.withValues(alpha: 0.80);
+              : Colors.white.withValues(alpha: 0.85);
           final inactiveIconColor = isDark
               ? indicatorColor.withValues(alpha: 0.65)
-              : const Color(0xff3F3F46);
+              : const Color(0xff27272A);
           final activeIconColor = isDark ? canvasColor : Colors.white;
 
           // CONTENIDO INTERNO DEL PANEL
@@ -95,12 +95,13 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Cápsula vertical deslizante para el tamaño de letra (Apple Dual-Clip Slider con ClipRect dinámico)
+                      // Cápsula vertical deslizante para el tamaño de letra (Apple Dual-Clip Slider)
                       Expanded(
                         flex: 5,
                         child: _FontSizeCapsuleSlider(
                           controller: controller,
                           moduleBg: neutralBg,
+                          activeBg: activeBg,
                           indicatorColor: indicatorColor,
                           canvasColor: canvasColor,
                           borderColor: borderColor,
@@ -462,6 +463,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
 class _FontSizeCapsuleSlider extends StatefulWidget {
   final ReadPreferencesController controller;
   final Color moduleBg;
+  final Color activeBg;
   final Color indicatorColor;
   final Color canvasColor;
   final Color borderColor;
@@ -470,6 +472,7 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
     Key? key,
     required this.controller,
     required this.moduleBg,
+    required this.activeBg,
     required this.indicatorColor,
     required this.canvasColor,
     required this.borderColor,
@@ -556,7 +559,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
                   ),
                 ),
 
-                // 2. CAPA RELLENA ACTIVA: Recortada con ClipRect exacto para crecer y decrecer de 0 a 140px
+                // 2. CAPA RELLENA ACTIVA: Mismo color azabache unificado y recorte ClipRect exacto
                 ClipRect(
                   child: Align(
                     alignment: Alignment.bottomCenter,
@@ -565,19 +568,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
                       height: sliderHeight,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: isDark
-                              ? [
-                                  widget.indicatorColor,
-                                  widget.indicatorColor.withValues(alpha: 0.85),
-                                ]
-                              : [
-                                  const Color(0xff3F3F46), // Zinc 700
-                                  const Color(0xff18181B), // Zinc 900
-                                ],
-                        ),
+                        color: widget.activeBg,
                       ),
                       child: Stack(
                         alignment: Alignment.bottomCenter,
