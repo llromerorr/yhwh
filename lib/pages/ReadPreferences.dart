@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 
-/// Centro de Control de Lectura Flotante (Diseño Vanguardista Apple Glassmorphism & Cerámica Neumórfica)
+/// Centro de Control de Lectura Flotante (Diseño Vanguardista Apple Glassmorphism & Cerámica 3D Neumórfica)
 class ReadPreferencesControlCenter extends StatelessWidget {
   const ReadPreferencesControlCenter({Key? key}) : super(key: key);
 
@@ -35,7 +35,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Tokens de diseño vanguardista (Apple Frosted Glass & Ceramic Cards):
+          // Tokens de diseño vanguardista (Apple Frosted Glass & Ceramic 3D Cards):
           final acrylicAlpha = isDark ? 0.30 : 0.82;
           final neutralBg = isDark
               ? indicatorColor.withValues(alpha: 0.12)
@@ -95,7 +95,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Cápsula vertical deslizante para el tamaño de letra (Apple Dual-Clip Slider)
+                      // Cápsula vertical deslizante para el tamaño de letra (Apple Dual-Clip Slider con ClipRect dinámico)
                       Expanded(
                         flex: 5,
                         child: _FontSizeCapsuleSlider(
@@ -184,12 +184,12 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                 boxShadow: [
                                   if (!isDark) ...[
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.05),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 3),
+                                      color: Colors.black.withValues(alpha: 0.08),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
                                     ),
                                     BoxShadow(
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(alpha: 0.95),
                                       blurRadius: 2,
                                       offset: const Offset(0, -1),
                                     ),
@@ -248,7 +248,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
-                  // BLOQUE 2: TOGGLES DE ACTIVACIÓN AGRUPADOS + RESET
+                  // BLOQUE 2: TOGGLES DE ACTIVACIÓN AGRUPADOS + RESET (Con estética 3D unificada)
                   Row(
                     children: [
                       // TOGGLE 1: Pantalla Siempre Activa (Ícono de teléfono despierto)
@@ -458,7 +458,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
   }
 }
 
-/// Cápsula Vertical Táctil con Máscara de Recorte Dual Apple (El icono nunca se tapa)
+/// Cápsula Vertical Táctil con Máscara de Recorte Dual Apple (El icono nunca se tapa y responde al arrastre)
 class _FontSizeCapsuleSlider extends StatefulWidget {
   final ReadPreferencesController controller;
   final Color moduleBg;
@@ -527,12 +527,12 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
             boxShadow: [
               if (!isDark) ...[
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 14,
                   offset: const Offset(0, 4),
                 ),
                 BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.90),
+                  color: Colors.white.withValues(alpha: 0.95),
                   blurRadius: 2,
                   offset: const Offset(0, -1),
                 ),
@@ -556,40 +556,42 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
                   ),
                 ),
 
-                // 2. CAPA RELLENA ACTIVA: Recortada dinámicamente con el icono en color activo invertido
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  heightFactor: fillPercent,
-                  child: Container(
-                    height: sliderHeight,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: isDark
-                            ? [
-                                widget.indicatorColor,
-                                widget.indicatorColor.withValues(alpha: 0.85),
-                              ]
-                            : [
-                                const Color(0xff3F3F46), // Zinc 700
-                                const Color(0xff18181B), // Zinc 900
-                              ],
-                      ),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        Positioned(
-                          bottom: 18,
-                          child: Icon(
-                            Icons.format_size_rounded,
-                            size: 28,
-                            color: isDark ? widget.canvasColor : Colors.white,
-                          ),
+                // 2. CAPA RELLENA ACTIVA: Recortada con ClipRect exacto para crecer y decrecer de 0 a 140px
+                ClipRect(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    heightFactor: fillPercent,
+                    child: Container(
+                      height: sliderHeight,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: isDark
+                              ? [
+                                  widget.indicatorColor,
+                                  widget.indicatorColor.withValues(alpha: 0.85),
+                                ]
+                              : [
+                                  const Color(0xff3F3F46), // Zinc 700
+                                  const Color(0xff18181B), // Zinc 900
+                                ],
                         ),
-                      ],
+                      ),
+                      child: Stack(
+                        alignment: Alignment.bottomCenter,
+                        children: [
+                          Positioned(
+                            bottom: 18,
+                            child: Icon(
+                              Icons.format_size_rounded,
+                              size: 28,
+                              color: isDark ? widget.canvasColor : Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -602,7 +604,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
   }
 }
 
-/// Módulo Táctil con Animación de Rebote Elástico y Sombra Neumórfica de Vanguardia
+/// Módulo Táctil con Animación de Rebote Elástico y Sombra Neumórfica 3D de Vanguardia en Todos los Botones
 class _BouncyControlModule extends StatefulWidget {
   final VoidCallback onTap;
   final Widget child;
@@ -631,6 +633,7 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isTransparent = widget.backgroundColor == Colors.transparent;
 
     return GestureDetector(
       onTapDown: (_) {
@@ -659,14 +662,14 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
               width: 1.2,
             ),
             boxShadow: [
-              if (!isDark && widget.backgroundColor != Colors.transparent) ...[
+              if (!isDark && !isTransparent) ...[
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
                 BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: Colors.white.withValues(alpha: 0.95),
                   blurRadius: 2,
                   offset: const Offset(0, -1),
                 ),
