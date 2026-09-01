@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 
-/// Centro de Control de Lectura Flotante (Diseño Vanguardista Apple Glassmorphism & Cerámica 3D Neumórfica)
+/// Centro de Control de Lectura Flotante (Diseño Vanguardista Apple Glassmorphism & Cerámica 3D Neumórfica en Todos los Temas)
 class ReadPreferencesControlCenter extends StatelessWidget {
   const ReadPreferencesControlCenter({Key? key}) : super(key: key);
 
@@ -35,20 +35,20 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Tokens de diseño vanguardista (100% armonizados y unificados):
+          // Tokens de diseño vanguardista (100% armonizados en Claro, Oscuro y OLED):
           final acrylicAlpha = isDark ? 0.30 : 0.82;
           final neutralBg = isDark
               ? indicatorColor.withValues(alpha: 0.12)
               : Colors.white.withValues(alpha: 0.95);
           final activeBg = isDark ? indicatorColor : const Color(0xff18181B);
           final borderColor = isDark
-              ? indicatorColor.withValues(alpha: 0.12)
+              ? indicatorColor.withValues(alpha: 0.16)
               : Colors.black.withValues(alpha: 0.08);
           final topBorderColor = isDark
               ? indicatorColor.withValues(alpha: 0.50)
               : Colors.white.withValues(alpha: 0.85);
           final inactiveIconColor = isDark
-              ? indicatorColor.withValues(alpha: 0.65)
+              ? indicatorColor.withValues(alpha: 0.70)
               : const Color(0xff27272A);
           final activeIconColor = isDark ? canvasColor : Colors.white;
 
@@ -95,7 +95,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Cápsula vertical deslizante para el tamaño de letra (Apple Dual-Clip Slider)
+                      // Cápsula vertical deslizante para el tamaño de letra (Apple Dual-Clip Slider 3D)
                       Expanded(
                         flex: 5,
                         child: _FontSizeCapsuleSlider(
@@ -194,6 +194,17 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                       blurRadius: 2,
                                       offset: const Offset(0, -1),
                                     ),
+                                  ] else ...[
+                                    BoxShadow(
+                                      color: Colors.white.withValues(alpha: 0.06),
+                                      blurRadius: 1,
+                                      offset: const Offset(0, -1),
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.40),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
                                   ],
                                 ],
                               ),
@@ -249,7 +260,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
-                  // BLOQUE 2: TOGGLES DE ACTIVACIÓN AGRUPADOS + RESET (Con estética 3D unificada)
+                  // BLOQUE 2: TOGGLES DE ACTIVACIÓN AGRUPADOS + RESET (Con estética 3D unificada en todos los temas)
                   Row(
                     children: [
                       // TOGGLE 1: Pantalla Siempre Activa (Ícono de teléfono despierto)
@@ -389,12 +400,19 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           width: 1.5,
         ),
         boxShadow: [
-          if (!isDark)
+          if (!isDark) ...[
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
+          ] else ...[
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.50),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ],
       ),
       child: MediaQuery(
@@ -539,6 +557,17 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
                   blurRadius: 2,
                   offset: const Offset(0, -1),
                 ),
+              ] else ...[
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  blurRadius: 1,
+                  offset: const Offset(0, -1),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
               ],
             ],
           ),
@@ -559,7 +588,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
                   ),
                 ),
 
-                // 2. CAPA RELLENA ACTIVA: Mismo color azabache unificado y recorte ClipRect exacto
+                // 2. CAPA RELLENA ACTIVA: Mismo color activo unificado y recorte ClipRect exacto
                 ClipRect(
                   child: Align(
                     alignment: Alignment.bottomCenter,
@@ -653,17 +682,31 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
               width: 1.2,
             ),
             boxShadow: [
-              if (!isDark && !isTransparent) ...[
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  blurRadius: 2,
-                  offset: const Offset(0, -1),
-                ),
+              if (!isTransparent) ...[
+                if (!isDark) ...[
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    blurRadius: 2,
+                    offset: const Offset(0, -1),
+                  ),
+                ] else ...[
+                  // Modo Oscuro / OLED: Bisel de cristal superior + sombra de oclusión
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    blurRadius: 1,
+                    offset: const Offset(0, -1),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.40),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ],
             ],
           ),
