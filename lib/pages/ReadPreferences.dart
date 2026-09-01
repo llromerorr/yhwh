@@ -35,10 +35,20 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Tokens de diseño coherentes y armónicos con el tema activo
-          final neutralBg = indicatorColor.withValues(alpha: isDark ? 0.12 : 0.08);
+          // Tokens de diseño óptico adaptativos (Fórmula Apple Frosted Glass):
+          // En modo claro: 0.78 de blanco esmerilado para refractar la luz sin manchar de gris ceniza.
+          // En modo oscuro/OLED: 0.30 de carbón/negro para luminiscencia profunda.
+          final acrylicAlpha = isDark ? 0.30 : 0.78;
+          final neutralBg = isDark
+              ? indicatorColor.withValues(alpha: 0.12)
+              : Colors.black.withValues(alpha: 0.05);
           final activeBg = indicatorColor;
-          final borderColor = indicatorColor.withValues(alpha: 0.12);
+          final borderColor = isDark
+              ? indicatorColor.withValues(alpha: 0.12)
+              : indicatorColor.withValues(alpha: 0.08);
+          final topBorderColor = isDark
+              ? indicatorColor.withValues(alpha: 0.50)
+              : indicatorColor.withValues(alpha: 0.20);
           final inactiveIconColor = indicatorColor.withValues(alpha: 0.60);
           final activeIconColor = canvasColor;
 
@@ -48,12 +58,12 @@ class ReadPreferencesControlCenter extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
             decoration: BoxDecoration(
               color: controller.enableAcrylicEffect
-                  ? canvasColor.withValues(alpha: 0.30)
+                  ? canvasColor.withValues(alpha: acrylicAlpha)
                   : canvasColor,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
               border: Border(
                 top: BorderSide(
-                  color: indicatorColor.withValues(alpha: 0.5),
+                  color: topBorderColor,
                   width: 1.5,
                 ),
               ),
@@ -348,13 +358,21 @@ class ReadPreferencesControlCenter extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       decoration: BoxDecoration(
         color: controller.enableAcrylicEffect
-            ? Theme.of(context).canvasColor.withValues(alpha: 0.2)
+            ? Theme.of(context).canvasColor.withValues(alpha: isDark ? 0.20 : 0.85)
             : Theme.of(context).canvasColor,
         borderRadius: BorderRadius.circular(300.0),
         border: Border.all(
-          color: indicatorColor.withValues(alpha: 0.5),
+          color: indicatorColor.withValues(alpha: isDark ? 0.50 : 0.20),
           width: 1.5,
         ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+        ],
       ),
       child: MediaQuery(
         data: MediaQuery.of(context).copyWith(

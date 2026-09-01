@@ -34,66 +34,68 @@ class MainPage extends StatelessWidget {
         },
       ),
 
-      bottomNavigationBar: Container( 
-        child: Container(
-          foregroundDecoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
-                width: 1.5
-              )
-            )
-          ),
-            
-          child: GetBuilder<MainPageController>(
-            init: MainPageController(),
-            builder: (_){
-              return GetBuilder<ReadPreferencesController>(
-                init: ReadPreferencesController(),
-                builder: (readPrefs) {
-                  Widget navBar = BottomNavigationBar(
-                    currentIndex: _.mainPagetabIndex,
-                    elevation: 0,
-                    type: BottomNavigationBarType.fixed,
-                    backgroundColor: readPrefs.enableAcrylicEffect 
-                        ? Theme.of(context).canvasColor.withValues(alpha: 0.3) 
-                        : Theme.of(context).canvasColor,
-                    selectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.9),
-                    unselectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.6),
-                              
-                    items: [
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.book),
-                        label: 'Biblia',
-                      ),
-                              
-                      BottomNavigationBarItem(
-                        icon: Badge(
-                          isLabelVisible: _.isDownloadCompleted, 
-                          backgroundColor: Colors.red,
-                          label: const Text('1', style: TextStyle(color: Colors.white, fontSize: 10)), 
-                          child: const Icon(Icons.alternate_email_rounded),
-                        ),
-                        label: 'Contacto',
-                      ),
-                    ],
-                              
-                    onTap: _.bottomNavigationBarOnTap
-                  );
+      bottomNavigationBar: GetBuilder<MainPageController>(
+        init: MainPageController(),
+        builder: (_){
+          return GetBuilder<ReadPreferencesController>(
+            init: ReadPreferencesController(),
+            builder: (readPrefs) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final acrylicAlpha = isDark ? 0.30 : 0.78;
+              final topBorderColor = Theme.of(context).indicatorColor.withValues(alpha: isDark ? 0.50 : 0.20);
 
-                  return ClipRRect(
-                    child: readPrefs.enableAcrylicEffect
-                      ? BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 36, sigmaY: 36, tileMode: TileMode.mirror),
-                          child: navBar,
-                        )
-                      : navBar,
-                  );
-                }
+              Widget navBar = BottomNavigationBar(
+                currentIndex: _.mainPagetabIndex,
+                elevation: 0,
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: readPrefs.enableAcrylicEffect 
+                    ? Theme.of(context).canvasColor.withValues(alpha: acrylicAlpha) 
+                    : Theme.of(context).canvasColor,
+                selectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.9),
+                unselectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.6),
+                          
+                items: [
+                  const BottomNavigationBarItem(
+                    icon: Icon(Icons.book),
+                    label: 'Biblia',
+                  ),
+                          
+                  BottomNavigationBarItem(
+                    icon: Badge(
+                      isLabelVisible: _.isDownloadCompleted, 
+                      backgroundColor: Colors.red,
+                      label: const Text('1', style: TextStyle(color: Colors.white, fontSize: 10)), 
+                      child: const Icon(Icons.alternate_email_rounded),
+                    ),
+                    label: 'Contacto',
+                  ),
+                ],
+                          
+                onTap: _.bottomNavigationBarOnTap
               );
-            },
-          )
-        ),
+
+              Widget blurredNavBar = ClipRRect(
+                child: readPrefs.enableAcrylicEffect
+                  ? BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 36, sigmaY: 36, tileMode: TileMode.mirror),
+                      child: navBar,
+                    )
+                  : navBar,
+              );
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    color: topBorderColor,
+                    height: 1.5,
+                  ),
+                  blurredNavBar,
+                ],
+              );
+            }
+          );
+        },
       )
     );
   }

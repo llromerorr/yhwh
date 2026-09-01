@@ -94,7 +94,7 @@ class BiblePage extends StatelessWidget {
                               child: MaterialButton(
                                 elevation: 0,
                                 onPressed: biblePageController.previusChapter,
-                                color: Theme.of(context).canvasColor.withValues(alpha: 0.2),
+                                color: Theme.of(context).canvasColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.20 : 0.78),
                             
                                 child: Icon(
                                   Icons.keyboard_arrow_left,
@@ -104,7 +104,7 @@ class BiblePage extends StatelessWidget {
                                 padding: EdgeInsets.all(0),
                                 shape: CircleBorder(
                                   side: BorderSide(
-                                    color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                                    color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
                                     width: 1.5
                                   )
                                 ),
@@ -122,7 +122,7 @@ class BiblePage extends StatelessWidget {
                                 padding: EdgeInsets.all(0),
                                 shape: CircleBorder(
                                   side: BorderSide(
-                                    color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                                    color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
                                     width: 1.5
                                   )
                                 ),
@@ -150,7 +150,7 @@ class BiblePage extends StatelessWidget {
                               child: MaterialButton(
                                 elevation: 0,
                                 onPressed: biblePageController.nextChapter,
-                                color: Theme.of(context).canvasColor.withValues(alpha: 0.2),
+                                color: Theme.of(context).canvasColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.20 : 0.78),
                                                           
                                 child: Icon(
                                   Icons.keyboard_arrow_right,
@@ -160,7 +160,7 @@ class BiblePage extends StatelessWidget {
                                 padding: EdgeInsets.all(0),
                                 shape: CircleBorder(
                                   side: BorderSide(
-                                    color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                                    color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
                                     width: 1.5
                                   )
                                 ),
@@ -178,7 +178,7 @@ class BiblePage extends StatelessWidget {
                                 padding: EdgeInsets.all(0),
                                 shape: CircleBorder(
                                   side: BorderSide(
-                                    color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                                    color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
                                     width: 1.5
                                   )
                                 ),
@@ -216,7 +216,7 @@ class BiblePage extends StatelessWidget {
                       slivers: [
                         // AppBar
                         SliverAppBar(
-                          backgroundColor: readPrefs.enableAcrylicEffect ? Theme.of(context).canvasColor.withValues(alpha: 0.3) : Theme.of(context).canvasColor,
+                          backgroundColor: readPrefs.enableAcrylicEffect ? Theme.of(context).canvasColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.30 : 0.78) : Theme.of(context).canvasColor,
                           primary: true,
                           floating: false,
                           pinned: true,
@@ -225,7 +225,7 @@ class BiblePage extends StatelessWidget {
                           titleSpacing: 0,
                           bottom: PreferredSize(
                             child: Container(
-                              color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
+                              color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
                               height: 1.5
                             ),
                             
