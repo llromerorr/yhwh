@@ -36,7 +36,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final canvasColor = Theme.of(context).canvasColor;
 
           // Tokens de diseño iOS 18 (Gradientes 3D, Iluminación especular y Vidrio líquido translúcido):
-          final acrylicAlpha = isDark ? 0.65 : 0.72;
+          final acrylicAlpha = isDark ? 0.1 : 0.2;
 
           // Gradiente 3D para módulos en reposo (Luz diagonal translúcida adaptada al acrílico)
           final neutralGradient = isDark
@@ -85,20 +85,37 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               : Colors.black.withValues(alpha: 0.12);
           final topBorderColor = isDark
               ? indicatorColor.withValues(alpha: 0.40)
-              : Colors.black.withValues(alpha: 0.15);
+              : Colors.white; // Bisel blanco puro reflectante
           final inactiveIconColor = isDark
               ? indicatorColor.withValues(alpha: 0.70)
               : const Color(0xff27272A);
           final activeIconColor = isDark ? canvasColor : Colors.white;
 
-          // CONTENIDO INTERNO DEL PANEL
+          // CONTENIDO INTERNO DEL PANEL CON ILUMINACIÓN CENITAL
           Widget panelContent = Container(
             constraints: const BoxConstraints(maxWidth: 480),
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
             decoration: BoxDecoration(
-              color: controller.enableAcrylicEffect
-                  ? canvasColor.withValues(alpha: acrylicAlpha)
-                  : canvasColor,
+              gradient: controller.enableAcrylicEffect
+                  ? (isDark
+                      ? LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            canvasColor.withValues(alpha: 0.70),
+                            canvasColor.withValues(alpha: 0.50),
+                          ],
+                        )
+                      : const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Color(0xEEFFFFFF), // Blanco puro 93% arriba (Luz cenital brillante)
+                            Color(0xC8F4F5F9), // Porcelana satinada 78% abajo
+                          ],
+                        ))
+                  : null,
+              color: controller.enableAcrylicEffect ? null : canvasColor,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
               border: Border(
                 top: BorderSide(
@@ -108,10 +125,16 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.14),
+                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.10),
                   blurRadius: 28,
                   offset: const Offset(0, -6),
                 ),
+                if (!isDark && controller.enableAcrylicEffect)
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.80),
+                    blurRadius: 4,
+                    offset: const Offset(0, -1),
+                  ),
               ],
             ),
             child: SafeArea(
