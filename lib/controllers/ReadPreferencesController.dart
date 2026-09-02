@@ -29,16 +29,16 @@ class ReadPreferencesController extends GetxController {
     36.0, // 7: Accesibilidad Máx
   ];
 
-  static const Map<double, String> fontLevelLabels = {
-    16.0: 'Compacto',
-    18.0: 'Pequeño',
-    20.0: 'Estándar',
-    22.0: 'Confort',
-    25.0: 'Grande',
-    28.0: 'Muy Grande',
-    32.0: 'Accesibilidad',
-    36.0: 'Accesibilidad Máx',
-  };
+  static const List<String> fontLevelLabels = [
+    'Compacto',
+    'Pequeño',
+    'Estándar',
+    'Confort',
+    'Grande',
+    'Muy Grande',
+    'Accesibilidad',
+    'Accesibilidad Máx',
+  ];
 
   int get currentFontLevelIndex {
     int closestIndex = 2; // Default 20.0
@@ -56,7 +56,11 @@ class ReadPreferencesController extends GetxController {
   double get fontScaleFactor => currentFontSize / 20.0;
 
   String get currentFontLabel {
-    return fontLevelLabels[fontLevels[currentFontLevelIndex]] ?? '${currentFontSize.round()} pt';
+    int idx = currentFontLevelIndex;
+    if (idx >= 0 && idx < fontLevelLabels.length) {
+      return fontLevelLabels[idx];
+    }
+    return '${currentFontSize.round()} pt';
   }
 
   bool get isVisualImpaired => currentFontSize >= 28.0;
@@ -154,7 +158,7 @@ class ReadPreferencesController extends GetxController {
     int clampedIndex = index.clamp(0, fontLevels.length - 1);
     double targetSize = fontLevels[clampedIndex];
     setFontSize(targetSize);
-    String label = fontLevelLabels[targetSize] ?? '${targetSize.round()} pt';
+    String label = fontLevelLabels[clampedIndex];
     showToast("${targetSize.round()} pt • $label", Icons.format_size_rounded);
   }
 
