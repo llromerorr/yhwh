@@ -7,6 +7,48 @@ import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 
+// =============================================================================
+// 🎛️ PANEL DE CONTROL VISUAL (Modifica estos valores para ajustar la estética)
+// =============================================================================
+abstract class ControlCenterVisualConfig {
+  // --- 1. BANDEJA DEL PANEL (FONDO PRINCIPAL) ---
+  /// Opacidad superior del fondo en Modo Claro (0.0 = 100% transparente, 1.0 = sólido)
+  static const double lightPanelTopAlpha = 0.45;
+  /// Opacidad inferior del fondo en Modo Claro
+  static const double lightPanelBottomAlpha = 0.30;
+
+  /// Opacidad superior del fondo en Modo Oscuro / OLED
+  static const double darkPanelTopAlpha = 0.60;
+  /// Opacidad inferior del fondo en Modo Oscuro / OLED
+  static const double darkPanelBottomAlpha = 0.40;
+
+  // --- 2. BOTONES Y MÓDULOS EN REPOSO ---
+  /// Opacidad superior de los botones en Modo Claro
+  static const double lightButtonTopAlpha = 0.70;
+  /// Opacidad inferior de los botones en Modo Claro
+  static const double lightButtonBottomAlpha = 0.45;
+
+  /// Opacidad de los botones en Modo Oscuro
+  static const double darkButtonTopAlpha = 0.20;
+  static const double darkButtonBottomAlpha = 0.08;
+
+  // --- 3. DESENFOQUE GAUSSIANO (BLUR) ---
+  /// Intensidad del desenfoque en Modo Claro (px)
+  static const double lightBlurSigma = 20.0;
+  /// Intensidad del desenfoque en Modo Oscuro (px)
+  static const double darkBlurSigma = 25.0;
+
+  // --- 4. LIQUID GLASS & REFRACCIÓN ÓPTICA ---
+  /// Distorsión óptica de los bordes (0.0 = plano, 0.08 = pronunciado)
+  static const double liquidGlassDistortion = 0.04;
+  /// Ancho del bisel de refracción óptica (px)
+  static const double liquidGlassDistortionWidth = 16.0;
+  /// Saturación de color en el borde óptico en Modo Claro
+  static const double opticalBorderSaturationLight = 1.2;
+  /// Saturación de color en el borde óptico en Modo Oscuro
+  static const double opticalBorderSaturationDark = 1.0;
+}
+
 /// Centro de Control de Lectura Flotante (Diseño iOS 18 Liquid Glass & Neumorfismo Gradiente 3D)
 class ReadPreferencesControlCenter extends StatelessWidget {
   const ReadPreferencesControlCenter({Key? key}) : super(key: key);
@@ -36,14 +78,22 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Gradiente 3D para módulos en reposo (Relieve satinado sobre acrílico denso)
+          // Gradiente 3D para módulos en reposo
           final neutralGradient = isDark
               ? LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    indicatorColor.withValues(alpha: controller.enableAcrylicEffect ? 0.20 : 0.15),
-                    indicatorColor.withValues(alpha: controller.enableAcrylicEffect ? 0.08 : 0.05),
+                    indicatorColor.withValues(
+                      alpha: controller.enableAcrylicEffect
+                          ? ControlCenterVisualConfig.darkButtonTopAlpha
+                          : 0.15,
+                    ),
+                    indicatorColor.withValues(
+                      alpha: controller.enableAcrylicEffect
+                          ? ControlCenterVisualConfig.darkButtonBottomAlpha
+                          : 0.05,
+                    ),
                   ],
                 )
               : LinearGradient(
@@ -51,10 +101,10 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     controller.enableAcrylicEffect
-                        ? Colors.white.withValues(alpha: 0.90)
+                        ? Colors.white.withValues(alpha: ControlCenterVisualConfig.lightButtonTopAlpha)
                         : const Color(0xFFFFFFFF),
                     controller.enableAcrylicEffect
-                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.72)
+                        ? const Color(0xFFE2E4EA).withValues(alpha: ControlCenterVisualConfig.lightButtonBottomAlpha)
                         : const Color(0xFFE2E4EA),
                   ],
                 );
@@ -89,7 +139,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               : const Color(0xff27272A);
           final activeIconColor = isDark ? canvasColor : Colors.white;
 
-          // CONTENIDO INTERNO DEL PANEL (Lámina de Acrílico Denso y Esmerilado)
+          // CONTENIDO INTERNO DEL PANEL
           Widget panelContent = Container(
             constraints: const BoxConstraints(maxWidth: 480),
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
@@ -100,16 +150,16 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            canvasColor.withValues(alpha: 0.82),
-                            canvasColor.withValues(alpha: 0.70),
+                            canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelTopAlpha),
+                            canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelBottomAlpha),
                           ],
                         )
                       : LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.white.withValues(alpha: 0.82),
-                            const Color(0xFFF0F2F7).withValues(alpha: 0.72),
+                            Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelTopAlpha),
+                            const Color(0xFFF0F2F7).withValues(alpha: ControlCenterVisualConfig.lightPanelBottomAlpha),
                           ],
                         ))
                   : null,
@@ -398,14 +448,18 @@ class ReadPreferencesControlCenter extends StatelessWidget {
             ),
           );
 
-          // EFECTO ACRÍLICO NATIVO (BackdropFilter con Desenfoque Gaussiano de 25px sobre Lámina Densa)
+          // EFECTO ACRÍLICO NATIVO (BackdropFilter con Desenfoque Gaussiano configurable)
           Widget finalPanel = ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             child: controller.enableAcrylicEffect
                 ? BackdropFilter(
                     filter: ImageFilter.blur(
-                      sigmaX: 25,
-                      sigmaY: 25,
+                      sigmaX: isDark 
+                          ? ControlCenterVisualConfig.darkBlurSigma 
+                          : ControlCenterVisualConfig.lightBlurSigma,
+                      sigmaY: isDark 
+                          ? ControlCenterVisualConfig.darkBlurSigma 
+                          : ControlCenterVisualConfig.lightBlurSigma,
                       tileMode: TileMode.mirror,
                     ),
                     child: panelContent,
@@ -746,14 +800,16 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
               shape: LiquidGlassShape.squircle(
                 cornerRadius: 24,
                 borderType: OpticalBorder(
-                  borderSaturation: isDark ? 1.0 : 1.2,
+                  borderSaturation: isDark
+                      ? ControlCenterVisualConfig.opticalBorderSaturationDark
+                      : ControlCenterVisualConfig.opticalBorderSaturationLight,
                   ambientIntensity: isDark ? 0.8 : 1.0,
                   borderSolidity: 0.0,
                 ),
               ),
               refraction: const LiquidGlassRefraction(
-                distortion: 0.04,
-                distortionWidth: 16,
+                distortion: ControlCenterVisualConfig.liquidGlassDistortion,
+                distortionWidth: ControlCenterVisualConfig.liquidGlassDistortionWidth,
               ),
             ),
             child: sliderBody,
@@ -886,14 +942,16 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
               shape: LiquidGlassShape.squircle(
                 cornerRadius: 20,
                 borderType: OpticalBorder(
-                  borderSaturation: isDark ? 1.0 : 1.2,
+                  borderSaturation: isDark
+                      ? ControlCenterVisualConfig.opticalBorderSaturationDark
+                      : ControlCenterVisualConfig.opticalBorderSaturationLight,
                   ambientIntensity: isDark ? 0.8 : 1.0,
                   borderSolidity: 0.0,
                 ),
               ),
               refraction: const LiquidGlassRefraction(
-                distortion: 0.04,
-                distortionWidth: 16,
+                distortion: ControlCenterVisualConfig.liquidGlassDistortion,
+                distortionWidth: ControlCenterVisualConfig.liquidGlassDistortionWidth,
               ),
             ),
             child: moduleBody,
