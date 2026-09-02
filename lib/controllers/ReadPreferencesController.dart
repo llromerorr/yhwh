@@ -18,6 +18,47 @@ class ReadPreferencesController extends GetxController {
   bool isJustified = false;
   bool keepScreenOn = false;
 
+  static const List<double> fontLevels = [
+    16.0, // 0: Compacto
+    18.0, // 1: Pequeño
+    20.0, // 2: Estándar
+    22.0, // 3: Confort
+    25.0, // 4: Grande
+    28.0, // 5: Muy Grande
+    32.0, // 6: Accesibilidad
+    36.0, // 7: Accesibilidad Máx
+  ];
+
+  static const Map<double, String> fontLevelLabels = {
+    16.0: 'Compacto',
+    18.0: 'Pequeño',
+    20.0: 'Estándar',
+    22.0: 'Confort',
+    25.0: 'Grande',
+    28.0: 'Muy Grande',
+    32.0: 'Accesibilidad',
+    36.0: 'Accesibilidad Máx',
+  };
+
+  int get currentFontLevelIndex {
+    int closestIndex = 2; // Default 20.0
+    double minDiff = (currentFontSize - fontLevels[0]).abs();
+    for (int i = 1; i < fontLevels.length; i++) {
+      double diff = (currentFontSize - fontLevels[i]).abs();
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = i;
+      }
+    }
+    return closestIndex;
+  }
+
+  double get fontScaleFactor => currentFontSize / 20.0;
+
+  String get currentFontLabel {
+    return fontLevelLabels[fontLevels[currentFontLevelIndex]] ?? '${currentFontSize.round()} pt';
+  }
+
   bool get isVisualImpaired => currentFontSize >= 28.0;
 
   // Sistema de notificación HUD estilo cápsula iOS / Dynamic Island
@@ -32,7 +73,7 @@ class ReadPreferencesController extends GetxController {
     currentFontFamily = getStorage.read('fontFamily') ?? 'Roboto';
     enableAcrylicEffect = getStorage.read('enableAcrylicEffect') ?? false;
     
-    currentFontSize = getStorage.read('fontSize') ?? 22.0;
+    currentFontSize = getStorage.read('fontSize') ?? 20.0;
     isJustified = getStorage.read('isJustified') ?? false;
     keepScreenOn = getStorage.read('keepScreenOn') ?? false;
 
@@ -77,19 +118,19 @@ class ReadPreferencesController extends GetxController {
     currentFontSize = size;
     getStorage.write('fontSize', size);
 
-    // Ajustamos la altura y separación dinámicamente
+    // Ajustamos la altura y separación dinámicamente según la escala
     double newFontHeight = 1.55;
     double newLetterSeparation = 0.0;
 
-    if (size >= 38.0) {
+    if (size >= 32.0) {
       newFontHeight = 1.6;
-      newLetterSeparation = 1.0;
-    } else if (size >= 30.0) {
-      newFontHeight = 1.4; 
-      newLetterSeparation = 0.5;
+      newLetterSeparation = 0.6;
+    } else if (size >= 25.0) {
+      newFontHeight = 1.5; 
+      newLetterSeparation = 0.3;
     } else if (size <= 18.0) {
       newFontHeight = 1.6;
-      newLetterSeparation = 0.2;
+      newLetterSeparation = 0.1;
     }
 
     getStorage.write('fontHeight', newFontHeight);
@@ -107,6 +148,24 @@ class ReadPreferencesController extends GetxController {
 
     _biblePageController.update();
     update();
+  }
+
+  void setFontSizeByIndex(int index) {
+    int clampedIndex = index.clamp(0, fontLevels.length - 1);
+    double targetSize = fontLevels[clampedIndex];
+    setFontSize(targetSize);
+    String label = fontLevelLabels[targetSize] ?? '${targetSize.round()} pt';
+    showToast("${targetSize.round()} pt • $label", Icons.format_size_rounded);
+  }
+
+  void stepUpFontSize() {
+    int nextIndex = (currentFontLevelIndex + 1).clamp(0, fontLevels.length - 1);
+    setFontSizeByIndex(nextIndex);
+  }
+
+  void stepDownFontSize() {
+    int nextIndex = (currentFontLevelIndex - 1).clamp(0, fontLevels.length - 1);
+    setFontSizeByIndex(nextIndex);
   }
 
   void setJustified(bool value) {

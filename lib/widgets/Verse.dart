@@ -92,7 +92,7 @@ class Verse extends StatelessWidget {
               ? FontWeight.bold
               : FontWeight.normal,
           color: resolvedColorNumber,
-          fontSize: this.fontSize - 5,
+          fontSize: (this.fontSize * 0.72).clamp(11.0, 24.0),
         ),
         'ctn': TextStyle(
           fontWeight: FontWeight.normal,
@@ -109,7 +109,7 @@ class Verse extends StatelessWidget {
         'a': TextStyle(
           fontWeight: FontWeight.bold,
           fontStyle: FontStyle.normal,
-          fontSize: this.fontSize - 5,
+          fontSize: (this.fontSize * 0.68).clamp(11.0, 22.0),
           backgroundColor: Colors.transparent,
           decoration: TextDecoration.none,
           color: this.highlight
@@ -210,7 +210,7 @@ class Verse extends StatelessWidget {
       fontFamily: this.fontFamily,
       fontWeight: FontWeight.bold,
       height: height,
-      fontSize: fontSize! - 3,
+      fontSize: (fontSize! * 0.68).clamp(11.0, 22.0),
       fontStyle: FontStyle.italic,
       decoration: TextDecoration.none,
       letterSpacing: letterSeparation,
@@ -257,7 +257,7 @@ class Verse extends StatelessWidget {
                     fontFamily: this.fontFamily,
                     fontWeight: FontWeight.bold,
                     height: height,
-                    fontSize: fontSize + 10,
+                    fontSize: (fontSize * 1.35).clamp(22.0, 42.0),
                     letterSpacing: letterSeparation,
                     color: resolvedColorText),
                 overrideStyle: {'a': aStyle},

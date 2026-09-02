@@ -540,36 +540,60 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
 }
 
 class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
-  static const double minFont = 14.0;
-  static const double maxFont = 45.0;
   static const double sliderHeight = 140.0;
   bool _isPressed = false;
 
-  void _updateFontSizeFromY(double localY, double height) {
-    double percent = (1.0 - (localY / height)).clamp(0.0, 1.0);
-    double newSize = minFont + percent * (maxFont - minFont);
-    widget.controller.setFontSize(newSize);
-    widget.controller.showToast("${newSize.round()} pt", Icons.format_size_rounded);
+  double _dragStartY = 0.0;
+  int _dragStartIndex = 2;
+
+  // 20 píxeles de desplazamiento vertical por cada nivel
+  static const double pixelsPerStep = 20.0;
+
+  void _handleDragStart(DragStartDetails details) {
+    setState(() => _isPressed = true);
+    _dragStartY = details.globalPosition.dy;
+    _dragStartIndex = widget.controller.currentFontLevelIndex;
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    double totalDeltaY = _dragStartY - details.globalPosition.dy; // Desplazar hacia arriba suma niveles
+    int stepOffset = (totalDeltaY / pixelsPerStep).truncate();
+    int targetIndex = (_dragStartIndex + stepOffset).clamp(0, ReadPreferencesController.fontLevels.length - 1);
+
+    if (targetIndex != widget.controller.currentFontLevelIndex) {
+      HapticFeedback.selectionClick();
+      widget.controller.setFontSizeByIndex(targetIndex);
+    }
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    setState(() => _isPressed = false);
+    // Toque en mitad superior: +1 nivel; toque en mitad inferior: -1 nivel
+    if (details.localPosition.dy < sliderHeight / 2) {
+      HapticFeedback.selectionClick();
+      widget.controller.stepUpFontSize();
+    } else {
+      HapticFeedback.selectionClick();
+      widget.controller.stepDownFontSize();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    double fillPercent = ((widget.controller.currentFontSize - minFont) / (maxFont - minFont)).clamp(0.0, 1.0);
+    
+    // Nivel del 0 al 7 mapeado suavemente del 20% al 100% de llenado
+    int levelIndex = widget.controller.currentFontLevelIndex;
+    int totalLevels = ReadPreferencesController.fontLevels.length;
+    double fillPercent = ((levelIndex + 1) / totalLevels).clamp(0.18, 1.0);
 
     return GestureDetector(
-      onVerticalDragStart: (_) => setState(() => _isPressed = true),
-      onVerticalDragUpdate: (details) {
-        _updateFontSizeFromY(details.localPosition.dy, sliderHeight);
-      },
+      onVerticalDragStart: _handleDragStart,
+      onVerticalDragUpdate: _handleDragUpdate,
       onVerticalDragEnd: (_) => setState(() => _isPressed = false),
       onVerticalDragCancel: () => setState(() => _isPressed = false),
-      onTapDown: (details) {
-        setState(() => _isPressed = true);
-        HapticFeedback.selectionClick();
-        _updateFontSizeFromY(details.localPosition.dy, sliderHeight);
-      },
-      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: _handleTapUp,
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
         scale: _isPressed ? 0.95 : 1.0,
