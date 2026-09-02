@@ -53,10 +53,10 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     controller.enableAcrylicEffect
-                        ? Colors.white.withValues(alpha: 0.88)
+                        ? Colors.white.withValues(alpha: 0.72)
                         : const Color(0xFFFFFFFF),
                     controller.enableAcrylicEffect
-                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.78)
+                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.52)
                         : const Color(0xFFE2E4EA),
                   ],
                 );
@@ -85,13 +85,13 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               : Colors.black.withValues(alpha: 0.12);
           final topBorderColor = isDark
               ? indicatorColor.withValues(alpha: 0.40)
-              : Colors.white; // Bisel blanco puro reflectante
+              : Colors.white.withValues(alpha: 0.80);
           final inactiveIconColor = isDark
               ? indicatorColor.withValues(alpha: 0.70)
               : const Color(0xff27272A);
           final activeIconColor = isDark ? canvasColor : Colors.white;
 
-          // CONTENIDO INTERNO DEL PANEL CON ILUMINACIÓN CENITAL
+          // CONTENIDO INTERNO DEL PANEL CON CRISTAL TRANSLÚCIDO
           Widget panelContent = Container(
             constraints: const BoxConstraints(maxWidth: 480),
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
@@ -106,12 +106,12 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                             canvasColor.withValues(alpha: 0.50),
                           ],
                         )
-                      : const LinearGradient(
+                      : LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Color(0xEEFFFFFF), // Blanco puro 93% arriba (Luz cenital brillante)
-                            Color(0xC8F4F5F9), // Porcelana satinada 78% abajo
+                            Colors.white.withValues(alpha: 0.52), // Cristal blanco 52% arriba
+                            Colors.white.withValues(alpha: 0.35), // Cristal blanco 35% abajo
                           ],
                         ))
                   : null,
