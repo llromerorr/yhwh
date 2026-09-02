@@ -36,7 +36,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Gradiente 3D para módulos en reposo (Vidrio esmerilado translúcido coordinado con bisel)
+          // Gradiente 3D para módulos en reposo (Relieve satinado sobre acrílico denso)
           final neutralGradient = isDark
               ? LinearGradient(
                   begin: Alignment.topLeft,
@@ -51,10 +51,10 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     controller.enableAcrylicEffect
-                        ? Colors.white.withValues(alpha: 0.50)
+                        ? Colors.white.withValues(alpha: 0.90)
                         : const Color(0xFFFFFFFF),
                     controller.enableAcrylicEffect
-                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.30)
+                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.72)
                         : const Color(0xFFE2E4EA),
                   ],
                 );
@@ -89,7 +89,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               : const Color(0xff27272A);
           final activeIconColor = isDark ? canvasColor : Colors.white;
 
-          // CONTENIDO INTERNO DEL PANEL (Lámina flotante estilo iOS 18 Control Center)
+          // CONTENIDO INTERNO DEL PANEL (Lámina de Acrílico Denso y Esmerilado)
           Widget panelContent = Container(
             constraints: const BoxConstraints(maxWidth: 480),
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
@@ -100,16 +100,16 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            canvasColor.withValues(alpha: 0.1),
-                            canvasColor.withValues(alpha: 0.1),
+                            canvasColor.withValues(alpha: 0.82),
+                            canvasColor.withValues(alpha: 0.70),
                           ],
                         )
                       : LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.white.withValues(alpha: 0.18),
-                            Colors.white.withValues(alpha: 0.08),
+                            Colors.white.withValues(alpha: 0.82),
+                            const Color(0xFFF0F2F7).withValues(alpha: 0.72),
                           ],
                         ))
                   : null,
@@ -123,13 +123,13 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
                   blurRadius: 28,
                   offset: const Offset(0, -6),
                 ),
                 if (!isDark && controller.enableAcrylicEffect)
                   BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.70),
+                    color: Colors.white.withValues(alpha: 0.90),
                     blurRadius: 4,
                     offset: const Offset(0, -1),
                   ),
@@ -405,13 +405,13 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                       ),
                     ),
                     refraction: const LiquidGlassRefraction(
-                      distortion: 0.10,
-                      distortionWidth: 24,
+                      distortion: 0.04,
+                      distortionWidth: 16,
                     ),
                     appearance: LiquidGlassAppearance(
                       color: isDark
-                          ? canvasColor.withValues(alpha: 0.45)
-                          : Colors.white.withValues(alpha: 0.22),
+                          ? canvasColor.withValues(alpha: 0.65)
+                          : Colors.white.withValues(alpha: 0.70),
                     ),
                   ),
                   child: panelContent,
