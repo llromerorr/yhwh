@@ -8,6 +8,7 @@ import 'package:yhwh/controllers/ReadPreferencesController.dart';
 import 'package:yhwh/pages/BiblePage.dart';
 import 'package:animate_do/animate_do.dart' as animateDo;
 import 'package:yhwh/pages/ContactPage.dart'; // Import original recuperado
+import 'package:yhwh/widgets/GlassContainer.dart';
 
 class MainPage extends StatelessWidget {
   @override
@@ -41,16 +42,13 @@ class MainPage extends StatelessWidget {
             init: ReadPreferencesController(),
             builder: (readPrefs) {
               final isDark = Theme.of(context).brightness == Brightness.dark;
-              final acrylicAlpha = isDark ? 0.30 : 0.78;
-              final topBorderColor = Theme.of(context).indicatorColor.withValues(alpha: isDark ? 0.50 : 0.20);
+              final topBorderColor = Theme.of(context).indicatorColor.withValues(alpha: isDark ? 0.45 : 0.22);
 
               Widget navBar = BottomNavigationBar(
                 currentIndex: _.mainPagetabIndex,
                 elevation: 0,
                 type: BottomNavigationBarType.fixed,
-                backgroundColor: readPrefs.enableAcrylicEffect 
-                    ? Theme.of(context).canvasColor.withValues(alpha: acrylicAlpha) 
-                    : Theme.of(context).canvasColor,
+                backgroundColor: Colors.transparent,
                 selectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.9),
                 unselectedItemColor: Theme.of(context).indicatorColor.withValues(alpha: 0.6),
                           
@@ -74,24 +72,36 @@ class MainPage extends StatelessWidget {
                 onTap: _.bottomNavigationBarOnTap
               );
 
-              Widget blurredNavBar = ClipRRect(
-                child: readPrefs.enableAcrylicEffect
-                  ? BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 36, sigmaY: 36, tileMode: TileMode.mirror),
-                      child: navBar,
-                    )
-                  : navBar,
-              );
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
+              return GlassContainer(
+                enableAcrylic: readPrefs.enableAcrylicEffect,
+                blur: isDark ? 23.0 : 19.0,
+                border: Border(
+                  top: BorderSide(
                     color: topBorderColor,
-                    height: 1.5,
+                    width: 1.5,
                   ),
-                  blurredNavBar,
-                ],
+                ),
+                gradient: readPrefs.enableAcrylicEffect
+                    ? (isDark
+                        ? LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Theme.of(context).canvasColor.withValues(alpha: 0.45),
+                              Theme.of(context).canvasColor.withValues(alpha: 0.25),
+                            ],
+                          )
+                        : LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.70),
+                              Colors.white.withValues(alpha: 0.40),
+                            ],
+                          ))
+                    : null,
+                color: readPrefs.enableAcrylicEffect ? null : Theme.of(context).canvasColor,
+                child: navBar,
               );
             }
           );

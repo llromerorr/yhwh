@@ -13,6 +13,7 @@ import 'package:yhwh/pages/HighlighterCreate.dart';
 import 'package:yhwh/pages/HighlighterPage.dart';
 import 'package:yhwh/pages/ReadPreferences.dart';
 import 'package:yhwh/widgets/ChapterFooter.dart';
+import 'package:yhwh/widgets/GlassContainer.dart';
 import 'package:yhwh/widgets/Verse.dart';
 import 'package:animate_do/animate_do.dart' as animateDo;
 
@@ -79,119 +80,145 @@ class BiblePage extends StatelessWidget {
                     ),
 
                     AnimatedSwitcher(
-                      duration: Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 300),
                       switchInCurve: Curves.easeInOut,
                       switchOutCurve: Curves.easeInOut,
-                      child: (biblePageController.bookNumber == 1 && biblePageController.chapterNumber == 1) ? SizedBox() : Container(
-                        width: 45.0,
-                        height: 45.0,
-                        child: Tooltip(
-                          message: 'Capitulo anterior',
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(300.0),
-                            child: readPrefs.enableAcrylicEffect ? BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
-                              child: MaterialButton(
-                                elevation: 0,
-                                onPressed: biblePageController.previusChapter,
-                                color: Theme.of(context).canvasColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.20 : 0.78),
-                            
-                                child: Icon(
-                                  Icons.keyboard_arrow_left,
-                                  color: Theme.of(context).indicatorColor,
-                                  size: 24,
+                      child: (biblePageController.bookNumber == 1 && biblePageController.chapterNumber == 1)
+                          ? const SizedBox()
+                          : Tooltip(
+                              message: 'Capitulo anterior',
+                              child: GlassContainer(
+                                enableAcrylic: readPrefs.enableAcrylicEffect,
+                                blur: Theme.of(context).brightness == Brightness.dark ? 23.0 : 19.0,
+                                width: 45.0,
+                                height: 45.0,
+                                borderRadius: BorderRadius.circular(30.0),
+                                border: Border.all(
+                                  color: Theme.of(context).indicatorColor.withValues(
+                                        alpha: Theme.of(context).brightness == Brightness.dark ? 0.45 : 0.22,
+                                      ),
+                                  width: 1.2,
                                 ),
-                                padding: EdgeInsets.all(0),
-                                shape: CircleBorder(
-                                  side: BorderSide(
-                                    color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
-                                    width: 1.5
-                                  )
+                                gradient: readPrefs.enableAcrylicEffect
+                                    ? (Theme.of(context).brightness == Brightness.dark
+                                        ? LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Theme.of(context).canvasColor.withValues(alpha: 0.35),
+                                              Theme.of(context).canvasColor.withValues(alpha: 0.15),
+                                            ],
+                                          )
+                                        : LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Colors.white.withValues(alpha: 0.65),
+                                              Colors.white.withValues(alpha: 0.25),
+                                            ],
+                                          ))
+                                    : null,
+                                color: readPrefs.enableAcrylicEffect ? null : Theme.of(context).canvasColor,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: Theme.of(context).brightness == Brightness.dark ? 0.35 : 0.08,
+                                    ),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    onTap: biblePageController.previusChapter,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.keyboard_arrow_left,
+                                        color: Theme.of(context).indicatorColor,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ) : MaterialButton(
-                                elevation: 0,
-                                onPressed: biblePageController.previusChapter,
-                                color: Theme.of(context).canvasColor,
-                            
-                                child: Icon(
-                                  Icons.keyboard_arrow_left,
-                                  color: Theme.of(context).indicatorColor,
-                                  size: 24,
-                                ),
-                                padding: EdgeInsets.all(0),
-                                shape: CircleBorder(
-                                  side: BorderSide(
-                                    color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
-                                    width: 1.5
-                                  )
-                                ),
-                              ),
-                          ),
-                        ),
-                      )
+                            ),
                     ),
 
                     Expanded(child: SizedBox.fromSize()),
 
                     AnimatedSwitcher(
-                      duration: Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 300),
                       switchInCurve: Curves.easeInOut,
                       switchOutCurve: Curves.easeInOut,
-                      child: (biblePageController.bookNumber == 66 && biblePageController.chapterNumber == 22) ? SizedBox() : Container(
-                        width: 45.0,
-                        height: 45.0,
-                        child: Tooltip(
-                          message: 'Capitulo siguiente',
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(300.0),
-                            child: readPrefs.enableAcrylicEffect ? BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
-                              child: MaterialButton(
-                                elevation: 0,
-                                onPressed: biblePageController.nextChapter,
-                                color: Theme.of(context).canvasColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.20 : 0.78),
-                                                          
-                                child: Icon(
-                                  Icons.keyboard_arrow_right,
-                                  color: Theme.of(context).indicatorColor,
-                                  size: 24,
+                      child: (biblePageController.bookNumber == 66 && biblePageController.chapterNumber == 22)
+                          ? const SizedBox()
+                          : Tooltip(
+                              message: 'Capitulo siguiente',
+                              child: GlassContainer(
+                                enableAcrylic: readPrefs.enableAcrylicEffect,
+                                blur: Theme.of(context).brightness == Brightness.dark ? 23.0 : 19.0,
+                                width: 45.0,
+                                height: 45.0,
+                                borderRadius: BorderRadius.circular(30.0),
+                                border: Border.all(
+                                  color: Theme.of(context).indicatorColor.withValues(
+                                        alpha: Theme.of(context).brightness == Brightness.dark ? 0.45 : 0.22,
+                                      ),
+                                  width: 1.2,
                                 ),
-                                padding: EdgeInsets.all(0),
-                                shape: CircleBorder(
-                                  side: BorderSide(
-                                    color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
-                                    width: 1.5
-                                  )
+                                gradient: readPrefs.enableAcrylicEffect
+                                    ? (Theme.of(context).brightness == Brightness.dark
+                                        ? LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Theme.of(context).canvasColor.withValues(alpha: 0.35),
+                                              Theme.of(context).canvasColor.withValues(alpha: 0.15),
+                                            ],
+                                          )
+                                        : LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Colors.white.withValues(alpha: 0.65),
+                                              Colors.white.withValues(alpha: 0.25),
+                                            ],
+                                          ))
+                                    : null,
+                                color: readPrefs.enableAcrylicEffect ? null : Theme.of(context).canvasColor,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: Theme.of(context).brightness == Brightness.dark ? 0.35 : 0.08,
+                                    ),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    onTap: biblePageController.nextChapter,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.keyboard_arrow_right,
+                                        color: Theme.of(context).indicatorColor,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ) : MaterialButton(
-                                elevation: 0,
-                                onPressed: biblePageController.nextChapter,
-                                color: Theme.of(context).canvasColor,
-                                                          
-                                child: Icon(
-                                  Icons.keyboard_arrow_right,
-                                  color: Theme.of(context).indicatorColor,
-                                  size: 24,
-                                ),
-                                padding: EdgeInsets.all(0),
-                                shape: CircleBorder(
-                                  side: BorderSide(
-                                    color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
-                                    width: 1.5
-                                  )
-                                ),
-                              ),
-                          ),
-                        ),
-                      ),
+                            ),
                     ),
 
                     //Genera efecto de movimiento en el Floating Button
                     AnimatedPadding(
                       padding: EdgeInsets.symmetric(horizontal: (biblePageController.bookNumber == 66 && biblePageController.chapterNumber == 22) ? 2 : 0),
-                      duration: Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
                     ),
                   ],
@@ -208,7 +235,7 @@ class BiblePage extends StatelessWidget {
                   onNotification: biblePageController.scrollNotification,
                   child: RawScrollbar(
                     interactive: true,
-                    radius: Radius.circular(30),
+                    radius: const Radius.circular(30),
                     thumbColor: Theme.of(context).indicatorColor.withValues(alpha: 0.4),
                     controller: biblePageController.autoScrollController,
                     child: CustomScrollView(
@@ -216,7 +243,7 @@ class BiblePage extends StatelessWidget {
                       slivers: [
                         // AppBar
                         SliverAppBar(
-                          backgroundColor: readPrefs.enableAcrylicEffect ? Theme.of(context).canvasColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.30 : 0.78) : Theme.of(context).canvasColor,
+                          backgroundColor: Colors.transparent,
                           primary: true,
                           floating: false,
                           pinned: true,
@@ -225,25 +252,39 @@ class BiblePage extends StatelessWidget {
                           titleSpacing: 0,
                           bottom: PreferredSize(
                             child: Container(
-                              color: Theme.of(context).indicatorColor.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.50 : 0.20),
-                              height: 1.5
+                              color: Theme.of(context).indicatorColor.withValues(
+                                    alpha: Theme.of(context).brightness == Brightness.dark ? 0.45 : 0.22,
+                                  ),
+                              height: 1.5,
                             ),
-                            
-                            preferredSize: Size.fromHeight(0)
+                            preferredSize: const Size.fromHeight(0),
                           ),
                     
-                          flexibleSpace: readPrefs.enableAcrylicEffect ? ClipRRect(
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(
-                                sigmaX: 35,
-                                sigmaY: 35,
-                                tileMode: TileMode.mirror
-                              ),
-                              child: Container(
-                                color: Colors.transparent,
-                              ),
-                            ),
-                          ) : null,
+                          flexibleSpace: GlassContainer(
+                            enableAcrylic: readPrefs.enableAcrylicEffect,
+                            blur: Theme.of(context).brightness == Brightness.dark ? 23.0 : 19.0,
+                            gradient: readPrefs.enableAcrylicEffect
+                                ? (Theme.of(context).brightness == Brightness.dark
+                                    ? LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Theme.of(context).canvasColor.withValues(alpha: 0.45),
+                                          Theme.of(context).canvasColor.withValues(alpha: 0.25),
+                                        ],
+                                      )
+                                    : LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.white.withValues(alpha: 0.70),
+                                          Colors.white.withValues(alpha: 0.40),
+                                        ],
+                                      ))
+                                : null,
+                            color: readPrefs.enableAcrylicEffect ? null : Theme.of(context).canvasColor,
+                            child: const SizedBox.expand(),
+                          ),
                           
                           title: AnimatedCrossFade(
                             sizeCurve: Curves.easeInOut,

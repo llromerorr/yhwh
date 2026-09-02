@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:yhwh/controllers/ReadPreferencesController.dart';
+import 'package:yhwh/widgets/GlassContainer.dart';
 
 class FloatingWidget extends StatelessWidget {
   final Widget child;
@@ -12,32 +15,59 @@ class FloatingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Theme.of(context).canvasColor,
-      child: Padding(
-        padding: padding,
-        child: SafeArea(
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Theme.of(context).indicatorColor.withValues(alpha: 0.7), width: 1.0),
-              color: Theme.of(context).canvasColor,
-              borderRadius: BorderRadius.circular(18.0),
-              // boxShadow: [
-              //   BoxShadow(
-              //     color: Theme.of(context).shadowColor.withValues(alpha: 0.5),
-              //     blurRadius: 12.0,
-              //     spreadRadius: 2.0,
-              //     offset: Offset(0, 0)
-              //   )
-              // ]
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GetBuilder<ReadPreferencesController>(
+      init: ReadPreferencesController(),
+      builder: (readPrefs) {
+        return Container(
+          color: Colors.transparent,
+          child: Padding(
+            padding: padding,
+            child: SafeArea(
+              child: GlassContainer(
+                enableAcrylic: readPrefs.enableAcrylicEffect,
+                blur: isDark ? 23.0 : 19.0,
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(
+                  color: Theme.of(context).indicatorColor.withValues(
+                        alpha: isDark ? 0.45 : 0.22,
+                      ),
+                  width: 1.2,
+                ),
+                gradient: readPrefs.enableAcrylicEffect
+                    ? (isDark
+                        ? LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Theme.of(context).canvasColor.withValues(alpha: 0.55),
+                              Theme.of(context).canvasColor.withValues(alpha: 0.35),
+                            ],
+                          )
+                        : LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.75),
+                              Colors.white.withValues(alpha: 0.45),
+                            ],
+                          ))
+                    : null,
+                color: readPrefs.enableAcrylicEffect ? null : Theme.of(context).canvasColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.40 : 0.12),
+                    blurRadius: 24.0,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+                child: child,
+              ),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18.0),
-              child: child
-            )
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

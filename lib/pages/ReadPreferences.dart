@@ -13,7 +13,7 @@ import 'package:yhwh/widgets/GlassContainer.dart';
 abstract class ControlCenterVisualConfig {
   // --- 1. BANDEJA DEL PANEL (FONDO PRINCIPAL) ---
   /// Opacidad superior del fondo en Modo Claro (0.0 = 100% transparente, 1.0 = sólido)
-  static const double lightPanelTopAlpha = 0;
+  static const double lightPanelTopAlpha = 0.9;
   /// Opacidad inferior del fondo en Modo Claro
   static const double lightPanelBottomAlpha = 0;
 
@@ -24,9 +24,9 @@ abstract class ControlCenterVisualConfig {
 
   // --- 2. BOTONES Y MÓDULOS EN REPOSO ---
   /// Opacidad superior de los botones en Modo Claro
-  static const double lightButtonTopAlpha = 0.35;
+  static const double lightButtonTopAlpha = 0.5;
   /// Opacidad inferior de los botones en Modo Claro
-  static const double lightButtonBottomAlpha = 0.18;
+  static const double lightButtonBottomAlpha = 0.5;
 
   /// Opacidad de los botones en Modo Oscuro
   static const double darkButtonTopAlpha = 0.05;
@@ -34,19 +34,9 @@ abstract class ControlCenterVisualConfig {
 
   // --- 3. DESENFOQUE GAUSSIANO (BLUR) ---
   /// Intensidad del desenfoque en Modo Claro (16px difumina el texto pero deja ver los colores)
-  static const double lightBlurSigma = 16.0;
+  static const double lightBlurSigma = 19.0;
   /// Intensidad del desenfoque en Modo Oscuro (18px)
   static const double darkBlurSigma = 23.0;
-
-  // --- 4. LIQUID GLASS & REFRACCIÓN ÓPTICA ---
-  /// Distorsión óptica de los bordes (0.0 = plano, 0.08 = pronunciado)
-  static const double liquidGlassDistortion = 0.04;
-  /// Ancho del bisel de refracción óptica (px)
-  static const double liquidGlassDistortionWidth = 16.0;
-  /// Saturación de color en el borde óptico en Modo Claro
-  static const double opticalBorderSaturationLight = 1.2;
-  /// Saturación de color en el borde óptico en Modo Oscuro
-  static const double opticalBorderSaturationDark = 1.0;
 }
 
 /// Centro de Control de Lectura Flotante (Diseño iOS 18 Liquid Glass & Neumorfismo Gradiente 3D)
