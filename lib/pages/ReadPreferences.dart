@@ -590,10 +590,10 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    // Nivel del 0 al 7 mapeado suavemente del 20% al 100% de llenado
+    // Mapeo calibrado estilo iOS: en nivel 0 (16 pt) el relleno es del 30% (cubre el icono completo), y sube de 10% en 10% hasta el 100%
     int levelIndex = widget.controller.currentFontLevelIndex;
     int totalLevels = ReadPreferencesController.fontLevels.length;
-    double fillPercent = ((levelIndex + 1) / totalLevels).clamp(0.18, 1.0);
+    double fillPercent = (levelIndex / (totalLevels - 1)) * 0.70 + 0.30;
 
     return GestureDetector(
       onVerticalDragStart: _handleDragStart,
@@ -649,10 +649,10 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
               children: [
                 // 1. CAPA BASE INACTIVA: Icono base en la pista vacía
                 Positioned(
-                  bottom: 18,
+                  bottom: 12,
                   child: Icon(
                     Icons.format_size_rounded,
-                    size: 28,
+                    size: 26,
                     color: isDark
                         ? widget.indicatorColor.withValues(alpha: 0.45)
                         : const Color(0xff71717A),
@@ -674,10 +674,10 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
                         alignment: Alignment.bottomCenter,
                         children: [
                           Positioned(
-                            bottom: 18,
+                            bottom: 12,
                             child: Icon(
                               Icons.format_size_rounded,
-                              size: 28,
+                              size: 26,
                               color: isDark ? widget.canvasColor : Colors.white,
                             ),
                           ),
