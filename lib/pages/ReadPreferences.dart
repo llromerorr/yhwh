@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 
@@ -34,9 +35,6 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final isDark = Theme.of(context).brightness == Brightness.dark;
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
-
-          // Tokens de diseño iOS 18 (Gradientes 3D, Iluminación especular y Vidrio líquido translúcido):
-          final acrylicAlpha = isDark ? 0.1 : 0.2;
 
           // Gradiente 3D para módulos en reposo (Vidrio esmerilado translúcido coordinado con bisel)
           final neutralGradient = isDark
@@ -102,8 +100,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            canvasColor.withValues(alpha: 0.45),
-                            canvasColor.withValues(alpha: 0.25),
+                            canvasColor.withValues(alpha: 0.1),
+                            canvasColor.withValues(alpha: 0.1),
                           ],
                         )
                       : LinearGradient(
@@ -394,22 +392,34 @@ class ReadPreferencesControlCenter extends StatelessWidget {
             ),
           );
 
-          // EFECTO ACRÍLICO NATIVO (BackdropFilter cristalino de 20px de desenfoque)
-          final glassFilter = ImageFilter.blur(
-            sigmaX: isDark ? 28 : 20,
-            sigmaY: isDark ? 28 : 20,
-            tileMode: TileMode.mirror,
-          );
-
-          Widget finalPanel = ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            child: controller.enableAcrylicEffect
-                ? BackdropFilter(
-                    filter: glassFilter,
-                    child: panelContent,
-                  )
-                : panelContent,
-          );
+          // EFECTO CRISTAL LÍQUIDO NATIVO (LiquidGlassLens con Refracción Óptica y Bisel)
+          Widget finalPanel = controller.enableAcrylicEffect
+              ? LiquidGlassLens(
+                  style: LiquidGlassStyle(
+                    shape: LiquidGlassShape.roundedRectangle(
+                      cornerRadius: 32,
+                      borderType: OpticalBorder(
+                        borderSaturation: isDark ? 1.0 : 1.4,
+                        ambientIntensity: isDark ? 0.8 : 1.2,
+                        borderSolidity: 0.0,
+                      ),
+                    ),
+                    refraction: const LiquidGlassRefraction(
+                      distortion: 0.10,
+                      distortionWidth: 24,
+                    ),
+                    appearance: LiquidGlassAppearance(
+                      color: isDark
+                          ? canvasColor.withValues(alpha: 0.45)
+                          : Colors.white.withValues(alpha: 0.22),
+                    ),
+                  ),
+                  child: panelContent,
+                )
+              : ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  child: panelContent,
+                );
 
           // ESTRUCTURA CON AVISO FLOTANDO POR ENCIMA DEL PANEL (Control Center)
           return Column(
