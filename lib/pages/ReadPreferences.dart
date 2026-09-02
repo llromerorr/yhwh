@@ -38,7 +38,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           // Tokens de diseño iOS 18 (Gradientes 3D, Iluminación especular y Vidrio líquido translúcido):
           final acrylicAlpha = isDark ? 0.1 : 0.2;
 
-          // Gradiente 3D para módulos en reposo (Luz diagonal translúcida adaptada al acrílico)
+          // Gradiente 3D para módulos en reposo (Vidrio esmerilado translúcido coordinado con bisel)
           final neutralGradient = isDark
               ? LinearGradient(
                   begin: Alignment.topLeft,
@@ -53,10 +53,10 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     controller.enableAcrylicEffect
-                        ? Colors.white.withValues(alpha: 0.72)
+                        ? Colors.white.withValues(alpha: 0.60)
                         : const Color(0xFFFFFFFF),
                     controller.enableAcrylicEffect
-                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.52)
+                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.38)
                         : const Color(0xFFE2E4EA),
                   ],
                 );
@@ -82,10 +82,12 @@ class ReadPreferencesControlCenter extends StatelessWidget {
 
           final borderColor = isDark
               ? indicatorColor.withValues(alpha: 0.18)
-              : Colors.black.withValues(alpha: 0.12);
+              : (controller.enableAcrylicEffect
+                  ? Colors.white.withValues(alpha: 0.85)
+                  : Colors.black.withValues(alpha: 0.12));
           final topBorderColor = isDark
               ? indicatorColor.withValues(alpha: 0.40)
-              : Colors.white.withValues(alpha: 0.80);
+              : Colors.white.withValues(alpha: 0.90);
           final inactiveIconColor = isDark
               ? indicatorColor.withValues(alpha: 0.70)
               : const Color(0xff27272A);
@@ -110,8 +112,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.white.withValues(alpha: 0.52), // Cristal blanco 52% arriba
-                            Colors.white.withValues(alpha: 0.35), // Cristal blanco 35% abajo
+                            Colors.white.withValues(alpha: 0.45), // Cristal blanco 45% arriba
+                            Colors.white.withValues(alpha: 0.28), // Cristal blanco 28% abajo
                           ],
                         ))
                   : null,
@@ -125,13 +127,13 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.10),
+                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
                   blurRadius: 28,
                   offset: const Offset(0, -6),
                 ),
                 if (!isDark && controller.enableAcrylicEffect)
                   BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.80),
+                    color: Colors.white.withValues(alpha: 0.90),
                     blurRadius: 4,
                     offset: const Offset(0, -1),
                   ),
@@ -394,16 +396,32 @@ class ReadPreferencesControlCenter extends StatelessWidget {
             ),
           );
 
-          // EFECTO ACRÍLICO NATIVO (BackdropFilter estilo AppBar)
+          // EFECTO ACRÍLICO NATIVO (BackdropFilter con Composición de Luminancia y Vibrancy)
+          final glassFilter = isDark
+              ? ImageFilter.blur(
+                  sigmaX: 30,
+                  sigmaY: 30,
+                  tileMode: TileMode.mirror,
+                )
+              : ImageFilter.compose(
+                  outer: ColorFilter.matrix(const <double>[
+                    1.12, 0,    0,    0, 24, // Realce canal Rojo y ganancia blanca
+                    0,    1.12, 0,    0, 24, // Realce canal Verde y ganancia blanca
+                    0,    0,    1.12, 0, 24, // Realce canal Azul y ganancia blanca
+                    0,    0,    0,    1,  0,
+                  ]),
+                  inner: ImageFilter.blur(
+                    sigmaX: 28,
+                    sigmaY: 28,
+                    tileMode: TileMode.mirror,
+                  ),
+                );
+
           Widget finalPanel = ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             child: controller.enableAcrylicEffect
                 ? BackdropFilter(
-                    filter: ImageFilter.blur(
-                      sigmaX: 35,
-                      sigmaY: 35,
-                      tileMode: TileMode.mirror,
-                    ),
+                    filter: glassFilter,
                     child: panelContent,
                   )
                 : panelContent,
