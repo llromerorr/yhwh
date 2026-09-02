@@ -557,6 +557,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
     });
     _dragStartY = details.globalPosition.dy;
     _dragStartIndex = widget.controller.currentFontLevelIndex;
+    HapticFeedback.lightImpact();
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
@@ -569,7 +570,12 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
     int targetIndex = (_dragStartIndex + stepOffset).clamp(0, ReadPreferencesController.fontLevels.length - 1);
 
     if (targetIndex != widget.controller.currentFontLevelIndex) {
-      HapticFeedback.selectionClick();
+      // Vibración háptica real y nítida
+      if (targetIndex == 0 || targetIndex == ReadPreferencesController.fontLevels.length - 1) {
+        HapticFeedback.mediumImpact(); // Tope mínimo o máximo
+      } else {
+        HapticFeedback.lightImpact(); // Salto de nivel
+      }
       widget.controller.setFontSizeByIndex(targetIndex);
     }
   }
@@ -577,6 +583,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
   void _handleTapUp(TapUpDetails details) {
     setState(() => _isPressed = false);
     if (!_hasMoved) {
+      HapticFeedback.lightImpact();
       // Toque en mitad superior: +1 nivel; toque en mitad inferior: -1 nivel
       if (details.localPosition.dy < sliderHeight / 2) {
         widget.controller.stepUpFontSize();
@@ -593,19 +600,22 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
     // Mapeo calibrado estilo iOS: en nivel 0 (16 pt) el relleno es del 30% (cubre el icono completo), y sube de 10% en 10% hasta el 100%
     int levelIndex = widget.controller.currentFontLevelIndex;
     int totalLevels = ReadPreferencesController.fontLevels.length;
-    double fillPercent = (levelIndex / (totalLevels - 1)) * 0.70 + 0.30;
+    double targetFill = (levelIndex / (totalLevels - 1)) * 0.70 + 0.30;
 
     return GestureDetector(
       onVerticalDragStart: _handleDragStart,
       onVerticalDragUpdate: _handleDragUpdate,
       onVerticalDragEnd: (_) => setState(() => _isPressed = false),
       onVerticalDragCancel: () => setState(() => _isPressed = false),
-      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapDown: (_) {
+        setState(() => _isPressed = true);
+        HapticFeedback.lightImpact();
+      },
       onTapUp: _handleTapUp,
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
-        scale: _isPressed ? 0.95 : 1.0,
-        duration: const Duration(milliseconds: 140),
+        scale: _isPressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 160),
         curve: Curves.easeOutBack,
         child: Container(
           height: sliderHeight,
@@ -647,42 +657,60 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
-                // 1. CAPA BASE INACTIVA: Icono base en la pista vacía
+                // 1. CAPA BASE INACTIVA: Icono base en la pista vacía con micro-escala
                 Positioned(
                   bottom: 12,
-                  child: Icon(
-                    Icons.format_size_rounded,
-                    size: 26,
-                    color: isDark
-                        ? widget.indicatorColor.withValues(alpha: 0.45)
-                        : const Color(0xff71717A),
+                  child: AnimatedScale(
+                    scale: _isPressed ? 1.06 : 1.0,
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutBack,
+                    child: Icon(
+                      Icons.format_size_rounded,
+                      size: 26,
+                      color: isDark
+                          ? widget.indicatorColor.withValues(alpha: 0.45)
+                          : const Color(0xff71717A),
+                    ),
                   ),
                 ),
 
-                // 2. CAPA RELLENA ACTIVA: Gradiente 3D activo y recorte ClipRect exacto
-                ClipRect(
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    heightFactor: fillPercent,
-                    child: Container(
-                      height: sliderHeight,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: widget.activeGradient,
-                      ),
-                      child: Stack(
+                // 2. CAPA RELLENA ACTIVA CON ANIMACIÓN FLUIDA DE RESORTE (Spring Physics)
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: targetFill, end: targetFill),
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, animatedFill, child) {
+                    return ClipRect(
+                      child: Align(
                         alignment: Alignment.bottomCenter,
-                        children: [
-                          Positioned(
-                            bottom: 12,
+                        heightFactor: animatedFill,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    height: sliderHeight,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: widget.activeGradient,
+                    ),
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        Positioned(
+                          bottom: 12,
+                          child: AnimatedScale(
+                            scale: _isPressed ? 1.06 : 1.0,
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeOutBack,
                             child: Icon(
                               Icons.format_size_rounded,
                               size: 26,
                               color: isDark ? widget.canvasColor : Colors.white,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
