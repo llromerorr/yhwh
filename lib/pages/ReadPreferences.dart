@@ -19,7 +19,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
       isDismissible: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.15),
+      barrierColor: Colors.transparent, // Fondo cristalino sin velo gris
       builder: (context) => const ReadPreferencesControlCenter(),
     );
   }
@@ -36,7 +36,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final canvasColor = Theme.of(context).canvasColor;
 
           // Tokens de diseño iOS 18 (Gradientes 3D, Iluminación especular y Vidrio líquido translúcido):
-          final acrylicAlpha = isDark ? 0.55 : 0.58;
+          final acrylicAlpha = isDark ? 0.65 : 0.72;
 
           // Gradiente 3D para módulos en reposo (Luz diagonal translúcida adaptada al acrílico)
           final neutralGradient = isDark
@@ -44,8 +44,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    indicatorColor.withValues(alpha: controller.enableAcrylicEffect ? 0.22 : 0.16),
-                    indicatorColor.withValues(alpha: controller.enableAcrylicEffect ? 0.10 : 0.06),
+                    indicatorColor.withValues(alpha: controller.enableAcrylicEffect ? 0.20 : 0.15),
+                    indicatorColor.withValues(alpha: controller.enableAcrylicEffect ? 0.08 : 0.05),
                   ],
                 )
               : LinearGradient(
@@ -53,10 +53,10 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     controller.enableAcrylicEffect
-                        ? Colors.white.withValues(alpha: 0.85)
+                        ? Colors.white.withValues(alpha: 0.88)
                         : const Color(0xFFFFFFFF),
                     controller.enableAcrylicEffect
-                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.75)
+                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.78)
                         : const Color(0xFFE2E4EA),
                   ],
                 );
@@ -84,8 +84,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               ? indicatorColor.withValues(alpha: 0.18)
               : Colors.black.withValues(alpha: 0.12);
           final topBorderColor = isDark
-              ? indicatorColor.withValues(alpha: 0.50)
-              : indicatorColor.withValues(alpha: 0.22);
+              ? indicatorColor.withValues(alpha: 0.40)
+              : Colors.black.withValues(alpha: 0.15);
           final inactiveIconColor = isDark
               ? indicatorColor.withValues(alpha: 0.70)
               : const Color(0xff27272A);
@@ -108,8 +108,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.12),
-                  blurRadius: 32,
+                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.14),
+                  blurRadius: 28,
                   offset: const Offset(0, -6),
                 ),
               ],
