@@ -82,12 +82,10 @@ class ReadPreferencesControlCenter extends StatelessWidget {
 
           final borderColor = isDark
               ? indicatorColor.withValues(alpha: 0.18)
-              : (controller.enableAcrylicEffect
-                  ? Colors.white.withValues(alpha: 0.85)
-                  : Colors.black.withValues(alpha: 0.12));
+              : indicatorColor.withValues(alpha: 0.14);
           final topBorderColor = isDark
-              ? indicatorColor.withValues(alpha: 0.40)
-              : Colors.white.withValues(alpha: 0.90);
+              ? indicatorColor.withValues(alpha: 0.45)
+              : indicatorColor.withValues(alpha: 0.22);
           final inactiveIconColor = isDark
               ? indicatorColor.withValues(alpha: 0.70)
               : const Color(0xff27272A);
