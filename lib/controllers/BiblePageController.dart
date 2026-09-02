@@ -482,7 +482,7 @@ class BiblePageController extends GetxController {
                 Widget sheetContent = SafeArea(
                   top: false,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -492,7 +492,7 @@ class BiblePageController extends GetxController {
                           child: Container(
                             width: 42,
                             height: 5,
-                            margin: const EdgeInsets.only(bottom: 16),
+                            margin: const EdgeInsets.only(bottom: 18),
                             decoration: BoxDecoration(
                               color: indicatorColor.withValues(
                                 alpha: isDark ? 0.30 : 0.20,
@@ -502,132 +502,116 @@ class BiblePageController extends GetxController {
                           ),
                         ),
 
-                        // Tarjeta translúcida con el contenido de la referencia
+                        // Encabezado limpio con Badge y Título
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? indicatorColor.withValues(alpha: 0.12)
+                                    : indicatorColor.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: borderColor,
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.auto_stories_rounded,
+                                    size: 14,
+                                    color: indicatorColor,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Pasaje Relacionado",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: indicatorColor,
+                                      letterSpacing: -0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              previewTitle,
+                              style: TextStyle(
+                                fontFamily: fontFamily,
+                                fontWeight: FontWeight.bold,
+                                fontSize: fontSize - 1,
+                                color: indicatorColor,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Texto del versículo directamente sobre el cristal con scroll elástico
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 300),
                           transitionBuilder: (child, animation) {
                             return FadeTransition(opacity: animation, child: child);
                           },
                           child: previewVerses.isNotEmpty
-                              ? Container(
+                              ? ConstrainedBox(
                                   key: ValueKey('cross_ref_${book ?? 0}_${chapter ?? 0}_${verse_from ?? 0}'),
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    gradient: neutralGradient,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: borderColor, width: 1.2),
-                                    boxShadow: [
-                                      if (!isDark) ...[
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.08),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                        BoxShadow(
-                                          color: Colors.white.withValues(
-                                            alpha: readPrefs.enableAcrylicEffect ? 0.35 : 0.95,
-                                          ),
-                                          blurRadius: 2,
-                                          offset: const Offset(0, -1),
-                                        ),
-                                      ] else ...[
-                                        BoxShadow(
-                                          color: Colors.white.withValues(alpha: 0.06),
-                                          blurRadius: 1,
-                                          offset: const Offset(0, -1),
-                                        ),
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.40),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ],
+                                  constraints: BoxConstraints(
+                                    maxHeight: MediaQuery.of(context).size.height * 0.42,
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Cabecera con icono y título de la referencia
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.auto_stories_rounded,
-                                            size: 20,
-                                            color: isDark
-                                                ? indicatorColor.withValues(alpha: 0.9)
-                                                : const Color(0xFF27272A),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              previewTitle,
-                                              style: TextStyle(
-                                                fontFamily: fontFamily,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: fontSize,
-                                                color: indicatorColor,
-                                                letterSpacing: -0.2,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                  child: RawScrollbar(
+                                    radius: const Radius.circular(8),
+                                    thumbColor: indicatorColor.withValues(alpha: 0.30),
+                                    child: SingleChildScrollView(
+                                      physics: const BouncingScrollPhysics(),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: previewVerses,
                                       ),
-                                      const SizedBox(height: 12),
-
-                                      // Lista de versículos con scroll elástico
-                                      ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxHeight: MediaQuery.of(context).size.height * 0.40,
-                                        ),
-                                        child: RawScrollbar(
-                                          radius: const Radius.circular(8),
-                                          thumbColor: indicatorColor.withValues(alpha: 0.35),
-                                          child: SingleChildScrollView(
-                                            physics: const BouncingScrollPhysics(),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: previewVerses,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-
-                                      const SizedBox(height: 16),
-
-                                      // Botón interactivo con rebote háptico "Ir a la referencia"
-                                      _ReferenceActionModule(
-                                        gradient: activeGradient,
-                                        borderColor: borderColor,
-                                        onTap: () {
-                                          Navigator.pop(context);
-                                          setReferenceSafeScroll(book!, chapter!, verse_from!);
-                                        },
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.menu_book_rounded,
-                                              size: 19,
-                                              color: isDark ? canvasColor : Colors.white,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              "Ir a la referencia",
-                                              style: TextStyle(
-                                                color: isDark ? canvasColor : Colors.white,
-                                                fontFamily: fontFamily,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: fontSize - 4,
-                                                letterSpacing: -0.2,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 )
                               : const SizedBox.shrink(key: Key('shrink')),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Botón de acción con rebote háptico
+                        _ReferenceActionModule(
+                          gradient: activeGradient,
+                          borderColor: borderColor,
+                          onTap: () {
+                            Navigator.pop(context);
+                            setReferenceSafeScroll(book!, chapter!, verse_from!);
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Leer capítulo completo",
+                                style: TextStyle(
+                                  color: isDark ? canvasColor : Colors.white,
+                                  fontFamily: fontFamily,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: fontSize - 4,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 18,
+                                color: isDark ? canvasColor : Colors.white,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -686,13 +670,14 @@ class BiblePageController extends GetxController {
   void onFootnoteTap({int? book, int? chapter, int? verse, String? footnote, required BuildContext context}){
     String textoNotaParaMostrar = rvr60_commentaries['$book:$chapter:$verse:$footnote'].toString();
 
-    // 1. BUSCAMOS EL PRIMER ENLACE AUTOMÁTICAMENTE
-    RegExp exp = RegExp(r"<a\s+href=['\x22](.*?)['\x22]>");
-    var match = exp.firstMatch(textoNotaParaMostrar);
-    String? firstLink = match?.group(1);
+    // 1. Extraemos todas las citas bíblicas de la nota
+    RegExp linkExp = RegExp(r"<a\s+href=['\x22](.*?)['\x22]>(.*?)<\/a>");
+    var allLinkMatches = linkExp.allMatches(textoNotaParaMostrar).toList();
+    String? firstLink = allLinkMatches.isNotEmpty ? allLinkMatches.first.group(1) : null;
+    String? selectedLink = firstLink;
 
     // 2. VARIABLES DE ESTADO AFUERA DEL BUILDER
-    List<Widget> previewVerses = []; // Ahora es una lista de widgets Verse
+    List<Widget> previewVerses = []; 
     String previewTitle = "";
     bool initialLoadTriggered = false; 
     
@@ -700,8 +685,6 @@ class BiblePageController extends GetxController {
     int? targetChapter;
     int? targetVerseFrom;
     int? targetVerseTo;
-
-    final ScrollController _versePreviewScrollController = ScrollController();
 
     showModalBottomSheet(
       context: context,
@@ -764,13 +747,12 @@ class BiblePageController extends GetxController {
               
               for (int i = refVerseFrom; i <= endVerse; i++) {
                 if (i > 0 && i <= chapterVerses.length) {
-                  // AÑADIMOS TU WIDGET VERSE
                   tempVerses.add(
                     Verse(
                       verseNumber: i,
                       text: chapterVerses[i-1],
                       title: rvr60_titles.containsKey('$refBook:$refChapter:$i') == true ? rvr60_titles['$refBook:$refChapter:$i'].toString() : "",
-                      highlight: false, // Sin resaltado en la previsualización
+                      highlight: false,
                       selected: false,
                       colorHighlight: Colors.transparent,
                       colorNumber: Theme.of(context).indicatorColor.withAlpha(145),
@@ -779,15 +761,10 @@ class BiblePageController extends GetxController {
                       fontHeight: fontHeight,
                       fontLetterSeparation: fontLetterSeparation,
                       fontFamily: fontFamily,
-                      isFirstVerseShowed: true, // Evita espacios grandes arriba
-                      
-                      // Si tocan una nota o referencia dentro de la previsualización, pueden seguir navegando
-                      onFootnoteTap: (String footnote) {
-                        // this.onFootnoteTap(book: refBook, chapter: refChapter, verse: i, footnote: footnote, context: context);
-                      },
-                      onReferenceTap: (int b, int c, int vf, int vt) {
-                        // this.onReferenceTap(book: b, chapter: c, verse_from: vf, verse_to: vt, context: context);
-                      },
+                      isFirstVerseShowed: true,
+                      isJustified: isJustified,
+                      onFootnoteTap: (String footnote) {},
+                      onReferenceTap: (int b, int c, int vf, int vt) {},
                     )
                   );
                 }
@@ -799,13 +776,9 @@ class BiblePageController extends GetxController {
                 targetVerseFrom = refVerseFrom;
                 targetVerseTo = refVerseTo;
                 
-                // 1. Buscamos el controlador de preferencias con GetX
                 final readPreferencesController = Get.find<ReadPreferencesController>();
-
-                // 2. Evaluamos la condición
                 bool isVisualImpaired = readPreferencesController.isVisualImpaired;
 
-                // 3. Asignamos el título dinámicamente
                 previewTitle = isVisualImpaired
                     ? '${intToAbreviatura[refBook]} $refChapter:$refVerseFrom${refVerseTo != refVerseFrom ? '-$refVerseTo' : ''}'
                     : '${intToBook[refBook]} $refChapter:$refVerseFrom${refVerseTo != refVerseFrom ? '-$refVerseTo' : ''}';
@@ -888,7 +861,7 @@ class BiblePageController extends GetxController {
                 Widget sheetContent = SafeArea(
                   top: false,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -898,7 +871,7 @@ class BiblePageController extends GetxController {
                           child: Container(
                             width: 42,
                             height: 5,
-                            margin: const EdgeInsets.only(bottom: 16),
+                            margin: const EdgeInsets.only(bottom: 18),
                             decoration: BoxDecoration(
                               color: indicatorColor.withValues(
                                 alpha: isDark ? 0.30 : 0.20,
@@ -908,251 +881,203 @@ class BiblePageController extends GetxController {
                           ),
                         ),
 
-                        // Cabecera con título del versículo y nota
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: RichText(
-                            text: TextSpan(
-                              text: '${intToBook[book]} $chapter:$verse ',
-                              style: TextStyle(
-                                fontFamily: fontFamily,
-                                fontWeight: FontWeight.bold,
-                                fontSize: fontSize,
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                        // Encabezado limpio con Badge y Versículo
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? const Color(0xffe5c064).withValues(alpha: 0.15)
+                                    : const Color(0xffe36414).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xffe5c064).withValues(alpha: 0.35)
+                                      : const Color(0xffe36414).withValues(alpha: 0.25),
+                                  width: 1.0,
+                                ),
                               ),
-                              children: [
-                                TextSpan(
-                                  text: footnote,
-                                  style: TextStyle(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.lightbulb_rounded,
+                                    size: 14,
+                                    color: isDark ? const Color(0xffe5c064) : const Color(0xffe36414),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Nota Explicativa",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? const Color(0xffe5c064) : const Color(0xffe36414),
+                                      letterSpacing: -0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Spacer(),
+                            RichText(
+                              text: TextSpan(
+                                text: '${intToBook[book]} $chapter:$verse ',
+                                style: TextStyle(
+                                  fontFamily: fontFamily,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: fontSize - 1,
+                                  color: indicatorColor,
+                                  letterSpacing: -0.3,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: "[$footnote]",
+                                    style: TextStyle(
+                                      fontFamily: fontFamily,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: fontSize - 5,
+                                      color: isDark ? const Color(0xffe5c064) : const Color(0xffe36414),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Texto explicativo de la nota (Limpio y legible)
+                        RichText(
+                          textAlign: TextAlign.left,
+                          text: HTML.toTextSpan(
+                            context,
+                            textoNotaParaMostrar,
+                            defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                  fontFamily: fontFamily,
+                                  fontWeight: FontWeight.normal,
+                                  height: 1.45,
+                                  fontSize: fontSize - 1,
+                                  fontStyle: FontStyle.normal,
+                                  letterSpacing: fontLetterSeparation,
+                                  color: indicatorColor.withValues(alpha: 0.90),
+                                ),
+                            overrideStyle: {
+                              'a': Theme.of(context).textTheme.bodyLarge!.copyWith(
                                     fontFamily: fontFamily,
                                     fontWeight: FontWeight.bold,
-                                    fontStyle: FontStyle.normal,
-                                    fontSize: fontSize - 7.0,
-                                    backgroundColor: Colors.transparent,
-                                    decoration: TextDecoration.none,
-                                    color: Theme.of(context).brightness == Brightness.light
-                                        ? const Color(0xffe36414)
-                                        : const Color(0xffe5c064),
+                                    fontSize: fontSize - 1,
+                                    color: isDark ? const Color(0xffe5c064) : const Color(0xffe36414),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Texto del comentario / nota al pie con tarjeta esmerilada
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: neutralGradient,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: borderColor, width: 1.2),
-                            boxShadow: [
-                              if (!isDark) ...[
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.08),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                                BoxShadow(
-                                  color: Colors.white.withValues(
-                                    alpha: readPrefs.enableAcrylicEffect ? 0.35 : 0.95,
-                                  ),
-                                  blurRadius: 2,
-                                  offset: const Offset(0, -1),
-                                ),
-                              ] else ...[
-                                BoxShadow(
-                                  color: Colors.white.withValues(alpha: 0.06),
-                                  blurRadius: 1,
-                                  offset: const Offset(0, -1),
-                                ),
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.40),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ],
-                          ),
-                          child: RichText(
-                            textAlign: TextAlign.left,
-                            text: HTML.toTextSpan(
-                              context,
-                              textoNotaParaMostrar,
-                              defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
                                     fontFamily: fontFamily,
-                                    fontWeight: FontWeight.normal,
-                                    height: fontHeight,
-                                    fontSize: fontSize,
-                                    fontStyle: FontStyle.normal,
-                                    letterSpacing: fontLetterSeparation,
+                                    fontWeight: FontWeight.bold,
+                                    fontStyle: FontStyle.italic,
+                                    fontSize: fontSize - 1,
                                     color: indicatorColor,
                                   ),
-                              overrideStyle: {
-                                'a': Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                      fontFamily: fontFamily,
-                                      fontWeight: FontWeight.bold,
-                                      height: fontHeight,
-                                      fontSize: fontSize - 1,
-                                      fontStyle: FontStyle.italic,
-                                      letterSpacing: fontLetterSeparation,
-                                      color: Theme.of(context).brightness == Brightness.light
-                                          ? const Color(0xffe36414)
-                                          : const Color(0xffe5c064),
-                                    ),
-                                'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                      fontFamily: fontFamily,
-                                      fontWeight: FontWeight.bold,
-                                      height: fontHeight,
-                                      fontSize: fontSize,
-                                      fontStyle: FontStyle.italic,
-                                      letterSpacing: fontLetterSeparation,
-                                      color: indicatorColor,
-                                    ),
-                              },
-                              linksCallback: (link) {
-                                loadReferenceText(link.toString());
-                              },
-                            ),
+                            },
+                            linksCallback: (link) {
+                              setModalState(() => selectedLink = link.toString());
+                              loadReferenceText(link.toString());
+                            },
                           ),
                         ),
 
-                        // Sección de previsualización dinámica si tocan un enlace
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 350),
-                          curve: Curves.easeOutCubic,
-                          alignment: Alignment.topCenter,
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(opacity: animation, child: child);
-                              },
-                              child: previewVerses.isNotEmpty
-                                  ? Container(
-                                      key: ValueKey('verse_${targetBook ?? 0}_${targetChapter ?? 0}_${targetVerseFrom ?? 0}'),
-                                      margin: const EdgeInsets.only(top: 14),
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        gradient: neutralGradient,
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(color: borderColor, width: 1.2),
-                                        boxShadow: [
-                                          if (!isDark) ...[
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.08),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                            BoxShadow(
-                                              color: Colors.white.withValues(
-                                                alpha: readPrefs.enableAcrylicEffect ? 0.35 : 0.95,
-                                              ),
-                                              blurRadius: 2,
-                                              offset: const Offset(0, -1),
-                                            ),
-                                          ] else ...[
-                                            BoxShadow(
-                                              color: Colors.white.withValues(alpha: 0.06),
-                                              blurRadius: 1,
-                                              offset: const Offset(0, -1),
-                                            ),
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.40),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.auto_stories_rounded,
-                                                size: 20,
-                                                color: isDark
-                                                    ? indicatorColor.withValues(alpha: 0.9)
-                                                    : const Color(0xFF27272A),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  previewTitle,
-                                                  style: TextStyle(
-                                                    fontFamily: fontFamily,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: fontSize - 1,
-                                                    color: indicatorColor,
-                                                    letterSpacing: -0.2,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 10),
-
-                                          ConstrainedBox(
-                                            constraints: BoxConstraints(
-                                              maxHeight: MediaQuery.of(context).size.height * 0.30,
-                                            ),
-                                            child: RawScrollbar(
-                                              radius: const Radius.circular(8),
-                                              thumbColor: indicatorColor.withValues(alpha: 0.35),
-                                              child: SingleChildScrollView(
-                                                physics: const BouncingScrollPhysics(),
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: previewVerses,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-
-                                          const SizedBox(height: 14),
-                                          _ReferenceActionModule(
-                                            gradient: activeGradient,
-                                            borderColor: borderColor,
-                                            onTap: () {
-                                              Navigator.pop(context);
-                                              setReferenceSafeScroll(
-                                                targetBook!,
-                                                targetChapter!,
-                                                targetVerseFrom!,
-                                              );
-                                            },
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.menu_book_rounded,
-                                                  size: 19,
-                                                  color: isDark ? canvasColor : Colors.white,
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  "Ir a la referencia",
-                                                  style: TextStyle(
-                                                    color: isDark ? canvasColor : Colors.white,
-                                                    fontFamily: fontFamily,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: fontSize - 4,
-                                                    letterSpacing: -0.2,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : const SizedBox.shrink(key: Key('shrink')),
+                        // Píldoras / Chips interactivos de citas bíblicas encontradas
+                        if (allLinkMatches.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            child: Row(
+                              children: allLinkMatches.map((m) {
+                                final linkStr = m.group(1)!;
+                                final label = m.group(2)!.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+                                final isSelected = selectedLink == linkStr;
+                                return _BouncyChip(
+                                  label: label,
+                                  isSelected: isSelected,
+                                  activeGradient: activeGradient,
+                                  neutralGradient: neutralGradient,
+                                  borderColor: borderColor,
+                                  indicatorColor: indicatorColor,
+                                  onTap: () {
+                                    setModalState(() => selectedLink = linkStr);
+                                    loadReferenceText(linkStr);
+                                  },
+                                );
+                              }).toList(),
                             ),
                           ),
+                        ],
+
+                        // Previsualización dinámica del versículo seleccionado
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                          alignment: Alignment.topCenter,
+                          child: previewVerses.isNotEmpty
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 14),
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxHeight: MediaQuery.of(context).size.height * 0.28,
+                                      ),
+                                      child: RawScrollbar(
+                                        radius: const Radius.circular(8),
+                                        thumbColor: indicatorColor.withValues(alpha: 0.30),
+                                        child: SingleChildScrollView(
+                                          physics: const BouncingScrollPhysics(),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: previewVerses,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _ReferenceActionModule(
+                                      gradient: activeGradient,
+                                      borderColor: borderColor,
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        if (targetBook != null && targetChapter != null && targetVerseFrom != null) {
+                                          setReferenceSafeScroll(
+                                            targetBook!,
+                                            targetChapter!,
+                                            targetVerseFrom!,
+                                          );
+                                        }
+                                      },
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Leer capítulo completo",
+                                            style: TextStyle(
+                                              color: isDark ? canvasColor : Colors.white,
+                                              fontFamily: fontFamily,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: fontSize - 4,
+                                              letterSpacing: -0.2,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Icon(
+                                            Icons.arrow_forward_rounded,
+                                            size: 18,
+                                            color: isDark ? canvasColor : Colors.white,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
                         ),
                       ],
                     ),
@@ -1218,7 +1143,7 @@ class BiblePageController extends GetxController {
 
 }
 
-/// Módulo de Botón Táctil con Rebote Háptico para el Panel de Referencias (Misma estética que ControlCenter)
+/// Módulo de Botón Táctil con Rebote Háptico para el Panel de Referencias
 class _ReferenceActionModule extends StatefulWidget {
   final VoidCallback onTap;
   final Widget child;
@@ -1259,7 +1184,7 @@ class _ReferenceActionModuleState extends State<_ReferenceActionModule> {
       },
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
-        scale: _isPressed ? 0.94 : 1.0,
+        scale: _isPressed ? 0.95 : 1.0,
         duration: const Duration(milliseconds: 140),
         curve: Curves.easeOutBack,
         child: AnimatedContainer(
@@ -1296,6 +1221,102 @@ class _ReferenceActionModuleState extends State<_ReferenceActionModule> {
             ],
           ),
           child: Center(child: widget.child),
+        ),
+      ),
+    );
+  }
+}
+
+/// Chip / Píldora Interactiva con Rebote Háptico para citas bíblicas
+class _BouncyChip extends StatefulWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Gradient? activeGradient;
+  final Gradient? neutralGradient;
+  final Color borderColor;
+  final Color indicatorColor;
+
+  const _BouncyChip({
+    Key? key,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    this.activeGradient,
+    this.neutralGradient,
+    required this.borderColor,
+    required this.indicatorColor,
+  }) : super(key: key);
+
+  @override
+  State<_BouncyChip> createState() => _BouncyChipState();
+}
+
+class _BouncyChipState extends State<_BouncyChip> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final canvasColor = Theme.of(context).canvasColor;
+
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() => _isPressed = true);
+        HapticFeedback.lightImpact();
+      },
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutBack,
+        child: Container(
+          margin: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            gradient: widget.isSelected ? widget.activeGradient : widget.neutralGradient,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: widget.isSelected ? Colors.transparent : widget.borderColor,
+              width: 1.0,
+            ),
+            boxShadow: [
+              if (widget.isSelected)
+                BoxShadow(
+                  color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.auto_stories_rounded,
+                size: 13,
+                color: widget.isSelected
+                    ? (isDark ? canvasColor : Colors.white)
+                    : widget.indicatorColor.withValues(alpha: 0.75),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: widget.isSelected
+                      ? (isDark ? canvasColor : Colors.white)
+                      : widget.indicatorColor,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
