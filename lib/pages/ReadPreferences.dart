@@ -35,25 +35,29 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           final indicatorColor = Theme.of(context).indicatorColor;
           final canvasColor = Theme.of(context).canvasColor;
 
-          // Tokens de diseño iOS 18 (Gradientes 3D, Iluminación especular y Vidrio líquido):
-          final acrylicAlpha = isDark ? 0.30 : 0.85;
+          // Tokens de diseño iOS 18 (Gradientes 3D, Iluminación especular y Vidrio líquido translúcido):
+          final acrylicAlpha = isDark ? 0.55 : 0.58;
 
-          // Gradiente 3D para módulos en reposo (Luz diagonal de esquina a esquina)
+          // Gradiente 3D para módulos en reposo (Luz diagonal translúcida adaptada al acrílico)
           final neutralGradient = isDark
               ? LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    indicatorColor.withValues(alpha: 0.18),
-                    indicatorColor.withValues(alpha: 0.08),
+                    indicatorColor.withValues(alpha: controller.enableAcrylicEffect ? 0.22 : 0.16),
+                    indicatorColor.withValues(alpha: controller.enableAcrylicEffect ? 0.10 : 0.06),
                   ],
                 )
-              : const LinearGradient(
+              : LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFFFFFFFF),
-                    Color(0xFFE2E4EA),
+                    controller.enableAcrylicEffect
+                        ? Colors.white.withValues(alpha: 0.85)
+                        : const Color(0xFFFFFFFF),
+                    controller.enableAcrylicEffect
+                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.75)
+                        : const Color(0xFFE2E4EA),
                   ],
                 );
 
