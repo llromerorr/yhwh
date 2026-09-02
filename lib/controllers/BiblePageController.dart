@@ -21,9 +21,11 @@ import 'package:yhwh/data/Define.dart';
 import 'package:yhwh/data/valuesOfBooks.dart';
 import 'package:yhwh/models/highlighterItem.dart';
 import 'package:yhwh/pages/FloatingReferencesPage.dart';
+import 'package:yhwh/pages/ReadPreferences.dart';
 import 'package:yhwh/pages/ReferencesPage.dart';
 import 'package:yhwh/widgets/FloatingBible.dart';
 import 'package:yhwh/widgets/FloatingWidget.dart';
+import 'package:yhwh/widgets/GlassContainer.dart';
 import 'package:yhwh/widgets/Verse.dart';
 
 
@@ -412,143 +414,270 @@ class BiblePageController extends GetxController {
               loadReferenceText();
             }
 
-            return ClipRect(
+            return GetBuilder<ReadPreferencesController>(
+              init: ReadPreferencesController(),
+              builder: (readPrefs) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                final indicatorColor = Theme.of(context).indicatorColor;
+                final canvasColor = Theme.of(context).canvasColor;
+                final topBorderColor = indicatorColor.withValues(
+                  alpha: isDark ? 0.45 : 0.22,
+                );
+                final borderColor = indicatorColor.withValues(
+                  alpha: isDark ? 0.18 : 0.14,
+                );
 
-              child: GetBuilder<ReadPreferencesController>(
-                init: ReadPreferencesController(),
-                builder: (readPrefs) {
-                  Widget content = Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).canvasColor.withValues(alpha: readPrefs.enableAcrylicEffect ? 0.4 : 1.0),
-                      border: Border(
-                        top: BorderSide(
-                          color: Theme.of(context).indicatorColor.withValues(alpha: 0.1), 
-                          width: 1.5
-                        ),
+                final neutralGradient = isDark
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          indicatorColor.withValues(
+                            alpha: readPrefs.enableAcrylicEffect
+                                ? ControlCenterVisualConfig.darkButtonTopAlpha
+                                : 0.15,
+                          ),
+                          indicatorColor.withValues(
+                            alpha: readPrefs.enableAcrylicEffect
+                                ? ControlCenterVisualConfig.darkButtonBottomAlpha
+                                : 0.05,
+                          ),
+                        ],
                       )
-                    ),
+                    : LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          readPrefs.enableAcrylicEffect
+                              ? Colors.white.withValues(
+                                  alpha: ControlCenterVisualConfig.lightButtonTopAlpha,
+                                )
+                              : const Color(0xFFFFFFFF),
+                          readPrefs.enableAcrylicEffect
+                              ? Colors.white.withValues(
+                                  alpha: ControlCenterVisualConfig.lightButtonBottomAlpha,
+                                )
+                              : const Color(0xFFE2E4EA),
+                        ],
+                      );
+
+                final activeGradient = isDark
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          indicatorColor,
+                          indicatorColor.withValues(alpha: 0.85),
+                        ],
+                      )
+                    : const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF2E2E34),
+                          Color(0xFF111114),
+                        ],
+                      );
+
+                Widget sheetContent = SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min, 
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Tirador de arrastre superior (Drag Handle estilo iOS)
                         Center(
                           child: Container(
-                            width: 40,
+                            width: 42,
                             height: 5,
+                            margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).indicatorColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
+                              color: indicatorColor.withValues(
+                                alpha: isDark ? 0.30 : 0.20,
+                              ),
+                              borderRadius: BorderRadius.circular(3),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10), 
-                  
-                        // --- SECCIÓN DE PREVISUALIZACIÓN DINÁMICA ---
+
+                        // Tarjeta translúcida con el contenido de la referencia
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 300),
                           transitionBuilder: (child, animation) {
                             return FadeTransition(opacity: animation, child: child);
                           },
-                          child: previewVerses.isNotEmpty 
-                            ? KeyedSubtree(
-                                key: ValueKey('cross_ref_${book ?? 0}_${chapter ?? 0}_${verse_from ?? 0}'),
-                                child: animateDo.FadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  child: Container(
-                                    margin: const EdgeInsets.only(top: 10), 
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).indicatorColor.withValues(alpha: 0.05), 
-                                      borderRadius: BorderRadius.circular(15),
-                                      border: Border.all(
-                                        color: Theme.of(context).indicatorColor.withValues(alpha: 0.1), 
-                                        width: 1
-                                      )
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          previewTitle,
-                                          style: TextStyle(
-                                            fontFamily: this.fontFamily,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: fontSize, 
-                                            color: Theme.of(context).indicatorColor,
-                                          )
+                          child: previewVerses.isNotEmpty
+                              ? Container(
+                                  key: ValueKey('cross_ref_${book ?? 0}_${chapter ?? 0}_${verse_from ?? 0}'),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    gradient: neutralGradient,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: borderColor, width: 1.2),
+                                    boxShadow: [
+                                      if (!isDark) ...[
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.08),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
                                         ),
-                                        const SizedBox(height: 10),
-                  
-                                        ConstrainedBox(
-                                          constraints: BoxConstraints(
-                                            maxHeight: MediaQuery.of(context).size.height * 0.4,
+                                        BoxShadow(
+                                          color: Colors.white.withValues(
+                                            alpha: readPrefs.enableAcrylicEffect ? 0.35 : 0.95,
                                           ),
-                                          child: Scrollbar(
-                                            radius: const Radius.circular(8),
-                                            child: SingleChildScrollView(
-                                              physics: const BouncingScrollPhysics(), 
-                                              // AHORA IMPRIMIMOS TUS WIDGETS VERSE
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: previewVerses,
-                                              )
-                                            ),
-                                          ),
+                                          blurRadius: 2,
+                                          offset: const Offset(0, -1),
                                         ),
-                  
-                                        const SizedBox(height: 15),
-                                        
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: TextButton.icon(
-                                            onPressed: () {
-                                              Navigator.pop(context); 
-                                              this.setReferenceSafeScroll(book!, chapter!, verse_from!);
-                                            },
-                                            icon: Icon(Icons.menu_book_rounded, size: 20, color: Theme.of(context).indicatorColor),
-                                            label: Text(
-                                              "Ir a la referencia", 
-                                              style: TextStyle(
-                                                color: Theme.of(context).indicatorColor, 
-                                                fontFamily: this.fontFamily, 
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: fontSize - 7,
-                                              )
-                                            ),
-                                            style: TextButton.styleFrom(
-                                              backgroundColor: Theme.of(context).indicatorColor.withValues(alpha: 0.1),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12)
-                                              )
-                                            ),
-                                          ),
-                                        )
+                                      ] else ...[
+                                        BoxShadow(
+                                          color: Colors.white.withValues(alpha: 0.06),
+                                          blurRadius: 1,
+                                          offset: const Offset(0, -1),
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.40),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
                                       ],
-                                    ),
+                                    ],
                                   ),
-                                ),
-                              )
-                            : const SizedBox.shrink(key: Key('shrink')), 
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Cabecera con icono y título de la referencia
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.auto_stories_rounded,
+                                            size: 20,
+                                            color: isDark
+                                                ? indicatorColor.withValues(alpha: 0.9)
+                                                : const Color(0xFF27272A),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              previewTitle,
+                                              style: TextStyle(
+                                                fontFamily: fontFamily,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: fontSize,
+                                                color: indicatorColor,
+                                                letterSpacing: -0.2,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+
+                                      // Lista de versículos con scroll elástico
+                                      ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          maxHeight: MediaQuery.of(context).size.height * 0.40,
+                                        ),
+                                        child: RawScrollbar(
+                                          radius: const Radius.circular(8),
+                                          thumbColor: indicatorColor.withValues(alpha: 0.35),
+                                          child: SingleChildScrollView(
+                                            physics: const BouncingScrollPhysics(),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: previewVerses,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 16),
+
+                                      // Botón interactivo con rebote háptico "Ir a la referencia"
+                                      _ReferenceActionModule(
+                                        gradient: activeGradient,
+                                        borderColor: borderColor,
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          setReferenceSafeScroll(book!, chapter!, verse_from!);
+                                        },
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.menu_book_rounded,
+                                              size: 19,
+                                              color: isDark ? canvasColor : Colors.white,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              "Ir a la referencia",
+                                              style: TextStyle(
+                                                color: isDark ? canvasColor : Colors.white,
+                                                fontFamily: fontFamily,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: fontSize - 4,
+                                                letterSpacing: -0.2,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : const SizedBox.shrink(key: Key('shrink')),
                         ),
-                  
-                        Container( 
-                          height: MediaQuery.of(context).viewPadding.bottom,
-                        )
                       ],
                     ),
-                  );
+                  ),
+                );
 
-                  return readPrefs.enableAcrylicEffect
-                    ? BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18, tileMode: TileMode.clamp),
-                        child: content,
-                      )
-                    : content;
-                }
-              ),
+                return GlassContainer(
+                  enableAcrylic: readPrefs.enableAcrylicEffect,
+                  blur: isDark
+                      ? ControlCenterVisualConfig.darkBlurSigma
+                      : ControlCenterVisualConfig.lightBlurSigma,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border(
+                    top: BorderSide(
+                      color: topBorderColor,
+                      width: 1.5,
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                      blurRadius: 28,
+                      offset: const Offset(0, -6),
+                    ),
+                  ],
+                  gradient: readPrefs.enableAcrylicEffect
+                      ? (isDark
+                          ? LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelTopAlpha),
+                                canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelBottomAlpha),
+                              ],
+                            )
+                          : LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelTopAlpha),
+                                Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelBottomAlpha),
+                              ],
+                            ))
+                      : null,
+                  color: readPrefs.enableAcrylicEffect ? null : canvasColor,
+                  child: sheetContent,
+                );
+              },
             );
-          }
+          },
         );
       },
     );
@@ -691,246 +820,387 @@ class BiblePageController extends GetxController {
               loadReferenceText(firstLink);
             }
 
-            return ClipRect(
-              child: GetBuilder<ReadPreferencesController>(
-                init: ReadPreferencesController(),
-                builder: (readPrefs) {
-                  Widget content = Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).canvasColor.withValues(alpha: readPrefs.enableAcrylicEffect ? 0.4 : 1.0),
-                      border: Border(
-                        top: BorderSide(
-                          color: Theme.of(context).indicatorColor.withValues(alpha: 0.4),
-                          width: 1.5
-                        ),
+            return GetBuilder<ReadPreferencesController>(
+              init: ReadPreferencesController(),
+              builder: (readPrefs) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                final indicatorColor = Theme.of(context).indicatorColor;
+                final canvasColor = Theme.of(context).canvasColor;
+                final topBorderColor = indicatorColor.withValues(
+                  alpha: isDark ? 0.45 : 0.22,
+                );
+                final borderColor = indicatorColor.withValues(
+                  alpha: isDark ? 0.18 : 0.14,
+                );
+
+                final neutralGradient = isDark
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          indicatorColor.withValues(
+                            alpha: readPrefs.enableAcrylicEffect
+                                ? ControlCenterVisualConfig.darkButtonTopAlpha
+                                : 0.15,
+                          ),
+                          indicatorColor.withValues(
+                            alpha: readPrefs.enableAcrylicEffect
+                                ? ControlCenterVisualConfig.darkButtonBottomAlpha
+                                : 0.05,
+                          ),
+                        ],
                       )
-                    ),
+                    : LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          readPrefs.enableAcrylicEffect
+                              ? Colors.white.withValues(
+                                  alpha: ControlCenterVisualConfig.lightButtonTopAlpha,
+                                )
+                              : const Color(0xFFFFFFFF),
+                          readPrefs.enableAcrylicEffect
+                              ? Colors.white.withValues(
+                                  alpha: ControlCenterVisualConfig.lightButtonBottomAlpha,
+                                )
+                              : const Color(0xFFE2E4EA),
+                        ],
+                      );
+
+                final activeGradient = isDark
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          indicatorColor,
+                          indicatorColor.withValues(alpha: 0.85),
+                        ],
+                      )
+                    : const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF2E2E34),
+                          Color(0xFF111114),
+                        ],
+                      );
+
+                Widget sheetContent = SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min, 
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Tirador de arrastre superior (Drag Handle estilo iOS)
                         Center(
                           child: Container(
-                            width: 40,
+                            width: 42,
                             height: 5,
+                            margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).indicatorColor.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(10),
+                              color: indicatorColor.withValues(
+                                alpha: isDark ? 0.30 : 0.20,
+                              ),
+                              borderRadius: BorderRadius.circular(3),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
-                  
-                        RichText(
-                          text: TextSpan(
-                            text: '${intToBook[book]} $chapter:$verse ',
-                            style: TextStyle(
-                              fontFamily: this.fontFamily,
-                              fontWeight: FontWeight.bold,
-                              fontSize: fontSize,
-                              color: Theme.of(context).textTheme.bodyLarge?.color,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: footnote,
-                                style: TextStyle(
-                                  fontFamily: this.fontFamily,
-                                  fontWeight: FontWeight.bold,
-                                  fontStyle: FontStyle.normal,
-                                  fontSize: this.fontSize - 7.0,
-                                  backgroundColor: Colors.transparent,
-                                  decoration: TextDecoration.none,
-                                  color: Theme.of(context).brightness == Brightness.light
-                                    ? Color(0xffe36414)
-                                    : Color(0xffe5c064),
-                                ),
+
+                        // Cabecera con título del versículo y nota
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: RichText(
+                            text: TextSpan(
+                              text: '${intToBook[book]} $chapter:$verse ',
+                              style: TextStyle(
+                                fontFamily: fontFamily,
+                                fontWeight: FontWeight.bold,
+                                fontSize: fontSize,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
+                              children: [
+                                TextSpan(
+                                  text: footnote,
+                                  style: TextStyle(
+                                    fontFamily: fontFamily,
+                                    fontWeight: FontWeight.bold,
+                                    fontStyle: FontStyle.normal,
+                                    fontSize: fontSize - 7.0,
+                                    backgroundColor: Colors.transparent,
+                                    decoration: TextDecoration.none,
+                                    color: Theme.of(context).brightness == Brightness.light
+                                        ? const Color(0xffe36414)
+                                        : const Color(0xffe5c064),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Texto del comentario / nota al pie con tarjeta esmerilada
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: neutralGradient,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: borderColor, width: 1.2),
+                            boxShadow: [
+                              if (!isDark) ...[
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                                BoxShadow(
+                                  color: Colors.white.withValues(
+                                    alpha: readPrefs.enableAcrylicEffect ? 0.35 : 0.95,
+                                  ),
+                                  blurRadius: 2,
+                                  offset: const Offset(0, -1),
+                                ),
+                              ] else ...[
+                                BoxShadow(
+                                  color: Colors.white.withValues(alpha: 0.06),
+                                  blurRadius: 1,
+                                  offset: const Offset(0, -1),
+                                ),
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.40),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ],
                           ),
-                        ),
-                  
-                        // const SizedBox(height: 10),
-                        
-                        RichText(
-                          textAlign: TextAlign.left,
-                          text: HTML.toTextSpan(
-                            context,
-                            textoNotaParaMostrar,
-                            defaultTextStyle:
-                              Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                fontFamily: this.fontFamily,
-                                fontWeight: FontWeight.normal,
-                                height: fontHeight,
-                                fontSize: fontSize,
-                                fontStyle: FontStyle.normal,
-                                letterSpacing: fontLetterSeparation,
-                                color: Theme.of(context).indicatorColor
-                              ),
-                            overrideStyle: {
-                              'a': Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                fontFamily: this.fontFamily,
-                                fontWeight: FontWeight.bold,
-                                height: this.fontHeight,
-                                fontSize: fontSize - 1,
-                                fontStyle: FontStyle.italic,
-                                letterSpacing: this.fontLetterSeparation,
-                                color: Theme.of(context).brightness == Brightness.light
-                                  ? Color(0xffe36414)
-                                  : Color(0xffe5c064),
-                              ),
-                              'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                fontFamily: this.fontFamily,
-                                fontWeight: FontWeight.bold,
-                                height: this.fontHeight,
-                                fontSize: fontSize,
-                                fontStyle: FontStyle.italic,
-                                letterSpacing: this.fontLetterSeparation,
-                                color: Theme.of(context).indicatorColor),
-                            },
-                            linksCallback: (link) {
-                              loadReferenceText(link.toString());
-                            },
+                          child: RichText(
+                            textAlign: TextAlign.left,
+                            text: HTML.toTextSpan(
+                              context,
+                              textoNotaParaMostrar,
+                              defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                    fontFamily: fontFamily,
+                                    fontWeight: FontWeight.normal,
+                                    height: fontHeight,
+                                    fontSize: fontSize,
+                                    fontStyle: FontStyle.normal,
+                                    letterSpacing: fontLetterSeparation,
+                                    color: indicatorColor,
+                                  ),
+                              overrideStyle: {
+                                'a': Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                      fontFamily: fontFamily,
+                                      fontWeight: FontWeight.bold,
+                                      height: fontHeight,
+                                      fontSize: fontSize - 1,
+                                      fontStyle: FontStyle.italic,
+                                      letterSpacing: fontLetterSeparation,
+                                      color: Theme.of(context).brightness == Brightness.light
+                                          ? const Color(0xffe36414)
+                                          : const Color(0xffe5c064),
+                                    ),
+                                'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                      fontFamily: fontFamily,
+                                      fontWeight: FontWeight.bold,
+                                      height: fontHeight,
+                                      fontSize: fontSize,
+                                      fontStyle: FontStyle.italic,
+                                      letterSpacing: fontLetterSeparation,
+                                      color: indicatorColor,
+                                    ),
+                              },
+                              linksCallback: (link) {
+                                loadReferenceText(link.toString());
+                              },
+                            ),
                           ),
                         ),
-                  
-                        // --- SECCIÓN DE PREVISUALIZACIÓN DINÁMICA ---
+
+                        // Sección de previsualización dinámica si tocan un enlace
                         AnimatedSize(
                           duration: const Duration(milliseconds: 350),
                           curve: Curves.easeOutCubic,
                           alignment: Alignment.topCenter,
-                          child: Container(
+                          child: SizedBox(
                             width: double.infinity,
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 300),
                               transitionBuilder: (child, animation) {
                                 return FadeTransition(opacity: animation, child: child);
                               },
-                              child: previewVerses.isNotEmpty 
-                                ? KeyedSubtree(
-                                    key: ValueKey('verse_${targetBook ?? 0}_${targetChapter ?? 0}_${targetVerseFrom ?? 0}'),
-                                    child: animateDo.FadeIn(
-                                      duration: const Duration(milliseconds: 400),
-                                      child: Container(
-                                        margin: const EdgeInsets.only(top: 20),
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          borderRadius: BorderRadius.circular(15),
-                                          border: Border.all(
-                                            color: Theme.of(context).indicatorColor.withValues(alpha: 0.2),
-                                            width: 2
-                                          )
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            AppBar(
-                                              title: Text(previewTitle,
-                                                style: TextStyle(
-                                                  fontFamily: this.fontFamily,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: fontSize - 2,
-                                                  color: Theme.of(context).indicatorColor,
-                                                )
-                                              ),
-                                              backgroundColor: Theme.of(context).indicatorColor.withValues(alpha: 0.1),
-                                              automaticallyImplyLeading: false,
-                                              centerTitle: true,
-                                              titleSpacing: 10,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                              
+                              child: previewVerses.isNotEmpty
+                                  ? Container(
+                                      key: ValueKey('verse_${targetBook ?? 0}_${targetChapter ?? 0}_${targetVerseFrom ?? 0}'),
+                                      margin: const EdgeInsets.only(top: 14),
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        gradient: neutralGradient,
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: borderColor, width: 1.2),
+                                        boxShadow: [
+                                          if (!isDark) ...[
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.08),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
                                             ),
-                  
-                                            // Text(
-                                            //   previewTitle,
-                                            //   style: TextStyle(
-                                            //     fontFamily: this.fontFamily,
-                                            //     fontWeight: FontWeight.bold,
-                                            //     fontSize: fontSize - 1,
-                                            //     color: Theme.of(context).indicatorColor,
-                                            //   )
-                                            // ),
-                  
-                                            // Divider(
-                                            //   color: Theme.of(context).indicatorColor.withValues(alpha: 0.3),
-                                            //   thickness: 2,
-                                            //   height: 20,
-                                            // ),
-                                            const SizedBox(height: 10),
-                  
-                                            ConstrainedBox(
-                                              constraints: BoxConstraints(
-                                                maxHeight: MediaQuery.of(context).size.height * 0.3,
+                                            BoxShadow(
+                                              color: Colors.white.withValues(
+                                                alpha: readPrefs.enableAcrylicEffect ? 0.35 : 0.95,
                                               ),
-                                              child: Scrollbar(
-                                                radius: const Radius.circular(8),
-                                                // interactive: false,
-                                                // thumbVisibility: true,
-                                                child: SingleChildScrollView(
-                                                  physics: const BouncingScrollPhysics(),
-                                                  // AHORA IMPRIMIMOS TUS WIDGETS VERSE
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: previewVerses,
-                                                  )
-                                                ),
-                                              ),
+                                              blurRadius: 2,
+                                              offset: const Offset(0, -1),
                                             ),
-                  
-                                            const SizedBox(height: 12),
-                                            Align(
-                                              alignment: Alignment.centerRight,
-                                              child: TextButton.icon(
-                                                onPressed: () {
-                                                  Navigator.pop(context); 
-                                                  this.setReferenceSafeScroll(targetBook!, targetChapter!, targetVerseFrom!);
-                                                },
-                                                icon: Icon(Icons.menu_book_rounded, size: 20, color: Theme.of(context).indicatorColor),
-                                                label: Text(
-                                                  "Ir a la referencia", 
-                                                  style: TextStyle(
-                                                    color: Theme.of(context).indicatorColor, 
-                                                    fontFamily: this.fontFamily, 
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: fontSize - 7,
-                                                  )
-                                                ),
-                                                style: TextButton.styleFrom(
-                                                  backgroundColor: Theme.of(context).indicatorColor.withValues(alpha: 0.1),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(12)
-                                                  )
-                                                ),
-                                              ),
-                                            )
+                                          ] else ...[
+                                            BoxShadow(
+                                              color: Colors.white.withValues(alpha: 0.06),
+                                              blurRadius: 1,
+                                              offset: const Offset(0, -1),
+                                            ),
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.40),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
                                           ],
-                                        ),
+                                        ],
                                       ),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(key: Key('shrink')), 
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.auto_stories_rounded,
+                                                size: 20,
+                                                color: isDark
+                                                    ? indicatorColor.withValues(alpha: 0.9)
+                                                    : const Color(0xFF27272A),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  previewTitle,
+                                                  style: TextStyle(
+                                                    fontFamily: fontFamily,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: fontSize - 1,
+                                                    color: indicatorColor,
+                                                    letterSpacing: -0.2,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 10),
+
+                                          ConstrainedBox(
+                                            constraints: BoxConstraints(
+                                              maxHeight: MediaQuery.of(context).size.height * 0.30,
+                                            ),
+                                            child: RawScrollbar(
+                                              radius: const Radius.circular(8),
+                                              thumbColor: indicatorColor.withValues(alpha: 0.35),
+                                              child: SingleChildScrollView(
+                                                physics: const BouncingScrollPhysics(),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: previewVerses,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          const SizedBox(height: 14),
+                                          _ReferenceActionModule(
+                                            gradient: activeGradient,
+                                            borderColor: borderColor,
+                                            onTap: () {
+                                              Navigator.pop(context);
+                                              setReferenceSafeScroll(
+                                                targetBook!,
+                                                targetChapter!,
+                                                targetVerseFrom!,
+                                              );
+                                            },
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.menu_book_rounded,
+                                                  size: 19,
+                                                  color: isDark ? canvasColor : Colors.white,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  "Ir a la referencia",
+                                                  style: TextStyle(
+                                                    color: isDark ? canvasColor : Colors.white,
+                                                    fontFamily: fontFamily,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: fontSize - 4,
+                                                    letterSpacing: -0.2,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(key: Key('shrink')),
                             ),
                           ),
                         ),
-                  
-                        Container( 
-                          height: MediaQuery.of(context).viewPadding.bottom,
-                        )
                       ],
                     ),
-                  );
+                  ),
+                );
 
-                  return readPrefs.enableAcrylicEffect
-                    ? BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18, tileMode: TileMode.clamp),
-                        child: content,
-                      )
-                    : content;
-                }
-              ),
+                return GlassContainer(
+                  enableAcrylic: readPrefs.enableAcrylicEffect,
+                  blur: isDark
+                      ? ControlCenterVisualConfig.darkBlurSigma
+                      : ControlCenterVisualConfig.lightBlurSigma,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border(
+                    top: BorderSide(
+                      color: topBorderColor,
+                      width: 1.5,
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                      blurRadius: 28,
+                      offset: const Offset(0, -6),
+                    ),
+                  ],
+                  gradient: readPrefs.enableAcrylicEffect
+                      ? (isDark
+                          ? LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelTopAlpha),
+                                canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelBottomAlpha),
+                              ],
+                            )
+                          : LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelTopAlpha),
+                                Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelBottomAlpha),
+                              ],
+                            ))
+                      : null,
+                  color: readPrefs.enableAcrylicEffect ? null : canvasColor,
+                  child: sheetContent,
+                );
+              },
             );
           }
         );
@@ -946,4 +1216,88 @@ class BiblePageController extends GetxController {
     // nothing
   }
 
+}
+
+/// Módulo de Botón Táctil con Rebote Háptico para el Panel de Referencias (Misma estética que ControlCenter)
+class _ReferenceActionModule extends StatefulWidget {
+  final VoidCallback onTap;
+  final Widget child;
+  final Gradient? gradient;
+  final Color? backgroundColor;
+  final Color borderColor;
+  final double height;
+
+  const _ReferenceActionModule({
+    Key? key,
+    required this.onTap,
+    required this.child,
+    this.gradient,
+    this.backgroundColor,
+    required this.borderColor,
+    this.height = 48.0,
+  }) : super(key: key);
+
+  @override
+  State<_ReferenceActionModule> createState() => _ReferenceActionModuleState();
+}
+
+class _ReferenceActionModuleState extends State<_ReferenceActionModule> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() => _isPressed = true);
+        HapticFeedback.lightImpact();
+      },
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.94 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutBack,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeInOut,
+          height: widget.height,
+          decoration: BoxDecoration(
+            gradient: widget.gradient,
+            color: widget.gradient == null ? widget.backgroundColor : null,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.borderColor,
+              width: 1.2,
+            ),
+            boxShadow: [
+              if (!isDark) ...[
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  blurRadius: 1,
+                  offset: const Offset(0, -1),
+                ),
+              ] else ...[
+                BoxShadow(
+                  color: widget.borderColor.withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ],
+          ),
+          child: Center(child: widget.child),
+        ),
+      ),
+    );
+  }
 }

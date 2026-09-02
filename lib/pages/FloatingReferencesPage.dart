@@ -24,14 +24,14 @@ class FloatingReferencesPage extends StatelessWidget {
               init: FloatingBibleController(),
               builder: (floatingBibleController) { 
                 return Container(
-                  color: Theme.of(context).canvasColor,
+                  color: Colors.transparent,
                   child: Stack(
                     children: [
                       // Referencias
                       Scaffold(
-                        backgroundColor: Theme.of(context).canvasColor,
+                        backgroundColor: Colors.transparent,
                         appBar: AppBar(
-                          backgroundColor: Theme.of(context).canvasColor,
+                          backgroundColor: Colors.transparent,
                           scrolledUnderElevation: 0,
                           elevation: 0,
                           title: Text("Referencias", style: Theme.of(context).textTheme.bodyLarge!.copyWith(
@@ -57,9 +57,9 @@ class FloatingReferencesPage extends StatelessWidget {
                                       builder: (FloatingReferencesPageController floatingReferencesPageController) {
                                         return FloatingWidget(
                                           child: Scaffold(
-                                            backgroundColor: Theme.of(context).canvasColor,
+                                            backgroundColor: Colors.transparent,
                                             appBar: AppBar(
-                                              backgroundColor: Theme.of(context).canvasColor,
+                                              backgroundColor: Colors.transparent,
                                               scrolledUnderElevation: 0,
                                               elevation: 0,
                                               title: TextField(
