@@ -53,10 +53,10 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     controller.enableAcrylicEffect
-                        ? Colors.white.withValues(alpha: 0.60)
+                        ? Colors.white.withValues(alpha: 0.50)
                         : const Color(0xFFFFFFFF),
                     controller.enableAcrylicEffect
-                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.38)
+                        ? const Color(0xFFE2E4EA).withValues(alpha: 0.30)
                         : const Color(0xFFE2E4EA),
                   ],
                 );
@@ -112,8 +112,8 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.white.withValues(alpha: 0.45), // Cristal blanco 45% arriba
-                            Colors.white.withValues(alpha: 0.28), // Cristal blanco 28% abajo
+                            Colors.white.withValues(alpha: 0.38), // Cristal blanco 38% arriba
+                            Colors.white.withValues(alpha: 0.22), // Cristal blanco 22% abajo
                           ],
                         ))
                   : null,
@@ -396,26 +396,12 @@ class ReadPreferencesControlCenter extends StatelessWidget {
             ),
           );
 
-          // EFECTO ACRÍLICO NATIVO (BackdropFilter con Composición de Luminancia y Vibrancy)
-          final glassFilter = isDark
-              ? ImageFilter.blur(
-                  sigmaX: 30,
-                  sigmaY: 30,
-                  tileMode: TileMode.mirror,
-                )
-              : ImageFilter.compose(
-                  outer: ColorFilter.matrix(const <double>[
-                    1.12, 0,    0,    0, 24, // Realce canal Rojo y ganancia blanca
-                    0,    1.12, 0,    0, 24, // Realce canal Verde y ganancia blanca
-                    0,    0,    1.12, 0, 24, // Realce canal Azul y ganancia blanca
-                    0,    0,    0,    1,  0,
-                  ]),
-                  inner: ImageFilter.blur(
-                    sigmaX: 28,
-                    sigmaY: 28,
-                    tileMode: TileMode.mirror,
-                  ),
-                );
+          // EFECTO ACRÍLICO NATIVO (BackdropFilter cristalino de 20px de desenfoque)
+          final glassFilter = ImageFilter.blur(
+            sigmaX: isDark ? 28 : 20,
+            sigmaY: isDark ? 28 : 20,
+            tileMode: TileMode.mirror,
+          );
 
           Widget finalPanel = ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
