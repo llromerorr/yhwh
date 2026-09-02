@@ -13,14 +13,14 @@ import 'package:yhwh/controllers/ReadPreferencesController.dart';
 abstract class ControlCenterVisualConfig {
   // --- 1. BANDEJA DEL PANEL (FONDO PRINCIPAL) ---
   /// Opacidad superior del fondo en Modo Claro (0.0 = 100% transparente, 1.0 = sólido)
-  static const double lightPanelTopAlpha = 0.28;
+  static const double lightPanelTopAlpha = 0;
   /// Opacidad inferior del fondo en Modo Claro
-  static const double lightPanelBottomAlpha = 0.16;
+  static const double lightPanelBottomAlpha = 0;
 
   /// Opacidad superior del fondo en Modo Oscuro / OLED
-  static const double darkPanelTopAlpha = 0.45;
+  static const double darkPanelTopAlpha = 0;
   /// Opacidad inferior del fondo en Modo Oscuro / OLED
-  static const double darkPanelBottomAlpha = 0.28;
+  static const double darkPanelBottomAlpha = 0;
 
   // --- 2. BOTONES Y MÓDULOS EN REPOSO ---
   /// Opacidad superior de los botones en Modo Claro
@@ -29,14 +29,14 @@ abstract class ControlCenterVisualConfig {
   static const double lightButtonBottomAlpha = 0.18;
 
   /// Opacidad de los botones en Modo Oscuro
-  static const double darkButtonTopAlpha = 0.22;
-  static const double darkButtonBottomAlpha = 0.10;
+  static const double darkButtonTopAlpha = 0.05;
+  static const double darkButtonBottomAlpha = 0.05;
 
   // --- 3. DESENFOQUE GAUSSIANO (BLUR) ---
   /// Intensidad del desenfoque en Modo Claro (16px difumina el texto pero deja ver los colores)
   static const double lightBlurSigma = 16.0;
   /// Intensidad del desenfoque en Modo Oscuro (18px)
-  static const double darkBlurSigma = 18.0;
+  static const double darkBlurSigma = 23.0;
 
   // --- 4. LIQUID GLASS & REFRACCIÓN ÓPTICA ---
   /// Distorsión óptica de los bordes (0.0 = plano, 0.08 = pronunciado)
@@ -159,7 +159,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelTopAlpha),
-                            const Color(0xFFF0F2F7).withValues(alpha: ControlCenterVisualConfig.lightPanelBottomAlpha),
+                            Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelBottomAlpha),
                           ],
                         ))
                   : null,
@@ -177,12 +177,6 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   blurRadius: 28,
                   offset: const Offset(0, -6),
                 ),
-                if (!isDark && controller.enableAcrylicEffect)
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.90),
-                    blurRadius: 4,
-                    offset: const Offset(0, -1),
-                  ),
               ],
             ),
             child: SafeArea(
@@ -292,32 +286,27 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                             Container(
                               height: 64,
                               decoration: BoxDecoration(
-                                gradient: neutralGradient,
+                                color: controller.enableAcrylicEffect
+                                    ? indicatorColor.withValues(alpha: isDark ? 0.08 : 0.05)
+                                    : null,
+                                gradient: controller.enableAcrylicEffect ? null : neutralGradient,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(color: borderColor, width: 1.2),
                                 boxShadow: [
-                                  if (!isDark) ...[
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.08),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                    BoxShadow(
-                                      color: Colors.white.withValues(alpha: 0.95),
-                                      blurRadius: 2,
-                                      offset: const Offset(0, -1),
-                                    ),
-                                  ] else ...[
-                                    BoxShadow(
-                                      color: Colors.white.withValues(alpha: 0.06),
-                                      blurRadius: 1,
-                                      offset: const Offset(0, -1),
-                                    ),
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.40),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
+                                  if (!controller.enableAcrylicEffect) ...[
+                                    if (!isDark) ...[
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.08),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ] else ...[
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.40),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ],
                                 ],
                               ),
