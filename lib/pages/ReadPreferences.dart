@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 
@@ -164,6 +165,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           indicatorColor: indicatorColor,
                           canvasColor: canvasColor,
                           borderColor: borderColor,
+                          enableLiquidGlass: controller.enableAcrylicEffect,
                         ),
                       ),
 
@@ -184,6 +186,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                     onTap: controller.cycleTheme,
                                     gradient: neutralGradient,
                                     borderColor: borderColor,
+                                    enableLiquidGlass: controller.enableAcrylicEffect,
                                     child: AnimatedSwitcher(
                                       duration: const Duration(milliseconds: 250),
                                       transitionBuilder: (child, anim) => ScaleTransition(
@@ -210,6 +213,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                     onTap: controller.cycleFontFamily,
                                     gradient: neutralGradient,
                                     borderColor: borderColor,
+                                    enableLiquidGlass: controller.enableAcrylicEffect,
                                     child: AnimatedSwitcher(
                                       duration: const Duration(milliseconds: 250),
                                       transitionBuilder: (child, anim) => ScaleTransition(
@@ -332,6 +336,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           gradient: controller.keepScreenOn ? activeGradient : neutralGradient,
                           isActive: controller.keepScreenOn,
                           borderColor: controller.keepScreenOn ? Colors.transparent : borderColor,
+                          enableLiquidGlass: controller.enableAcrylicEffect,
                           child: AnimatedScale(
                             scale: controller.keepScreenOn ? 1.08 : 1.0,
                             duration: const Duration(milliseconds: 180),
@@ -354,6 +359,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           gradient: controller.enableAcrylicEffect ? activeGradient : neutralGradient,
                           isActive: controller.enableAcrylicEffect,
                           borderColor: controller.enableAcrylicEffect ? Colors.transparent : borderColor,
+                          enableLiquidGlass: controller.enableAcrylicEffect,
                           child: AnimatedScale(
                             scale: controller.enableAcrylicEffect ? 1.08 : 1.0,
                             duration: const Duration(milliseconds: 180),
@@ -377,6 +383,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           onTap: controller.resetToDefaults,
                           gradient: neutralGradient,
                           borderColor: borderColor,
+                          enableLiquidGlass: controller.enableAcrylicEffect,
                           child: Icon(
                             Icons.restart_alt_rounded,
                             size: 26,
@@ -548,6 +555,7 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
   final Color indicatorColor;
   final Color canvasColor;
   final Color borderColor;
+  final bool enableLiquidGlass;
 
   const _FontSizeCapsuleSlider({
     Key? key,
@@ -557,6 +565,7 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
     required this.indicatorColor,
     required this.canvasColor,
     required this.borderColor,
+    this.enableLiquidGlass = false,
   }) : super(key: key);
 
   @override
@@ -626,6 +635,131 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
     int totalLevels = ReadPreferencesController.fontLevels.length;
     double targetFill = (levelIndex / (totalLevels - 1)) * 0.70 + 0.30;
 
+    Widget sliderBody = Container(
+      height: sliderHeight,
+      decoration: BoxDecoration(
+        gradient: widget.neutralGradient,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: widget.borderColor,
+          width: 1.2,
+        ),
+        boxShadow: [
+          if (!isDark) ...[
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.95),
+              blurRadius: 2,
+              offset: const Offset(0, -1),
+            ),
+          ] else ...[
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.06),
+              blurRadius: 1,
+              offset: const Offset(0, -1),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.45),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22.8),
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            // BARRA DE LLENADO ACTIVA CON SPRING PHYSICS ANIMADO
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: targetFill, end: targetFill),
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              builder: (context, animatedFill, child) {
+                return Align(
+                  alignment: Alignment.bottomCenter,
+                  child: FractionallySizedBox(
+                    heightFactor: animatedFill,
+                    widthFactor: 1.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: widget.activeGradient,
+                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(22.8)),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // ICONO Y TEXTO CON EFECTO DE COLOR INVERSO DINÁMICO
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Indicador de nivel superior en escala de puntos
+                    Text(
+                      '${widget.controller.currentFontSize.toInt()}',
+                      style: TextStyle(
+                        fontFamily: 'SF Pro Display',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: targetFill >= 0.85 
+                            ? (isDark ? widget.canvasColor : Colors.white) 
+                            : (isDark ? widget.indicatorColor.withValues(alpha: 0.85) : const Color(0xff27272A)),
+                      ),
+                    ),
+
+                    // Icono Tt inferior
+                    AnimatedScale(
+                      scale: _isPressed ? 1.08 : 1.0,
+                      duration: const Duration(milliseconds: 140),
+                      curve: Curves.easeOutBack,
+                      child: Icon(
+                        Icons.text_fields_rounded,
+                        size: 26,
+                        color: targetFill >= 0.30
+                            ? (isDark ? widget.canvasColor : Colors.white)
+                            : (isDark ? widget.indicatorColor : const Color(0xff27272A)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Widget finalSlider = widget.enableLiquidGlass
+        ? LiquidGlassLens(
+            style: LiquidGlassStyle(
+              shape: LiquidGlassShape.squircle(
+                cornerRadius: 24,
+                borderType: OpticalBorder(
+                  borderSaturation: isDark ? 1.0 : 1.2,
+                  ambientIntensity: isDark ? 0.8 : 1.0,
+                  borderSolidity: 0.0,
+                ),
+              ),
+              refraction: const LiquidGlassRefraction(
+                distortion: 0.04,
+                distortionWidth: 16,
+              ),
+            ),
+            child: sliderBody,
+          )
+        : sliderBody;
+
     return GestureDetector(
       onVerticalDragStart: _handleDragStart,
       onVerticalDragUpdate: _handleDragUpdate,
@@ -641,107 +775,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
         scale: _isPressed ? 0.96 : 1.0,
         duration: const Duration(milliseconds: 160),
         curve: Curves.easeOutBack,
-        child: Container(
-          height: sliderHeight,
-          decoration: BoxDecoration(
-            gradient: widget.neutralGradient,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: widget.borderColor,
-              width: 1.2,
-            ),
-            boxShadow: [
-              if (!isDark) ...[
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  blurRadius: 2,
-                  offset: const Offset(0, -1),
-                ),
-              ] else ...[
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  blurRadius: 1,
-                  offset: const Offset(0, -1),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                // 1. CAPA BASE INACTIVA: Icono base en la pista vacía con micro-escala
-                Positioned(
-                  bottom: 12,
-                  child: AnimatedScale(
-                    scale: _isPressed ? 1.06 : 1.0,
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOutBack,
-                    child: Icon(
-                      Icons.format_size_rounded,
-                      size: 26,
-                      color: isDark
-                          ? widget.indicatorColor.withValues(alpha: 0.45)
-                          : const Color(0xff71717A),
-                    ),
-                  ),
-                ),
-
-                // 2. CAPA RELLENA ACTIVA CON ANIMACIÓN FLUIDA DE RESORTE (Spring Physics)
-                TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: targetFill, end: targetFill),
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, animatedFill, child) {
-                    return ClipRect(
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        heightFactor: animatedFill,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: sliderHeight,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: widget.activeGradient,
-                    ),
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        Positioned(
-                          bottom: 12,
-                          child: AnimatedScale(
-                            scale: _isPressed ? 1.06 : 1.0,
-                            duration: const Duration(milliseconds: 180),
-                            curve: Curves.easeOutBack,
-                            child: Icon(
-                              Icons.format_size_rounded,
-                              size: 26,
-                              color: isDark ? widget.canvasColor : Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        child: finalSlider,
       ),
     );
   }
@@ -757,6 +791,7 @@ class _BouncyControlModule extends StatefulWidget {
   final Color borderColor;
   final double height;
   final EdgeInsetsGeometry? margin;
+  final bool enableLiquidGlass;
 
   const _BouncyControlModule({
     Key? key,
@@ -768,6 +803,7 @@ class _BouncyControlModule extends StatefulWidget {
     required this.borderColor,
     this.height = 64.0,
     this.margin,
+    this.enableLiquidGlass = false,
   }) : super(key: key);
 
   @override
@@ -781,6 +817,88 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isTransparent = widget.gradient == null && widget.backgroundColor == Colors.transparent;
+
+    Widget moduleBody = AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeInOut,
+      height: widget.height,
+      margin: widget.margin,
+      decoration: BoxDecoration(
+        gradient: widget.gradient,
+        color: widget.gradient == null ? widget.backgroundColor : null,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: widget.borderColor,
+          width: 1.2,
+        ),
+        boxShadow: [
+          if (!isTransparent) ...[
+            if (widget.isActive) ...[
+              // Botón Activo: Sombra profunda y halo de acento
+              BoxShadow(
+                color: isDark
+                    ? widget.borderColor.withValues(alpha: 0.25)
+                    : Colors.black.withValues(alpha: 0.26),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+              if (!isDark)
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.20),
+                  blurRadius: 1,
+                  offset: const Offset(0, -1),
+                ),
+            ] else ...[
+              if (!isDark) ...[
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  blurRadius: 2,
+                  offset: const Offset(0, -1),
+                ),
+              ] else ...[
+                // Modo Oscuro / OLED: Bisel de cristal superior + sombra de oclusión
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  blurRadius: 1,
+                  offset: const Offset(0, -1),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.40),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ],
+          ],
+        ],
+      ),
+      child: Center(child: widget.child),
+    );
+
+    Widget finalModule = widget.enableLiquidGlass
+        ? LiquidGlassLens(
+            style: LiquidGlassStyle(
+              shape: LiquidGlassShape.squircle(
+                cornerRadius: 20,
+                borderType: OpticalBorder(
+                  borderSaturation: isDark ? 1.0 : 1.2,
+                  ambientIntensity: isDark ? 0.8 : 1.0,
+                  borderSolidity: 0.0,
+                ),
+              ),
+              refraction: const LiquidGlassRefraction(
+                distortion: 0.04,
+                distortionWidth: 16,
+              ),
+            ),
+            child: moduleBody,
+          )
+        : moduleBody;
 
     return GestureDetector(
       onTapDown: (_) {
@@ -796,67 +914,7 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
         scale: _isPressed ? 0.92 : 1.0,
         duration: const Duration(milliseconds: 140),
         curve: Curves.easeOutBack,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeInOut,
-          height: widget.height,
-          margin: widget.margin,
-          decoration: BoxDecoration(
-            gradient: widget.gradient,
-            color: widget.gradient == null ? widget.backgroundColor : null,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: widget.borderColor,
-              width: 1.2,
-            ),
-            boxShadow: [
-              if (!isTransparent) ...[
-                if (widget.isActive) ...[
-                  // Botón Activo: Sombra profunda y halo de acento
-                  BoxShadow(
-                    color: isDark
-                        ? widget.borderColor.withValues(alpha: 0.25)
-                        : Colors.black.withValues(alpha: 0.26),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                  if (!isDark)
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.20),
-                      blurRadius: 1,
-                      offset: const Offset(0, -1),
-                    ),
-                ] else ...[
-                  if (!isDark) ...[
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.95),
-                      blurRadius: 2,
-                      offset: const Offset(0, -1),
-                    ),
-                  ] else ...[
-                    // Modo Oscuro / OLED: Bisel de cristal superior + sombra de oclusión
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      blurRadius: 1,
-                      offset: const Offset(0, -1),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.40),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ],
-              ],
-            ],
-          ),
-          child: Center(child: widget.child),
-        ),
+        child: finalModule,
       ),
     );
   }
