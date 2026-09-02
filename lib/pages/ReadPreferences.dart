@@ -13,30 +13,30 @@ import 'package:yhwh/controllers/ReadPreferencesController.dart';
 abstract class ControlCenterVisualConfig {
   // --- 1. BANDEJA DEL PANEL (FONDO PRINCIPAL) ---
   /// Opacidad superior del fondo en Modo Claro (0.0 = 100% transparente, 1.0 = sólido)
-  static const double lightPanelTopAlpha = 0.45;
+  static const double lightPanelTopAlpha = 0.28;
   /// Opacidad inferior del fondo en Modo Claro
-  static const double lightPanelBottomAlpha = 0.30;
+  static const double lightPanelBottomAlpha = 0.16;
 
   /// Opacidad superior del fondo en Modo Oscuro / OLED
-  static const double darkPanelTopAlpha = 0.60;
+  static const double darkPanelTopAlpha = 0.45;
   /// Opacidad inferior del fondo en Modo Oscuro / OLED
-  static const double darkPanelBottomAlpha = 0.40;
+  static const double darkPanelBottomAlpha = 0.28;
 
   // --- 2. BOTONES Y MÓDULOS EN REPOSO ---
   /// Opacidad superior de los botones en Modo Claro
-  static const double lightButtonTopAlpha = 0.70;
+  static const double lightButtonTopAlpha = 0.35;
   /// Opacidad inferior de los botones en Modo Claro
-  static const double lightButtonBottomAlpha = 0.45;
+  static const double lightButtonBottomAlpha = 0.18;
 
   /// Opacidad de los botones en Modo Oscuro
-  static const double darkButtonTopAlpha = 0.20;
-  static const double darkButtonBottomAlpha = 0.08;
+  static const double darkButtonTopAlpha = 0.22;
+  static const double darkButtonBottomAlpha = 0.10;
 
   // --- 3. DESENFOQUE GAUSSIANO (BLUR) ---
-  /// Intensidad del desenfoque en Modo Claro (px)
-  static const double lightBlurSigma = 20.0;
-  /// Intensidad del desenfoque en Modo Oscuro (px)
-  static const double darkBlurSigma = 25.0;
+  /// Intensidad del desenfoque en Modo Claro (16px difumina el texto pero deja ver los colores)
+  static const double lightBlurSigma = 16.0;
+  /// Intensidad del desenfoque en Modo Oscuro (18px)
+  static const double darkBlurSigma = 18.0;
 
   // --- 4. LIQUID GLASS & REFRACCIÓN ÓPTICA ---
   /// Distorsión óptica de los bordes (0.0 = plano, 0.08 = pronunciado)
@@ -104,7 +104,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                         ? Colors.white.withValues(alpha: ControlCenterVisualConfig.lightButtonTopAlpha)
                         : const Color(0xFFFFFFFF),
                     controller.enableAcrylicEffect
-                        ? const Color(0xFFE2E4EA).withValues(alpha: ControlCenterVisualConfig.lightButtonBottomAlpha)
+                        ? Colors.white.withValues(alpha: ControlCenterVisualConfig.lightButtonBottomAlpha)
                         : const Color(0xFFE2E4EA),
                   ],
                 );
@@ -706,7 +706,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
               offset: const Offset(0, 4),
             ),
             BoxShadow(
-              color: Colors.white.withValues(alpha: 0.95),
+              color: Colors.white.withValues(alpha: widget.enableLiquidGlass ? 0.35 : 0.95),
               blurRadius: 2,
               offset: const Offset(0, -1),
             ),
@@ -912,7 +912,7 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
                   offset: const Offset(0, 4),
                 ),
                 BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.95),
+                  color: Colors.white.withValues(alpha: widget.enableLiquidGlass ? 0.35 : 0.95),
                   blurRadius: 2,
                   offset: const Offset(0, -1),
                 ),
