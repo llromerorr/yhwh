@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
+import 'package:yhwh/widgets/GlassContainer.dart';
 
 // =============================================================================
 // 🎛️ PANEL DE CONTROL VISUAL (Modifica estos valores para ajustar la estética)
@@ -437,23 +437,14 @@ class ReadPreferencesControlCenter extends StatelessWidget {
             ),
           );
 
-          // EFECTO ACRÍLICO NATIVO (BackdropFilter con Desenfoque Gaussiano configurable)
-          Widget finalPanel = ClipRRect(
+          // EFECTO DE CRISTAL ACRÍLICO UNIFICADO (GlassContainer Nativo con aceleración en GPU)
+          Widget finalPanel = GlassContainer(
+            enableAcrylic: controller.enableAcrylicEffect,
+            blur: isDark
+                ? ControlCenterVisualConfig.darkBlurSigma
+                : ControlCenterVisualConfig.lightBlurSigma,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            child: controller.enableAcrylicEffect
-                ? BackdropFilter(
-                    filter: ImageFilter.blur(
-                      sigmaX: isDark 
-                          ? ControlCenterVisualConfig.darkBlurSigma 
-                          : ControlCenterVisualConfig.lightBlurSigma,
-                      sigmaY: isDark 
-                          ? ControlCenterVisualConfig.darkBlurSigma 
-                          : ControlCenterVisualConfig.lightBlurSigma,
-                      tileMode: TileMode.mirror,
-                    ),
-                    child: panelContent,
-                  )
-                : panelContent,
+            child: panelContent,
           );
 
           // ESTRUCTURA CON AVISO FLOTANDO POR ENCIMA DEL PANEL (Control Center)
@@ -783,28 +774,6 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
       ),
     );
 
-    Widget finalSlider = widget.enableLiquidGlass
-        ? LiquidGlassLens(
-            style: LiquidGlassStyle(
-              shape: LiquidGlassShape.squircle(
-                cornerRadius: 24,
-                borderType: OpticalBorder(
-                  borderSaturation: isDark
-                      ? ControlCenterVisualConfig.opticalBorderSaturationDark
-                      : ControlCenterVisualConfig.opticalBorderSaturationLight,
-                  ambientIntensity: isDark ? 0.8 : 1.0,
-                  borderSolidity: 0.0,
-                ),
-              ),
-              refraction: const LiquidGlassRefraction(
-                distortion: ControlCenterVisualConfig.liquidGlassDistortion,
-                distortionWidth: ControlCenterVisualConfig.liquidGlassDistortionWidth,
-              ),
-            ),
-            child: sliderBody,
-          )
-        : sliderBody;
-
     return GestureDetector(
       onVerticalDragStart: _handleDragStart,
       onVerticalDragUpdate: _handleDragUpdate,
@@ -820,7 +789,7 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
         scale: _isPressed ? 0.96 : 1.0,
         duration: const Duration(milliseconds: 160),
         curve: Curves.easeOutBack,
-        child: finalSlider,
+        child: sliderBody,
       ),
     );
   }
@@ -863,90 +832,6 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isTransparent = widget.gradient == null && widget.backgroundColor == Colors.transparent;
 
-    Widget moduleBody = AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeInOut,
-      height: widget.height,
-      margin: widget.margin,
-      decoration: BoxDecoration(
-        gradient: widget.gradient,
-        color: widget.gradient == null ? widget.backgroundColor : null,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: widget.borderColor,
-          width: 1.2,
-        ),
-        boxShadow: [
-          if (!isTransparent) ...[
-            if (widget.isActive) ...[
-              // Botón Activo: Sombra profunda y halo de acento
-              BoxShadow(
-                color: isDark
-                    ? widget.borderColor.withValues(alpha: 0.25)
-                    : Colors.black.withValues(alpha: 0.26),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-              if (!isDark)
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.20),
-                  blurRadius: 1,
-                  offset: const Offset(0, -1),
-                ),
-            ] else ...[
-              if (!isDark) ...[
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: widget.enableLiquidGlass ? 0.35 : 0.95),
-                  blurRadius: 2,
-                  offset: const Offset(0, -1),
-                ),
-              ] else ...[
-                // Modo Oscuro / OLED: Bisel de cristal superior + sombra de oclusión
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  blurRadius: 1,
-                  offset: const Offset(0, -1),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.40),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ],
-          ],
-        ],
-      ),
-      child: Center(child: widget.child),
-    );
-
-    Widget finalModule = widget.enableLiquidGlass
-        ? LiquidGlassLens(
-            style: LiquidGlassStyle(
-              shape: LiquidGlassShape.squircle(
-                cornerRadius: 20,
-                borderType: OpticalBorder(
-                  borderSaturation: isDark
-                      ? ControlCenterVisualConfig.opticalBorderSaturationDark
-                      : ControlCenterVisualConfig.opticalBorderSaturationLight,
-                  ambientIntensity: isDark ? 0.8 : 1.0,
-                  borderSolidity: 0.0,
-                ),
-              ),
-              refraction: const LiquidGlassRefraction(
-                distortion: ControlCenterVisualConfig.liquidGlassDistortion,
-                distortionWidth: ControlCenterVisualConfig.liquidGlassDistortionWidth,
-              ),
-            ),
-            child: moduleBody,
-          )
-        : moduleBody;
-
     return GestureDetector(
       onTapDown: (_) {
         setState(() => _isPressed = true);
@@ -961,7 +846,67 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
         scale: _isPressed ? 0.92 : 1.0,
         duration: const Duration(milliseconds: 140),
         curve: Curves.easeOutBack,
-        child: finalModule,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeInOut,
+          height: widget.height,
+          margin: widget.margin,
+          decoration: BoxDecoration(
+            gradient: widget.gradient,
+            color: widget.gradient == null ? widget.backgroundColor : null,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: widget.borderColor,
+              width: 1.2,
+            ),
+            boxShadow: [
+              if (!isTransparent) ...[
+                if (widget.isActive) ...[
+                  // Botón Activo: Sombra profunda y halo de acento
+                  BoxShadow(
+                    color: isDark
+                        ? widget.borderColor.withValues(alpha: 0.25)
+                        : Colors.black.withValues(alpha: 0.26),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                  if (!isDark)
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.20),
+                      blurRadius: 1,
+                      offset: const Offset(0, -1),
+                    ),
+                ] else ...[
+                  if (!isDark) ...[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: widget.enableLiquidGlass ? 0.35 : 0.95),
+                      blurRadius: 2,
+                      offset: const Offset(0, -1),
+                    ),
+                  ] else ...[
+                    // Modo Oscuro / OLED: Bisel de cristal superior + sombra de oclusión
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      blurRadius: 1,
+                      offset: const Offset(0, -1),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.40),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ],
+              ],
+            ],
+          ),
+          child: Center(child: widget.child),
+        ),
       ),
     );
   }
