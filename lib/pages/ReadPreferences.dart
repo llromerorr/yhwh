@@ -93,7 +93,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               : const Color(0xff27272A);
           final activeIconColor = isDark ? canvasColor : Colors.white;
 
-          // CONTENIDO INTERNO DEL PANEL CON CRISTAL TRANSLÚCIDO
+          // CONTENIDO INTERNO DEL PANEL (Lámina flotante estilo iOS 18 Control Center)
           Widget panelContent = Container(
             constraints: const BoxConstraints(maxWidth: 480),
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
@@ -104,16 +104,16 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            canvasColor.withValues(alpha: 0.70),
-                            canvasColor.withValues(alpha: 0.50),
+                            canvasColor.withValues(alpha: 0.45),
+                            canvasColor.withValues(alpha: 0.25),
                           ],
                         )
                       : LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.white.withValues(alpha: 0.38), // Cristal blanco 38% arriba
-                            Colors.white.withValues(alpha: 0.22), // Cristal blanco 22% abajo
+                            Colors.white.withValues(alpha: 0.18),
+                            Colors.white.withValues(alpha: 0.08),
                           ],
                         ))
                   : null,
@@ -127,13 +127,13 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
                   blurRadius: 28,
                   offset: const Offset(0, -6),
                 ),
                 if (!isDark && controller.enableAcrylicEffect)
                   BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.90),
+                    color: Colors.white.withValues(alpha: 0.70),
                     blurRadius: 4,
                     offset: const Offset(0, -1),
                   ),
