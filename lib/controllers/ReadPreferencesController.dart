@@ -41,7 +41,7 @@ class ReadPreferencesController extends GetxController {
   ];
 
   int get currentFontLevelIndex {
-    int closestIndex = 2; // Default 20.0
+    int closestIndex = 0;
     double minDiff = (currentFontSize - fontLevels[0]).abs();
     for (int i = 1; i < fontLevels.length; i++) {
       double diff = (currentFontSize - fontLevels[i]).abs();

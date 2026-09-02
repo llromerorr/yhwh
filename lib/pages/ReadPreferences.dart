@@ -545,19 +545,27 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
 
   double _dragStartY = 0.0;
   int _dragStartIndex = 2;
+  bool _hasMoved = false;
 
-  // 20 píxeles de desplazamiento vertical por cada nivel
-  static const double pixelsPerStep = 20.0;
+  // 18 píxeles de desplazamiento vertical por cada nivel
+  static const double pixelsPerStep = 18.0;
 
   void _handleDragStart(DragStartDetails details) {
-    setState(() => _isPressed = true);
+    setState(() {
+      _isPressed = true;
+      _hasMoved = false;
+    });
     _dragStartY = details.globalPosition.dy;
     _dragStartIndex = widget.controller.currentFontLevelIndex;
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
     double totalDeltaY = _dragStartY - details.globalPosition.dy; // Desplazar hacia arriba suma niveles
-    int stepOffset = (totalDeltaY / pixelsPerStep).truncate();
+    if (totalDeltaY.abs() > 4) {
+      _hasMoved = true;
+    }
+
+    int stepOffset = (totalDeltaY / pixelsPerStep).round();
     int targetIndex = (_dragStartIndex + stepOffset).clamp(0, ReadPreferencesController.fontLevels.length - 1);
 
     if (targetIndex != widget.controller.currentFontLevelIndex) {
@@ -568,13 +576,13 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
 
   void _handleTapUp(TapUpDetails details) {
     setState(() => _isPressed = false);
-    // Toque en mitad superior: +1 nivel; toque en mitad inferior: -1 nivel
-    if (details.localPosition.dy < sliderHeight / 2) {
-      HapticFeedback.selectionClick();
-      widget.controller.stepUpFontSize();
-    } else {
-      HapticFeedback.selectionClick();
-      widget.controller.stepDownFontSize();
+    if (!_hasMoved) {
+      // Toque en mitad superior: +1 nivel; toque en mitad inferior: -1 nivel
+      if (details.localPosition.dy < sliderHeight / 2) {
+        widget.controller.stepUpFontSize();
+      } else {
+        widget.controller.stepDownFontSize();
+      }
     }
   }
 
