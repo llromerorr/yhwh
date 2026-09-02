@@ -345,9 +345,8 @@ class BiblePageController extends GetxController {
   }
 
   void onReferenceTap({int? book, int? chapter, int? verse_from, int? verse_to, required BuildContext context}) {
-    
     // VARIABLES DE ESTADO AFUERA DEL BUILDER
-    List<Widget> previewVerses = []; // Ahora es una lista de widgets Verse
+    List<Widget> previewVerses = [];
     String previewTitle = "";
     bool initialLoadTriggered = false; 
 
@@ -373,7 +372,6 @@ class BiblePageController extends GetxController {
               
               for (int i = verse_from; i <= endVerse; i++) {
                 if (i > 0 && i <= chapterVerses.length) {
-                  // AÑADIMOS TU WIDGET VERSE
                   tempVerses.add(
                     Verse(
                       verseNumber: i,
@@ -390,20 +388,20 @@ class BiblePageController extends GetxController {
                       fontFamily: fontFamily,
                       isFirstVerseShowed: true, 
                       isJustified: isJustified,
-                      
-                      onFootnoteTap: (String footnote) {
-                        // this.onFootnoteTap(book: book, chapter: chapter, verse: i, footnote: footnote, context: context);
-                      },
-                      onReferenceTap: (int b, int c, int vf, int vt) {
-                        // this.onReferenceTap(book: b, chapter: c, verse_from: vf, verse_to: vt, context: context);
-                      },
+                      onFootnoteTap: (String footnote) {},
+                      onReferenceTap: (int b, int c, int vf, int vt) {},
                     )
                   );
                 }
               }
 
               setModalState(() {
-                previewTitle = '${intToBook[book]} $chapter:$verse_from${(verse_to != null && verse_to > verse_from) ? '-$verse_to' : ''}';
+                final readPreferencesController = Get.find<ReadPreferencesController>();
+                bool isVisualImpaired = readPreferencesController.isVisualImpaired;
+
+                previewTitle = isVisualImpaired
+                    ? '${intToAbreviatura[book]} $chapter:$verse_from${(verse_to != null && verse_to > verse_from) ? '-$verse_to' : ''}'
+                    : '${intToBook[book]} $chapter:$verse_from${(verse_to != null && verse_to > verse_from) ? '-$verse_to' : ''}';
                 previewVerses = tempVerses;
               });
             }
@@ -427,40 +425,6 @@ class BiblePageController extends GetxController {
                   alpha: isDark ? 0.18 : 0.14,
                 );
 
-                final neutralGradient = isDark
-                    ? LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          indicatorColor.withValues(
-                            alpha: readPrefs.enableAcrylicEffect
-                                ? ControlCenterVisualConfig.darkButtonTopAlpha
-                                : 0.15,
-                          ),
-                          indicatorColor.withValues(
-                            alpha: readPrefs.enableAcrylicEffect
-                                ? ControlCenterVisualConfig.darkButtonBottomAlpha
-                                : 0.05,
-                          ),
-                        ],
-                      )
-                    : LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          readPrefs.enableAcrylicEffect
-                              ? Colors.white.withValues(
-                                  alpha: ControlCenterVisualConfig.lightButtonTopAlpha,
-                                )
-                              : const Color(0xFFFFFFFF),
-                          readPrefs.enableAcrylicEffect
-                              ? Colors.white.withValues(
-                                  alpha: ControlCenterVisualConfig.lightButtonBottomAlpha,
-                                )
-                              : const Color(0xFFE2E4EA),
-                        ],
-                      );
-
                 final activeGradient = isDark
                     ? LinearGradient(
                         begin: Alignment.topLeft,
@@ -482,17 +446,17 @@ class BiblePageController extends GetxController {
                 Widget sheetContent = SafeArea(
                   top: false,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Tirador de arrastre superior (Drag Handle estilo iOS)
+                        // Tirador de arrastre superior
                         Center(
                           child: Container(
                             width: 42,
                             height: 5,
-                            margin: const EdgeInsets.only(bottom: 18),
+                            margin: const EdgeInsets.only(bottom: 14),
                             decoration: BoxDecoration(
                               color: indicatorColor.withValues(
                                 alpha: isDark ? 0.30 : 0.20,
@@ -502,7 +466,7 @@ class BiblePageController extends GetxController {
                           ),
                         ),
 
-                        // Encabezado limpio con Badge y Título
+                        // Nivel 1: Insignia + Botón de Acción Compacto con Icono
                         Row(
                           children: [
                             Container(
@@ -539,22 +503,45 @@ class BiblePageController extends GetxController {
                               ),
                             ),
                             const Spacer(),
-                            Text(
-                              previewTitle,
-                              style: TextStyle(
-                                fontFamily: fontFamily,
-                                fontWeight: FontWeight.bold,
-                                fontSize: fontSize - 1,
-                                color: indicatorColor,
-                                letterSpacing: -0.3,
+                            _ReferenceMiniActionBtn(
+                              label: "Abrir",
+                              icon: Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 16,
+                                color: isDark ? canvasColor : Colors.white,
                               ),
+                              gradient: activeGradient,
+                              borderColor: borderColor,
+                              textColor: isDark ? canvasColor : Colors.white,
+                              onTap: () {
+                                Navigator.pop(context);
+                                setReferenceSafeScroll(book!, chapter!, verse_from!);
+                              },
                             ),
                           ],
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 10),
 
-                        // Texto del versículo directamente sobre el cristal con scroll elástico
+                        // Nivel 2: Título en grande con FittedBox (Cero desborde)
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            previewTitle,
+                            style: TextStyle(
+                              fontFamily: fontFamily,
+                              fontWeight: FontWeight.bold,
+                              fontSize: fontSize,
+                              color: indicatorColor,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // Contenido del versículo directamente sobre el cristal con scroll elástico
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 300),
                           transitionBuilder: (child, animation) {
@@ -564,7 +551,7 @@ class BiblePageController extends GetxController {
                               ? ConstrainedBox(
                                   key: ValueKey('cross_ref_${book ?? 0}_${chapter ?? 0}_${verse_from ?? 0}'),
                                   constraints: BoxConstraints(
-                                    maxHeight: MediaQuery.of(context).size.height * 0.42,
+                                    maxHeight: MediaQuery.of(context).size.height * 0.48,
                                   ),
                                   child: RawScrollbar(
                                     radius: const Radius.circular(8),
@@ -579,39 +566,6 @@ class BiblePageController extends GetxController {
                                   ),
                                 )
                               : const SizedBox.shrink(key: Key('shrink')),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Botón de acción con rebote háptico
-                        _ReferenceActionModule(
-                          gradient: activeGradient,
-                          borderColor: borderColor,
-                          onTap: () {
-                            Navigator.pop(context);
-                            setReferenceSafeScroll(book!, chapter!, verse_from!);
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Leer capítulo completo",
-                                style: TextStyle(
-                                  color: isDark ? canvasColor : Colors.white,
-                                  fontFamily: fontFamily,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: fontSize - 4,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.arrow_forward_rounded,
-                                size: 18,
-                                color: isDark ? canvasColor : Colors.white,
-                              ),
-                            ],
-                          ),
                         ),
                       ],
                     ),
@@ -670,21 +624,14 @@ class BiblePageController extends GetxController {
   void onFootnoteTap({int? book, int? chapter, int? verse, String? footnote, required BuildContext context}){
     String textoNotaParaMostrar = rvr60_commentaries['$book:$chapter:$verse:$footnote'].toString();
 
-    // 1. Extraemos todas las citas bíblicas de la nota
-    RegExp linkExp = RegExp(r"<a\s+href=['\x22](.*?)['\x22]>(.*?)<\/a>");
-    var allLinkMatches = linkExp.allMatches(textoNotaParaMostrar).toList();
-    String? firstLink = allLinkMatches.isNotEmpty ? allLinkMatches.first.group(1) : null;
-    String? selectedLink = firstLink;
+    // 1. Parseamos todas las citas bíblicas de la nota
+    List<_ParsedReference> parsedList = _parseFootnoteLinks(textoNotaParaMostrar);
 
-    // 2. VARIABLES DE ESTADO AFUERA DEL BUILDER
-    List<Widget> previewVerses = []; 
-    String previewTitle = "";
-    bool initialLoadTriggered = false; 
-    
-    int? targetBook;
-    int? targetChapter;
-    int? targetVerseFrom;
-    int? targetVerseTo;
+    // 2. Estado
+    int activeIndex = 0;
+    PageController pageController = PageController();
+    Map<int, List<Widget>> cachedVerses = {};
+    bool initialLoadTriggered = false;
 
     showModalBottomSheet(
       context: context,
@@ -697,61 +644,24 @@ class BiblePageController extends GetxController {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
 
-            // --- FUNCIÓN CENTRAL PARA CARGAR TEXTO BÍBLICO ---
-            Future<void> loadReferenceText(String linkStr) async {
-              int? refBook;
-              int? refChapter;
-              int? refVerseFrom;
-              int? refVerseTo;
+            // Cargar versículos del índice activo
+            Future<void> loadIndex(int idx) async {
+              if (idx < 0 || idx >= parsedList.length) return;
+              if (cachedVerses.containsKey(idx)) return;
 
-              if (linkStr.startsWith('B:')) {
-                String cleanLink = linkStr.substring(2); 
-                List<String> parts = cleanLink.split(' '); 
-                
-                if (parts.isNotEmpty) {
-                  int? internalId = int.tryParse(parts[0]);
-                  if (internalId != null && linkIdToBook.containsKey(internalId)) {
-                     refBook = linkIdToBook[internalId]; 
-                  }
-                }
-                
-                if (parts.length > 1) {
-                  List<String> cv = parts[1].split(':'); 
-                  if (cv.isNotEmpty) refChapter = int.tryParse(cv[0]);
-                  
-                  if (cv.length > 1) {
-                    List<String> verses = cv[1].split('-'); 
-                    refVerseFrom = int.tryParse(verses[0]);
-                    refVerseTo = verses.length > 1 ? int.tryParse(verses[1]) : refVerseFrom;
-                  }
-                }
-              } else {
-                List<String> split = linkStr.split(':');
-                if (split.isNotEmpty) refBook = int.tryParse(split[0]);
-                if (split.length >= 2) refChapter = int.tryParse(split[1]);
-                if (split.length >= 3) {
-                  List<String> verses = split[2].split('-');
-                  refVerseFrom = int.tryParse(verses[0]);
-                  refVerseTo = verses.length > 1 ? int.tryParse(verses[1]) : refVerseFrom;
-                }
-              }
-
-              if (refBook == null || refChapter == null || refVerseFrom == null) {
-                return; 
-              }
-
-              List<String> chapterVerses = await BibleManager().getChapter(book: refBook, chapter: refChapter);
+              final target = parsedList[idx];
+              List<String> chapterVerses = await BibleManager().getChapter(book: target.book, chapter: target.chapter);
               
               List<Widget> tempVerses = [];
-              int endVerse = (refVerseTo != null && refVerseTo > 0 && refVerseTo >= refVerseFrom) ? refVerseTo : refVerseFrom;
+              int endVerse = (target.verseTo != null && target.verseTo! > 0 && target.verseTo! >= target.verseFrom) ? target.verseTo! : target.verseFrom;
               
-              for (int i = refVerseFrom; i <= endVerse; i++) {
+              for (int i = target.verseFrom; i <= endVerse; i++) {
                 if (i > 0 && i <= chapterVerses.length) {
                   tempVerses.add(
                     Verse(
                       verseNumber: i,
                       text: chapterVerses[i-1],
-                      title: rvr60_titles.containsKey('$refBook:$refChapter:$i') == true ? rvr60_titles['$refBook:$refChapter:$i'].toString() : "",
+                      title: rvr60_titles.containsKey('${target.book}:${target.chapter}:$i') == true ? rvr60_titles['${target.book}:${target.chapter}:$i'].toString() : "",
                       highlight: false,
                       selected: false,
                       colorHighlight: Colors.transparent,
@@ -771,26 +681,14 @@ class BiblePageController extends GetxController {
               }
 
               setModalState(() {
-                targetBook = refBook;
-                targetChapter = refChapter;
-                targetVerseFrom = refVerseFrom;
-                targetVerseTo = refVerseTo;
-                
-                final readPreferencesController = Get.find<ReadPreferencesController>();
-                bool isVisualImpaired = readPreferencesController.isVisualImpaired;
-
-                previewTitle = isVisualImpaired
-                    ? '${intToAbreviatura[refBook]} $refChapter:$refVerseFrom${refVerseTo != refVerseFrom ? '-$refVerseTo' : ''}'
-                    : '${intToBook[refBook]} $refChapter:$refVerseFrom${refVerseTo != refVerseFrom ? '-$refVerseTo' : ''}';
-                
-                previewVerses = tempVerses;
+                cachedVerses[idx] = tempVerses;
               });
             }
 
-            // --- AUTO-CARGA INICIAL ---
-            if (firstLink != null && !initialLoadTriggered) {
+            // Auto-carga del primer elemento si hay citas bíblicas
+            if (parsedList.isNotEmpty && !initialLoadTriggered) {
               initialLoadTriggered = true;
-              loadReferenceText(firstLink);
+              loadIndex(0);
             }
 
             return GetBuilder<ReadPreferencesController>(
@@ -858,20 +756,25 @@ class BiblePageController extends GetxController {
                         ],
                       );
 
+                final bool isVisualImpaired = readPrefs.isVisualImpaired;
+                final String sourceBookTitle = (book != null)
+                    ? (isVisualImpaired ? intToAbreviatura[book] ?? '' : intToBook[book] ?? '')
+                    : '';
+
                 Widget sheetContent = SafeArea(
                   top: false,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Tirador de arrastre superior (Drag Handle estilo iOS)
+                        // Tirador de arrastre superior
                         Center(
                           child: Container(
                             width: 42,
                             height: 5,
-                            margin: const EdgeInsets.only(bottom: 18),
+                            margin: const EdgeInsets.only(bottom: 14),
                             decoration: BoxDecoration(
                               color: indicatorColor.withValues(
                                 alpha: isDark ? 0.30 : 0.20,
@@ -881,7 +784,7 @@ class BiblePageController extends GetxController {
                           ),
                         ),
 
-                        // Encabezado limpio con Badge y Versículo
+                        // Nivel 1: Insignia + Botón de Acción Compacto con Icono
                         Row(
                           children: [
                             Container(
@@ -902,13 +805,17 @@ class BiblePageController extends GetxController {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    Icons.lightbulb_rounded,
+                                    parsedList.isNotEmpty
+                                        ? Icons.auto_stories_rounded
+                                        : Icons.lightbulb_rounded,
                                     size: 14,
                                     color: isDark ? const Color(0xffe5c064) : const Color(0xffe36414),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    "Nota Explicativa",
+                                    parsedList.isNotEmpty
+                                        ? '${parsedList.length} ${parsedList.length == 1 ? 'Pasaje' : 'Pasajes'} (${activeIndex + 1}/${parsedList.length})'
+                                        : "Nota Lingüística",
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -920,165 +827,186 @@ class BiblePageController extends GetxController {
                               ),
                             ),
                             const Spacer(),
-                            RichText(
-                              text: TextSpan(
-                                text: '${intToBook[book]} $chapter:$verse ',
-                                style: TextStyle(
-                                  fontFamily: fontFamily,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: fontSize - 1,
-                                  color: indicatorColor,
-                                  letterSpacing: -0.3,
+                            if (parsedList.isNotEmpty)
+                              _ReferenceMiniActionBtn(
+                                label: "Abrir",
+                                icon: Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 16,
+                                  color: isDark ? canvasColor : Colors.white,
                                 ),
-                                children: [
-                                  TextSpan(
-                                    text: "[$footnote]",
-                                    style: TextStyle(
-                                      fontFamily: fontFamily,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: fontSize - 5,
-                                      color: isDark ? const Color(0xffe5c064) : const Color(0xffe36414),
-                                    ),
-                                  ),
-                                ],
+                                gradient: activeGradient,
+                                borderColor: borderColor,
+                                textColor: isDark ? canvasColor : Colors.white,
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  final currentTarget = parsedList[activeIndex];
+                                  setReferenceSafeScroll(
+                                    currentTarget.book,
+                                    currentTarget.chapter,
+                                    currentTarget.verseFrom,
+                                  );
+                                },
+                              )
+                            else
+                              _ReferenceMiniActionBtn(
+                                label: "Cerrar",
+                                icon: Icon(
+                                  Icons.close_rounded,
+                                  size: 16,
+                                  color: indicatorColor,
+                                ),
+                                gradient: neutralGradient,
+                                borderColor: borderColor,
+                                textColor: indicatorColor,
+                                onTap: () => Navigator.pop(context),
                               ),
-                            ),
                           ],
                         ),
 
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 10),
 
-                        // Texto explicativo de la nota (Limpio y legible)
-                        RichText(
-                          textAlign: TextAlign.left,
-                          text: HTML.toTextSpan(
-                            context,
-                            textoNotaParaMostrar,
-                            defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                  fontFamily: fontFamily,
-                                  fontWeight: FontWeight.normal,
-                                  height: 1.45,
-                                  fontSize: fontSize - 1,
-                                  fontStyle: FontStyle.normal,
-                                  letterSpacing: fontLetterSeparation,
-                                  color: indicatorColor.withValues(alpha: 0.90),
-                                ),
-                            overrideStyle: {
-                              'a': Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        // Nivel 2: Título de origen en grande con FittedBox (Cero desborde)
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: RichText(
+                            text: TextSpan(
+                              text: '$sourceBookTitle $chapter:$verse ',
+                              style: TextStyle(
+                                fontFamily: fontFamily,
+                                fontWeight: FontWeight.bold,
+                                fontSize: fontSize,
+                                color: indicatorColor,
+                                letterSpacing: -0.3,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: "[$footnote]",
+                                  style: TextStyle(
                                     fontFamily: fontFamily,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: fontSize - 1,
+                                    fontSize: (fontSize - 4).clamp(12.0, 26.0),
                                     color: isDark ? const Color(0xffe5c064) : const Color(0xffe36414),
                                   ),
-                              'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                    fontFamily: fontFamily,
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FontStyle.italic,
-                                    fontSize: fontSize - 1,
-                                    color: indicatorColor,
-                                  ),
-                            },
-                            linksCallback: (link) {
-                              setModalState(() => selectedLink = link.toString());
-                              loadReferenceText(link.toString());
-                            },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
 
-                        // Píldoras / Chips interactivos de citas bíblicas encontradas
-                        if (allLinkMatches.isNotEmpty) ...[
+                        // --- CASO 1: NOTA CON PASAJES BÍBLICOS (CARRUSEL SWIPEABLE) ---
+                        if (parsedList.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+
+                          // Pestañas / Píldoras horizontales de selección rápida
+                          if (parsedList.length > 1)
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              child: Row(
+                                children: parsedList.asMap().entries.map((entry) {
+                                  final idx = entry.key;
+                                  final item = entry.value;
+                                  final isSelected = activeIndex == idx;
+                                  return _BouncyChip(
+                                    label: item.label,
+                                    isSelected: isSelected,
+                                    activeGradient: activeGradient,
+                                    neutralGradient: neutralGradient,
+                                    borderColor: borderColor,
+                                    indicatorColor: indicatorColor,
+                                    onTap: () {
+                                      setModalState(() => activeIndex = idx);
+                                      pageController.animateToPage(
+                                        idx,
+                                        duration: const Duration(milliseconds: 260),
+                                        curve: Curves.easeOutCubic,
+                                      );
+                                      loadIndex(idx);
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+
                           const SizedBox(height: 14),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            child: Row(
-                              children: allLinkMatches.map((m) {
-                                final linkStr = m.group(1)!;
-                                final label = m.group(2)!.replaceAll(RegExp(r'<[^>]*>'), '').trim();
-                                final isSelected = selectedLink == linkStr;
-                                return _BouncyChip(
-                                  label: label,
-                                  isSelected: isSelected,
-                                  activeGradient: activeGradient,
-                                  neutralGradient: neutralGradient,
-                                  borderColor: borderColor,
-                                  indicatorColor: indicatorColor,
-                                  onTap: () {
-                                    setModalState(() => selectedLink = linkStr);
-                                    loadReferenceText(linkStr);
-                                  },
+
+                          // PageView Deslizable (Carrusel 100% fluido con el dedo)
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.38,
+                            child: PageView.builder(
+                              controller: pageController,
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: parsedList.length,
+                              onPageChanged: (idx) {
+                                setModalState(() => activeIndex = idx);
+                                loadIndex(idx);
+                                HapticFeedback.selectionClick();
+                              },
+                              itemBuilder: (ctx, idx) {
+                                final currentVerses = cachedVerses[idx] ?? [];
+                                if (currentVerses.isEmpty) {
+                                  return const Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                                    ),
+                                  );
+                                }
+                                return RawScrollbar(
+                                  radius: const Radius.circular(8),
+                                  thumbColor: indicatorColor.withValues(alpha: 0.30),
+                                  child: SingleChildScrollView(
+                                    physics: const BouncingScrollPhysics(),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: currentVerses,
+                                    ),
+                                  ),
                                 );
-                              }).toList(),
+                              },
+                            ),
+                          ),
+                        ]
+                        // --- CASO 2: NOTA LINGÜÍSTICA / EXPLICATIVA (TEXTO DIRECTO) ---
+                        else ...[
+                          const SizedBox(height: 14),
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: MediaQuery.of(context).size.height * 0.35,
+                            ),
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              child: RichText(
+                                textAlign: TextAlign.left,
+                                text: HTML.toTextSpan(
+                                  context,
+                                  textoNotaParaMostrar,
+                                  defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                        fontFamily: fontFamily,
+                                        fontWeight: FontWeight.normal,
+                                        height: 1.45,
+                                        fontSize: fontSize - 1,
+                                        fontStyle: FontStyle.normal,
+                                        letterSpacing: fontLetterSeparation,
+                                        color: indicatorColor.withValues(alpha: 0.90),
+                                      ),
+                                  overrideStyle: {
+                                    'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                          fontFamily: fontFamily,
+                                          fontWeight: FontWeight.bold,
+                                          fontStyle: FontStyle.italic,
+                                          fontSize: fontSize - 1,
+                                          color: indicatorColor,
+                                        ),
+                                  },
+                                ),
+                              ),
                             ),
                           ),
                         ],
-
-                        // Previsualización dinámica del versículo seleccionado
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOutCubic,
-                          alignment: Alignment.topCenter,
-                          child: previewVerses.isNotEmpty
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 14),
-                                    ConstrainedBox(
-                                      constraints: BoxConstraints(
-                                        maxHeight: MediaQuery.of(context).size.height * 0.28,
-                                      ),
-                                      child: RawScrollbar(
-                                        radius: const Radius.circular(8),
-                                        thumbColor: indicatorColor.withValues(alpha: 0.30),
-                                        child: SingleChildScrollView(
-                                          physics: const BouncingScrollPhysics(),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: previewVerses,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _ReferenceActionModule(
-                                      gradient: activeGradient,
-                                      borderColor: borderColor,
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        if (targetBook != null && targetChapter != null && targetVerseFrom != null) {
-                                          setReferenceSafeScroll(
-                                            targetBook!,
-                                            targetChapter!,
-                                            targetVerseFrom!,
-                                          );
-                                        }
-                                      },
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            "Leer capítulo completo",
-                                            style: TextStyle(
-                                              color: isDark ? canvasColor : Colors.white,
-                                              fontFamily: fontFamily,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: fontSize - 4,
-                                              letterSpacing: -0.2,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Icon(
-                                            Icons.arrow_forward_rounded,
-                                            size: 18,
-                                            color: isDark ? canvasColor : Colors.white,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : const SizedBox.shrink(),
-                        ),
                       ],
                     ),
                   ),
@@ -1143,36 +1071,109 @@ class BiblePageController extends GetxController {
 
 }
 
-/// Módulo de Botón Táctil con Rebote Háptico para el Panel de Referencias
-class _ReferenceActionModule extends StatefulWidget {
-  final VoidCallback onTap;
-  final Widget child;
-  final Gradient? gradient;
-  final Color? backgroundColor;
-  final Color borderColor;
-  final double height;
+/// Estructura de Referencia parseada para el Carrusel
+class _ParsedReference {
+  final int book;
+  final int chapter;
+  final int verseFrom;
+  final int? verseTo;
+  final String label;
+  final String linkStr;
 
-  const _ReferenceActionModule({
+  _ParsedReference({
+    required this.book,
+    required this.chapter,
+    required this.verseFrom,
+    this.verseTo,
+    required this.label,
+    required this.linkStr,
+  });
+}
+
+/// Helper para parsear todas las citas bíblicas de una nota
+List<_ParsedReference> _parseFootnoteLinks(String text) {
+  List<_ParsedReference> list = [];
+  RegExp linkExp = RegExp(r"<a\s+href=['\x22](.*?)['\x22]>(.*?)<\/a>");
+  for (var m in linkExp.allMatches(text)) {
+    String linkStr = m.group(1)!;
+    String label = m.group(2)!.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+
+    int? refBook;
+    int? refChapter;
+    int? refVerseFrom;
+    int? refVerseTo;
+
+    if (linkStr.startsWith('B:')) {
+      String cleanLink = linkStr.substring(2);
+      List<String> parts = cleanLink.split(' ');
+      if (parts.isNotEmpty) {
+        int? internalId = int.tryParse(parts[0]);
+        if (internalId != null && linkIdToBook.containsKey(internalId)) {
+          refBook = linkIdToBook[internalId];
+        }
+      }
+      if (parts.length > 1) {
+        List<String> cv = parts[1].split(':');
+        if (cv.isNotEmpty) refChapter = int.tryParse(cv[0]);
+        if (cv.length > 1) {
+          List<String> verses = cv[1].split('-');
+          refVerseFrom = int.tryParse(verses[0]);
+          refVerseTo = verses.length > 1 ? int.tryParse(verses[1]) : refVerseFrom;
+        }
+      }
+    } else {
+      List<String> split = linkStr.split(':');
+      if (split.isNotEmpty) refBook = int.tryParse(split[0]);
+      if (split.length >= 2) refChapter = int.tryParse(split[1]);
+      if (split.length >= 3) {
+        List<String> verses = split[2].split('-');
+        refVerseFrom = int.tryParse(verses[0]);
+        refVerseTo = verses.length > 1 ? int.tryParse(verses[1]) : refVerseFrom;
+      }
+    }
+
+    if (refBook != null && refChapter != null && refVerseFrom != null) {
+      list.add(_ParsedReference(
+        book: refBook,
+        chapter: refChapter,
+        verseFrom: refVerseFrom,
+        verseTo: refVerseTo,
+        label: label,
+        linkStr: linkStr,
+      ));
+    }
+  }
+  return list;
+}
+
+/// Botón Compacto con Icono y Rebote Háptico para Encabezados
+class _ReferenceMiniActionBtn extends StatefulWidget {
+  final VoidCallback onTap;
+  final Widget? icon;
+  final String? label;
+  final Gradient? gradient;
+  final Color borderColor;
+  final Color? textColor;
+
+  const _ReferenceMiniActionBtn({
     Key? key,
     required this.onTap,
-    required this.child,
+    this.icon,
+    this.label,
     this.gradient,
-    this.backgroundColor,
     required this.borderColor,
-    this.height = 48.0,
+    this.textColor,
   }) : super(key: key);
 
   @override
-  State<_ReferenceActionModule> createState() => _ReferenceActionModuleState();
+  State<_ReferenceMiniActionBtn> createState() => _ReferenceMiniActionBtnState();
 }
 
-class _ReferenceActionModuleState extends State<_ReferenceActionModule> {
+class _ReferenceMiniActionBtnState extends State<_ReferenceMiniActionBtn> {
   bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return GestureDetector(
       onTapDown: (_) {
         setState(() => _isPressed = true);
@@ -1184,43 +1185,36 @@ class _ReferenceActionModuleState extends State<_ReferenceActionModule> {
       },
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
-        scale: _isPressed ? 0.95 : 1.0,
+        scale: _isPressed ? 0.92 : 1.0,
         duration: const Duration(milliseconds: 140),
         curve: Curves.easeOutBack,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeInOut,
-          height: widget.height,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             gradient: widget.gradient,
-            color: widget.gradient == null ? widget.backgroundColor : null,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: widget.borderColor,
-              width: 1.2,
+              width: 1.0,
             ),
-            boxShadow: [
-              if (!isDark) ...[
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.icon != null) widget.icon!,
+              if (widget.icon != null && widget.label != null) const SizedBox(width: 5),
+              if (widget.label != null)
+                Text(
+                  widget.label!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: widget.textColor ?? Colors.white,
+                    letterSpacing: -0.2,
+                  ),
                 ),
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  blurRadius: 1,
-                  offset: const Offset(0, -1),
-                ),
-              ] else ...[
-                BoxShadow(
-                  color: widget.borderColor.withValues(alpha: 0.25),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ],
           ),
-          child: Center(child: widget.child),
         ),
       ),
     );
