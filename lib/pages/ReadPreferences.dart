@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 
@@ -392,34 +391,20 @@ class ReadPreferencesControlCenter extends StatelessWidget {
             ),
           );
 
-          // EFECTO CRISTAL LÍQUIDO NATIVO (LiquidGlassLens con Refracción Óptica y Bisel)
-          Widget finalPanel = controller.enableAcrylicEffect
-              ? LiquidGlassLens(
-                  style: LiquidGlassStyle(
-                    shape: LiquidGlassShape.roundedRectangle(
-                      cornerRadius: 32,
-                      borderType: OpticalBorder(
-                        borderSaturation: isDark ? 1.0 : 1.4,
-                        ambientIntensity: isDark ? 0.8 : 1.2,
-                        borderSolidity: 0.0,
-                      ),
+          // EFECTO ACRÍLICO NATIVO (BackdropFilter con Desenfoque Gaussiano de 25px sobre Lámina Densa)
+          Widget finalPanel = ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            child: controller.enableAcrylicEffect
+                ? BackdropFilter(
+                    filter: ImageFilter.blur(
+                      sigmaX: 25,
+                      sigmaY: 25,
+                      tileMode: TileMode.mirror,
                     ),
-                    refraction: const LiquidGlassRefraction(
-                      distortion: 0.04,
-                      distortionWidth: 16,
-                    ),
-                    appearance: LiquidGlassAppearance(
-                      color: isDark
-                          ? canvasColor.withValues(alpha: 0.65)
-                          : Colors.white.withValues(alpha: 0.70),
-                    ),
-                  ),
-                  child: panelContent,
-                )
-              : ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                  child: panelContent,
-                );
+                    child: panelContent,
+                  )
+                : panelContent,
+          );
 
           // ESTRUCTURA CON AVISO FLOTANDO POR ENCIMA DEL PANEL (Control Center)
           return Column(
