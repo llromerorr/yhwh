@@ -45,6 +45,9 @@ class ReadPreferencesControlCenter extends StatelessWidget {
 
   /// Abre el Centro de Control directamente sobre la lectura
   static Future<void> show(BuildContext context) {
+    if (Get.isRegistered<BiblePageController>()) {
+      Get.find<BiblePageController>().setBottomSheetState(true);
+    }
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -54,7 +57,11 @@ class ReadPreferencesControlCenter extends StatelessWidget {
       backgroundColor: Colors.transparent,
       barrierColor: Colors.transparent, // Fondo cristalino sin velo gris
       builder: (context) => const ReadPreferencesControlCenter(),
-    );
+    ).then((_) {
+      if (Get.isRegistered<BiblePageController>()) {
+        Get.find<BiblePageController>().setBottomSheetState(false);
+      }
+    });
   }
 
   @override

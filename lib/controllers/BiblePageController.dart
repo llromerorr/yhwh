@@ -51,6 +51,14 @@ class BiblePageController extends GetxController {
   double fontLetterSeparation = 0.0;
   String fontFamily = "Crimson Text";
   bool isJustified = false;
+  bool isBottomSheetOpen = false;
+
+  void setBottomSheetState(bool isOpen) {
+    if (isBottomSheetOpen != isOpen) {
+      isBottomSheetOpen = isOpen;
+      update(['floatingActionButton']);
+    }
+  }
 
   @override
   void onInit() {
@@ -350,6 +358,7 @@ class BiblePageController extends GetxController {
     String previewTitle = "";
     bool initialLoadTriggered = false; 
 
+    setBottomSheetState(true);
     showModalBottomSheet(
       context: context,
       isDismissible: true, 
@@ -618,7 +627,9 @@ class BiblePageController extends GetxController {
           },
         );
       },
-    );
+    ).then((_) {
+      setBottomSheetState(false);
+    });
   }
 
   void onFootnoteTap({int? book, int? chapter, int? verse, String? footnote, required BuildContext context}){
@@ -633,6 +644,7 @@ class BiblePageController extends GetxController {
     Map<int, List<Widget>> cachedVerses = {};
     bool initialLoadTriggered = false;
 
+    setBottomSheetState(true);
     showModalBottomSheet(
       context: context,
       isDismissible: true, 
@@ -760,6 +772,7 @@ class BiblePageController extends GetxController {
                 final String sourceBookTitle = (book != null)
                     ? (isVisualImpaired ? intToAbreviatura[book] ?? '' : intToBook[book] ?? '')
                     : '';
+                final cleanFootnote = (footnote ?? '').replaceAll('[', '').replaceAll(']', '').trim();
 
                 Widget sheetContent = SafeArea(
                   top: false,
@@ -881,15 +894,16 @@ class BiblePageController extends GetxController {
                                 letterSpacing: -0.3,
                               ),
                               children: [
-                                TextSpan(
-                                  text: "[$footnote]",
-                                  style: TextStyle(
-                                    fontFamily: fontFamily,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: (fontSize - 4).clamp(12.0, 26.0),
-                                    color: isDark ? const Color(0xffe5c064) : const Color(0xffe36414),
+                                if (cleanFootnote.isNotEmpty)
+                                  TextSpan(
+                                    text: "[$cleanFootnote]",
+                                    style: TextStyle(
+                                      fontFamily: fontFamily,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: (fontSize - 4).clamp(12.0, 26.0),
+                                      color: isDark ? const Color(0xffe5c064) : const Color(0xffe36414),
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                           ),
@@ -1058,7 +1072,9 @@ class BiblePageController extends GetxController {
           }
         );
       },
-    );
+    ).then((_) {
+      setBottomSheetState(false);
+    });
   }
 
   void onReferenceButtonLongPress(){
