@@ -1,20 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:yhwh/data/Themes.dart';
-import 'package:yhwh/classes/ColorPalette.dart';
 
 class AppTheme
 {
+  static SystemUiOverlayStyle getOverlayStyle(Brightness brightness) {
+    final bool isDark = brightness == Brightness.dark;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      systemStatusBarContrastEnforced: false,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarContrastEnforced: false,
+    );
+  }
+
   // estos son temas por defecto, solo sirven para que no se rompa la app
   static ThemeData light = ThemeData(
     brightness: Brightness.light,
     canvasColor: const Color(0xffffffff),
     indicatorColor: const Color(0xff242424),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      systemOverlayStyle: getOverlayStyle(Brightness.light),
+    ),
   );
 
   static ThemeData dark = ThemeData(
     brightness: Brightness.dark,
     canvasColor: const Color(0xff000000),
     indicatorColor: const Color(0xffbbbbbb),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      systemOverlayStyle: getOverlayStyle(Brightness.dark),
+    ),
   );
 
   
@@ -25,11 +50,19 @@ class AppTheme
     if(themes.containsKey(themeName))
     {
       final palette = themes[themeName]!;
+      final overlay = getOverlayStyle(palette.brightness);
+
       // para temas claros
       if(palette.brightness == Brightness.light){
         theme = ThemeData.light().copyWith(
           canvasColor: palette.background,
           indicatorColor: palette.foreground,
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            systemOverlayStyle: overlay,
+          ),
           extensions: <ThemeExtension<dynamic>>[
             palette,
           ],
@@ -41,6 +74,12 @@ class AppTheme
         theme = ThemeData.dark().copyWith(
           canvasColor: palette.background,
           indicatorColor: palette.foreground,
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            systemOverlayStyle: overlay,
+          ),
           extensions: <ThemeExtension<dynamic>>[
             palette,
           ],

@@ -10,6 +10,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:path_provider/path_provider.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   // Init GetStorage
   await GetStorage.init();
 
@@ -19,28 +21,32 @@ void main() async {
       .. registerAdapter(HighlighterItemAdapter())
       .. registerAdapter(HighlighterOrderItemAdapter());
 
-  // envitar el cambio de orientacion de la aplicacion
+  // evitar el cambio de orientacion de la aplicacion
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+
+  // Cargar tema persistido para sincronizar barra de sistema desde el primer frame
+  final savedThemeName = GetStorage().read('currentTheme') ?? 'Blanco';
+  final initialTheme = AppTheme.getTheme(savedThemeName);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    AppTheme.getOverlayStyle(initialTheme.brightness),
+  );
 
   // Run Application
   runApp(GetMaterialApp(
     debugShowCheckedModeBanner: false,
     home: Builder(
       builder: (context) {
-        return AnnotatedRegion(child: MainPage(), value: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark ? Brightness.light : Brightness.dark ,
-          systemStatusBarContrastEnforced: false,
-          systemNavigationBarColor: Colors.transparent,
-          systemNavigationBarIconBrightness: Theme.of(context).brightness == Brightness.dark ? Brightness.light : Brightness.dark ,
-          systemNavigationBarContrastEnforced: false
-        ));
-      }
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: AppTheme.getOverlayStyle(Theme.of(context).brightness),
+          child: MainPage(),
+        );
+      },
     ),
     themeMode: ThemeMode.light,
-    theme: AppTheme.light,
+    theme: initialTheme,
     darkTheme: AppTheme.dark,
     builder: (context, child) => ScrollConfiguration(behavior: MyBehavior(), child: child!), // remove the glow effect.
   ));
