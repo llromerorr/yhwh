@@ -106,6 +106,21 @@ class ReadPreferencesController extends GetxController {
     });
   }
 
+  void dismissToast() {
+    _toastTimer?.cancel();
+    if (toastMessage != null || toastIcon != null) {
+      toastMessage = null;
+      toastIcon = null;
+      update();
+    }
+  }
+
+  @override
+  void onClose() {
+    _toastTimer?.cancel();
+    super.onClose();
+  }
+
   void toggleAcrylicEffect(bool value) {
     enableAcrylicEffect = value;
     getStorage.write('enableAcrylicEffect', value);
@@ -188,6 +203,10 @@ class ReadPreferencesController extends GetxController {
     }
 
     _biblePageController.update();
+    showToast(
+      value ? "Texto justificado" : "Texto a la izquierda",
+      value ? Icons.format_align_justify_rounded : Icons.format_align_left_rounded,
+    );
     update();
   }
 

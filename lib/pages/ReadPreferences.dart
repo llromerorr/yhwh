@@ -58,6 +58,9 @@ class ReadPreferencesControlCenter extends StatelessWidget {
       barrierColor: Colors.transparent, // Fondo cristalino sin velo gris
       builder: (context) => const ReadPreferencesControlCenter(),
     ).then((_) {
+      if (Get.isRegistered<ReadPreferencesController>()) {
+        Get.find<ReadPreferencesController>().dismissToast();
+      }
       if (Get.isRegistered<BiblePageController>()) {
         Get.find<BiblePageController>().setBottomSheetState(false);
       }
@@ -135,6 +138,15 @@ class ReadPreferencesControlCenter extends StatelessWidget {
               ? indicatorColor.withValues(alpha: 0.70)
               : const Color(0xff27272A);
           final activeIconColor = isDark ? canvasColor : Colors.white;
+
+          // Estilo 3D Apple Segmented Control para Alineación
+          final segmentActiveGradient = isDark
+              ? activeGradient
+              : neutralGradient;
+          final segmentActiveIconColor = isDark ? canvasColor : inactiveIconColor;
+          final segmentInactiveIconColor = isDark
+              ? indicatorColor.withValues(alpha: 0.70)
+              : indicatorColor.withValues(alpha: 0.38);
 
           // CONTENIDO INTERNO DEL PANEL
           Widget panelContent = Container(
@@ -283,28 +295,28 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                             Container(
                               height: 64,
                               decoration: BoxDecoration(
-                                color: controller.enableAcrylicEffect
-                                    ? indicatorColor.withValues(alpha: isDark ? 0.08 : 0.05)
+                                color: isDark
+                                    ? (controller.enableAcrylicEffect
+                                        ? indicatorColor.withValues(alpha: 0.08)
+                                        : null)
+                                    : (controller.enableAcrylicEffect
+                                        ? indicatorColor.withValues(alpha: 0.04)
+                                        : indicatorColor.withValues(alpha: 0.06)),
+                                gradient: isDark
+                                    ? (controller.enableAcrylicEffect ? null : neutralGradient)
                                     : null,
-                                gradient: controller.enableAcrylicEffect ? null : neutralGradient,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: borderColor, width: 1.2),
+                                border: Border.all(
+                                  color: isDark ? borderColor : indicatorColor.withValues(alpha: 0.10),
+                                  width: 1.2,
+                                ),
                                 boxShadow: [
-                                  if (!controller.enableAcrylicEffect) ...[
-                                    if (!isDark) ...[
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.08),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ] else ...[
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.40),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ],
+                                  if (isDark && !controller.enableAcrylicEffect)
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.40),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
                                 ],
                               ),
                               child: Row(
@@ -314,18 +326,29 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                     child: _BouncyControlModule(
                                       height: 56,
                                       margin: const EdgeInsets.all(4),
+                                      enableLiquidGlass: controller.enableAcrylicEffect,
                                       onTap: () {
                                         if (controller.isJustified) {
+                                          HapticFeedback.mediumImpact();
                                           controller.setJustified(false);
                                         }
                                       },
-                                      gradient: !controller.isJustified ? activeGradient : null,
+                                      gradient: !controller.isJustified ? segmentActiveGradient : null,
                                       isActive: !controller.isJustified,
-                                      borderColor: Colors.transparent,
-                                      child: Icon(
-                                        Icons.format_align_left_rounded,
-                                        size: 24,
-                                        color: !controller.isJustified ? activeIconColor : inactiveIconColor,
+                                      borderColor: isDark
+                                          ? Colors.transparent
+                                          : (!controller.isJustified
+                                              ? borderColor
+                                              : Colors.transparent),
+                                      child: AnimatedScale(
+                                        scale: !controller.isJustified ? 1.08 : 0.92,
+                                        duration: const Duration(milliseconds: 200),
+                                        curve: Curves.easeOutBack,
+                                        child: Icon(
+                                          Icons.format_align_left_rounded,
+                                          size: 24,
+                                          color: !controller.isJustified ? segmentActiveIconColor : segmentInactiveIconColor,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -335,18 +358,29 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                     child: _BouncyControlModule(
                                       height: 56,
                                       margin: const EdgeInsets.all(4),
+                                      enableLiquidGlass: controller.enableAcrylicEffect,
                                       onTap: () {
                                         if (!controller.isJustified) {
+                                          HapticFeedback.mediumImpact();
                                           controller.setJustified(true);
                                         }
                                       },
-                                      gradient: controller.isJustified ? activeGradient : null,
+                                      gradient: controller.isJustified ? segmentActiveGradient : null,
                                       isActive: controller.isJustified,
-                                      borderColor: Colors.transparent,
-                                      child: Icon(
-                                        Icons.format_align_justify_rounded,
-                                        size: 24,
-                                        color: controller.isJustified ? activeIconColor : inactiveIconColor,
+                                      borderColor: isDark
+                                          ? Colors.transparent
+                                          : (controller.isJustified
+                                              ? borderColor
+                                              : Colors.transparent),
+                                      child: AnimatedScale(
+                                        scale: controller.isJustified ? 1.08 : 0.92,
+                                        duration: const Duration(milliseconds: 200),
+                                        curve: Curves.easeOutBack,
+                                        child: Icon(
+                                          Icons.format_align_justify_rounded,
+                                          size: 24,
+                                          color: controller.isJustified ? segmentActiveIconColor : segmentInactiveIconColor,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -448,35 +482,55 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // AVISO HUD FLOTANTE (Flota sobre la lectura de fondo sin empujar el panel)
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                switchInCurve: Curves.easeOutBack,
-                switchOutCurve: Curves.easeIn,
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(
-                      scale: Tween<double>(begin: 0.85, end: 1.0).animate(animation),
-                      child: child,
+              // ZONA HUD FLOTANTE CON ALTURA ESTABLE (Mantiene la altura del modal 100% constante evitando saltos al desaparecer)
+              IgnorePointer(
+                ignoring: controller.toastMessage == null,
+                child: SizedBox(
+                  height: 52,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      switchInCurve: Curves.easeOutBack,
+                      switchOutCurve: Curves.easeIn,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: Tween<double>(begin: 0.85, end: 1.0).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: controller.toastMessage != null
+                          ? GestureDetector(
+                              key: ValueKey(controller.toastMessage),
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                controller.dismissToast();
+                              },
+                              onVerticalDragEnd: (_) {
+                                HapticFeedback.selectionClick();
+                                controller.dismissToast();
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(300.0),
+                                  child: controller.enableAcrylicEffect
+                                      ? BackdropFilter(
+                                          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
+                                          child: _buildToastCard(context, controller, indicatorColor, isDark),
+                                        )
+                                      : _buildToastCard(context, controller, indicatorColor, isDark),
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
                     ),
-                  );
-                },
-                child: controller.toastMessage != null
-                    ? Container(
-                        key: ValueKey(controller.toastMessage),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(300.0),
-                          child: controller.enableAcrylicEffect
-                              ? BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
-                                  child: _buildToastCard(context, controller, indicatorColor, isDark),
-                                )
-                              : _buildToastCard(context, controller, indicatorColor, isDark),
-                        ),
-                      )
-                    : const SizedBox(height: 0),
+                  ),
+                ),
               ),
 
               // EL PANEL DEL CENTRO DE CONTROL
@@ -827,7 +881,7 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isTransparent = widget.gradient == null && widget.backgroundColor == Colors.transparent;
+    final isTransparent = widget.gradient == null && (widget.backgroundColor == null || widget.backgroundColor == Colors.transparent);
 
     return GestureDetector(
       onTapDown: (_) {
@@ -859,20 +913,26 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
             boxShadow: [
               if (!isTransparent) ...[
                 if (widget.isActive) ...[
-                  // Botón Activo: Sombra profunda y halo de acento
+                  // Botón Activo: Sombra profunda y relieve 3D táctil
                   BoxShadow(
                     color: isDark
                         ? widget.borderColor.withValues(alpha: 0.25)
-                        : Colors.black.withValues(alpha: 0.26),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                        : Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
-                  if (!isDark)
+                  if (!isDark) ...[
                     BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.20),
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 1,
+                      offset: const Offset(0, 1),
+                    ),
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.70),
                       blurRadius: 1,
                       offset: const Offset(0, -1),
                     ),
+                  ],
                 ] else ...[
                   if (!isDark) ...[
                     BoxShadow(
