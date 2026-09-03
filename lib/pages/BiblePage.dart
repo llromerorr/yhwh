@@ -76,7 +76,12 @@ class BiblePage extends StatelessWidget {
                       child: IgnorePointer(
                         ignoring: biblePageController.isBottomSheetOpen,
                         child: Padding(
-                          padding: EdgeInsets.fromLTRB(12, 0, 12, MediaQuery.of(context).viewPadding.bottom + MediaQuery.of(context).padding.bottom),
+                          padding: EdgeInsets.fromLTRB(
+                            12,
+                            0,
+                            12,
+                            kBottomNavigationBarHeight + MediaQuery.of(context).viewPadding.bottom + 8.0,
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             
