@@ -122,6 +122,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
   late final PageController _pageController;
   final Map<int, List<Widget>> _cachedVerses = {};
   final Map<int, double> _pageHeights = {};
+  double _groupMaxHeight = 0.0;
+  bool _isExpanded = false;
   late final List<GlobalKey> _pillKeys;
   bool _isLoading = false;
 
@@ -153,6 +155,19 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
         _cachedVerses[index] = verses;
         _isLoading = false;
       });
+    }
+  }
+
+  void _onPageMeasured(int idx, double measuredHeight) {
+    if (measuredHeight <= 0) return;
+    _pageHeights[idx] = measuredHeight;
+    // Solo crece, nunca se encoge durante el swipe horizontal para garantizar estabilidad visual absoluta
+    if (measuredHeight > _groupMaxHeight) {
+      if (mounted) {
+        setState(() {
+          _groupMaxHeight = measuredHeight;
+        });
+      }
     }
   }
 
@@ -290,120 +305,150 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Tirador táctil superior estilo Apple
-                Center(
-                  child: Container(
-                    width: 38,
-                    height: 4.5,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: indicatorColor.withValues(
-                        alpha: isDark ? 0.30 : 0.20,
-                      ),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-
-                // 2. Barra de Encabezado: [Icono Contexto + Cita] <----> [Botón Icónico de Acción]
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Icono de contexto visual sutil
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: hasReferences
-                            ? indicatorColor.withValues(alpha: isDark ? 0.12 : 0.08)
-                            : accentColor.withValues(alpha: isDark ? 0.15 : 0.12),
-                        border: Border.all(
-                          color: hasReferences
-                              ? borderColor
-                              : accentColor.withValues(alpha: isDark ? 0.35 : 0.25),
-                          width: 1.0,
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          hasReferences
-                              ? Icons.auto_stories_rounded
-                              : Icons.format_quote_rounded,
-                          size: 18,
-                          color: hasReferences ? indicatorColor : accentColor,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 10),
-
-                    // Título principal con badge en negrita
-                    Expanded(
-                      child: RichText(
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        text: TextSpan(
-                          text: widget.title,
-                          style: TextStyle(
-                            fontFamily: readPrefs.currentFontFamily,
-                            fontWeight: FontWeight.bold,
-                            fontSize: headerFontSize,
-                            color: indicatorColor,
-                            letterSpacing: -0.3,
+                // 1 y 2. Zona Superior Interactiva (Tirador + Header) con soporte de gesto vertical (Detents)
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onVerticalDragEnd: (details) {
+                    if (details.primaryVelocity != null) {
+                      if (details.primaryVelocity! < -180) {
+                        // Deslizar arriba -> Elevar panel para lectura cómoda
+                        if (!_isExpanded) {
+                          HapticFeedback.mediumImpact();
+                          setState(() => _isExpanded = true);
+                        }
+                      } else if (details.primaryVelocity! > 180) {
+                        // Deslizar abajo -> Recoger al modo compacto o cerrar
+                        if (_isExpanded) {
+                          HapticFeedback.lightImpact();
+                          setState(() => _isExpanded = false);
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      }
+                    }
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Tirador táctil superior estilo Apple con micro-animación de ancho
+                      Center(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutCubic,
+                          width: _isExpanded ? 52 : 38,
+                          height: 4.5,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: indicatorColor.withValues(
+                              alpha: isDark ? 0.35 : 0.22,
+                            ),
+                            borderRadius: BorderRadius.circular(3),
                           ),
-                          children: [
-                            if (cleanBadge.isNotEmpty) ...[
-                              const TextSpan(text: ' '),
-                              TextSpan(
-                                text: '[$cleanBadge]',
+                        ),
+                      ),
+
+                      // Barra de Encabezado: [Icono Contexto + Cita] <----> [Botón Icónico de Acción]
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Icono de contexto visual sutil
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: hasReferences
+                                  ? indicatorColor.withValues(alpha: isDark ? 0.12 : 0.08)
+                                  : accentColor.withValues(alpha: isDark ? 0.15 : 0.12),
+                              border: Border.all(
+                                color: hasReferences
+                                    ? borderColor
+                                    : accentColor.withValues(alpha: isDark ? 0.35 : 0.25),
+                                width: 1.0,
+                              ),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                hasReferences
+                                    ? Icons.auto_stories_rounded
+                                    : Icons.format_quote_rounded,
+                                size: 18,
+                                color: hasReferences ? indicatorColor : accentColor,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          // Título principal con badge en negrita
+                          Expanded(
+                            child: RichText(
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              text: TextSpan(
+                                text: widget.title,
                                 style: TextStyle(
                                   fontFamily: readPrefs.currentFontFamily,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: badgeFontSize,
-                                  color: accentColor,
+                                  fontSize: headerFontSize,
+                                  color: indicatorColor,
+                                  letterSpacing: -0.3,
                                 ),
+                                children: [
+                                  if (cleanBadge.isNotEmpty) ...[
+                                    const TextSpan(text: ' '),
+                                    TextSpan(
+                                      text: '[$cleanBadge]',
+                                      style: TextStyle(
+                                        fontFamily: readPrefs.currentFontFamily,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: badgeFontSize,
+                                        color: accentColor,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
+                            ),
+                          ),
 
-                    const SizedBox(width: 8),
+                          const SizedBox(width: 8),
 
-                    // Botón de acción icónico flotante (Sin texto, 100% universal)
-                    if (hasReferences)
-                      _CircleIconButton(
-                        tooltip: 'Ir al versículo',
-                        icon: Icons.open_in_new_rounded,
-                        iconColor: isDark ? canvasColor : Colors.white,
-                        gradient: activeGradient,
-                        borderColor: borderColor,
-                        onTap: () {
-                          HapticFeedback.mediumImpact();
-                          Navigator.pop(context);
-                          final currentRef = widget.references[_activeIndex];
-                          widget.onNavigate(
-                            currentRef.book,
-                            currentRef.chapter,
-                            currentRef.verseFrom,
-                          );
-                        },
-                      )
-                    else
-                      _CircleIconButton(
-                        tooltip: 'Cerrar',
-                        icon: Icons.close_rounded,
-                        iconColor: indicatorColor,
-                        gradient: neutralGradient,
-                        borderColor: borderColor,
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          Navigator.pop(context);
-                        },
+                          // Botón de acción icónico flotante (Sin texto, 100% universal)
+                          if (hasReferences)
+                            _CircleIconButton(
+                              tooltip: 'Ir al versículo',
+                              icon: Icons.open_in_new_rounded,
+                              iconColor: isDark ? canvasColor : Colors.white,
+                              gradient: activeGradient,
+                              borderColor: borderColor,
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                Navigator.pop(context);
+                                final currentRef = widget.references[_activeIndex];
+                                widget.onNavigate(
+                                  currentRef.book,
+                                  currentRef.chapter,
+                                  currentRef.verseFrom,
+                                );
+                              },
+                            )
+                          else
+                            _CircleIconButton(
+                              tooltip: 'Cerrar',
+                              icon: Icons.close_rounded,
+                              iconColor: indicatorColor,
+                              gradient: neutralGradient,
+                              borderColor: borderColor,
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                Navigator.pop(context);
+                              },
+                            ),
+                        ],
                       ),
-                  ],
+                    ],
+                  ),
                 ),
 
                 // 3. Selector de Múltiples Citas a ancho completo con auto-centrado
@@ -505,16 +550,18 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     );
   }
 
-  /// Construye el visor de versículos con altura intrínseca adaptativa
+  /// Construye el visor de versículos con altura estable y elevación elástica
   Widget _buildReferencesContent({
     required BuildContext context,
     required double screenHeight,
     required Color indicatorColor,
     required bool hasMultiple,
   }) {
-    final maxContentHeight = (screenHeight * 0.48).clamp(200.0, 480.0);
+    final compactMaxContentHeight = (screenHeight * 0.42).clamp(180.0, 380.0);
+    final expandedMaxContentHeight = (screenHeight * 0.74).clamp(360.0, 680.0);
+    final maxContentHeight = _isExpanded ? expandedMaxContentHeight : compactMaxContentHeight;
 
-    // Caso 1 cita: Render directo con auto-ajuste de altura (cero espacio vacío)
+    // Caso 1 cita: Render directo con auto-ajuste de altura y elevación al scrollear
     if (!hasMultiple) {
       final currentVerses = _cachedVerses[0] ?? [];
       if (currentVerses.isEmpty && _isLoading) {
@@ -529,30 +576,47 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
           ),
         );
       }
-      return ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxContentHeight),
-        child: SingleChildScrollView(
-          primary: false,
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: currentVerses,
+      return AnimatedSize(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxContentHeight),
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (!_isExpanded && notification is ScrollUpdateNotification) {
+                if (notification.scrollDelta != null && notification.scrollDelta! > 12) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _isExpanded = true);
+                }
+              }
+              return false;
+            },
+            child: SingleChildScrollView(
+              primary: false,
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: currentVerses,
+              ),
+            ),
           ),
         ),
       );
     }
 
-    // Caso múltiples citas: PageView con altura intrínseca dinámica por página activa
-    final activeMeasuredHeight = _pageHeights[_activeIndex];
+    // Caso múltiples citas: PageView con altura uniforme para todo el grupo (cero efecto acordeón)
+    final targetHeight = (_groupMaxHeight > 0)
+        ? _groupMaxHeight.clamp(60.0, maxContentHeight)
+        : (_pageHeights[_activeIndex]?.clamp(60.0, maxContentHeight) ?? 110.0);
+
     return AnimatedSize(
-      duration: const Duration(milliseconds: 240),
+      duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
       alignment: Alignment.topCenter,
       child: SizedBox(
-        height: (activeMeasuredHeight != null)
-            ? activeMeasuredHeight.clamp(60.0, maxContentHeight)
-            : 110.0,
+        height: targetHeight,
         child: PageView.builder(
           controller: _pageController,
           physics: const BouncingScrollPhysics(),
@@ -574,23 +638,31 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                 ),
               );
             }
-            return SingleChildScrollView(
-              primary: false,
-              physics: const BouncingScrollPhysics(),
-              child: _MeasureSize(
-                onChange: (size) {
-                  if (size.height > 0 && _pageHeights[idx] != size.height) {
-                    if (mounted) {
-                      setState(() {
-                        _pageHeights[idx] = size.height;
-                      });
-                    }
+            return NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                // Al scrollear hacia abajo en un pasaje largo, el panel se levanta suavemente
+                if (!_isExpanded && notification is ScrollUpdateNotification) {
+                  if (notification.scrollDelta != null && notification.scrollDelta! > 12) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _isExpanded = true);
                   }
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: currentVerses,
+                }
+                return false;
+              },
+              child: SingleChildScrollView(
+                primary: false,
+                physics: const BouncingScrollPhysics(),
+                child: _MeasureSize(
+                  onChange: (size) {
+                    if (size.height > 0) {
+                      _onPageMeasured(idx, size.height);
+                    }
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: currentVerses,
+                  ),
                 ),
               ),
             );
@@ -600,7 +672,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     );
   }
 
-  /// Construye la nota lingüística / explicativa en formato HTML limpio
+  /// Construye la nota lingüística / explicativa en formato HTML limpio con soporte de elevación
   Widget _buildHtmlNoteContent({
     required BuildContext context,
     required double screenHeight,
@@ -608,34 +680,52 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     required Color indicatorColor,
     required double contentFontSize,
   }) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: (screenHeight * 0.40).clamp(160.0, 380.0),
-      ),
-      child: SingleChildScrollView(
-        primary: false,
-        physics: const BouncingScrollPhysics(),
-        child: RichText(
-          textAlign: TextAlign.left,
-          text: HTML.toTextSpan(
-            context,
-            widget.rawHtmlContent ?? '',
-            defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  fontFamily: readPrefs.currentFontFamily,
-                  fontWeight: FontWeight.normal,
-                  height: 1.5,
-                  fontSize: contentFontSize,
-                  color: indicatorColor.withValues(alpha: 0.92),
-                ),
-            overrideStyle: {
-              'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    fontFamily: readPrefs.currentFontFamily,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
-                    fontSize: contentFontSize,
-                    color: indicatorColor,
-                  ),
-            },
+    final compactMaxContentHeight = (screenHeight * 0.38).clamp(150.0, 320.0);
+    final expandedMaxContentHeight = (screenHeight * 0.70).clamp(320.0, 620.0);
+    final maxContentHeight = _isExpanded ? expandedMaxContentHeight : compactMaxContentHeight;
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxContentHeight),
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (!_isExpanded && notification is ScrollUpdateNotification) {
+              if (notification.scrollDelta != null && notification.scrollDelta! > 12) {
+                HapticFeedback.selectionClick();
+                setState(() => _isExpanded = true);
+              }
+            }
+            return false;
+          },
+          child: SingleChildScrollView(
+            primary: false,
+            physics: const BouncingScrollPhysics(),
+            child: RichText(
+              textAlign: TextAlign.left,
+              text: HTML.toTextSpan(
+                context,
+                widget.rawHtmlContent ?? '',
+                defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      fontFamily: readPrefs.currentFontFamily,
+                      fontWeight: FontWeight.normal,
+                      height: 1.5,
+                      fontSize: contentFontSize,
+                      color: indicatorColor.withValues(alpha: 0.92),
+                    ),
+                overrideStyle: {
+                  'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        fontFamily: readPrefs.currentFontFamily,
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.italic,
+                        fontSize: contentFontSize,
+                        color: indicatorColor,
+                      ),
+                },
+              ),
+            ),
           ),
         ),
       ),
