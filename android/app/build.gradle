@@ -4,8 +4,14 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace = "com.example.yhwh"
+    namespace = "com.yhwh.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -18,9 +24,23 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties['keyAlias']
+                keyPassword = keystoreProperties['keyPassword']
+                storeFile = keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+                storePassword = keystoreProperties['storePassword']
+                v1SigningEnabled = true
+                v2SigningEnabled = true
+            } else {
+                signingConfig = signingConfigs.debug
+            }
+        }
+    }
+
     defaultConfig {
-        // TODO: Asegúrate de que este ID sea único si la subes a la Play Store
-        applicationId = "com.example.yhwh"
+        applicationId = "com.yhwh.app"
         
         // 'flutter.minSdkVersion' en 21 (Android 5.0).
         // Esto garantiza compatibilidad con teléfonos desde el 2014/2015.
@@ -29,12 +49,16 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Soporte universal para procesadores de 32 bits (Tecno Pop / Spark Go) y 64 bits modernos
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+        }
     }
 
     buildTypes {
         release {
-            // Configuración de firma para release
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.release
             
             // Opcional: Ayuda a reducir el tamaño de la app
             // shrinkResources = true
