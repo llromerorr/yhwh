@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:simple_html_css/simple_html_css.dart';
@@ -23,14 +24,48 @@ class ReferenceItem {
   });
 }
 
+/// Widget para medir el tamaño intrínseco posterior al layout
+class _MeasureSize extends SingleChildRenderObjectWidget {
+  final ValueChanged<Size> onChange;
+
+  const _MeasureSize({
+    Key? key,
+    required this.onChange,
+    required Widget child,
+  }) : super(key: key, child: child);
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _MeasureSizeRenderObject(onChange);
+}
+
+class _MeasureSizeRenderObject extends RenderProxyBox {
+  final ValueChanged<Size> onChange;
+  Size? _prevSize;
+
+  _MeasureSizeRenderObject(this.onChange);
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    final newSize = child?.size ?? Size.zero;
+    if (_prevSize != newSize) {
+      _prevSize = newSize;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        onChange(newSize);
+      });
+    }
+  }
+}
+
 /// Panel Inferior de Referencias y Notas al Pie (Estilo Apple / Google Material 3)
 ///
 /// Características clave:
 /// - 100% Adaptable para fuentes desde 16 pt hasta 36 pt (modo accesibilidad).
 /// - Altura intrínseca elástica: Abraza notas breves y limita pasajes largos con scroll suave.
 /// - Cero texto redundante: Eliminadas etiquetas obvias ("Pasaje Relacionado", "Nota Lingüística", "Abrir").
-/// - Iconografía táctil y universal con respuesta háptica.
-/// - Paginación visual con Dots animados para notas con múltiples pasajes.
+/// - Píldoras táctiles con auto-centrado al deslizar y tamaño proporcional a la fuente.
+/// - Cero aserciones de Scrollbar y cero espacio vacío inferior.
 class ReferenceBottomSheet extends StatefulWidget {
   final String title;
   final String? footnoteBadge;
@@ -86,12 +121,15 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
   int _activeIndex = 0;
   late final PageController _pageController;
   final Map<int, List<Widget>> _cachedVerses = {};
+  final Map<int, double> _pageHeights = {};
+  late final List<GlobalKey> _pillKeys;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _pillKeys = List.generate(widget.references.length, (_) => GlobalKey());
     if (widget.references.isNotEmpty) {
       _loadCurrentIndex(0);
     }
@@ -127,7 +165,23 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
     );
+    _scrollToPill(index);
     _loadCurrentIndex(index);
+  }
+
+  void _scrollToPill(int index) {
+    if (index < 0 || index >= _pillKeys.length) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final keyContext = _pillKeys[index].currentContext;
+      if (keyContext != null) {
+        Scrollable.ensureVisible(
+          keyContext,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
   }
 
   @override
@@ -140,11 +194,14 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
         final screenHeight = MediaQuery.of(context).size.height;
         final screenWidth = MediaQuery.of(context).size.width;
 
-        // Escalabilidad tipográfica calculada de forma armónica
+        // Escalabilidad tipográfica calculada de forma armónica para todas las edades y modos visuales
         final baseFontSize = readPrefs.currentFontSize;
         final headerFontSize = (baseFontSize * 0.90).clamp(16.0, 24.0);
         final badgeFontSize = (baseFontSize * 0.72).clamp(11.0, 18.0);
         final contentFontSize = (baseFontSize - 2).clamp(13.0, 30.0);
+        final pillFontSize = (baseFontSize * 0.68).clamp(13.5, 22.0);
+        final pillHorizontalPadding = (baseFontSize * 0.50).clamp(11.0, 20.0);
+        final pillVerticalPadding = (baseFontSize * 0.28).clamp(6.0, 12.0);
 
         final topBorderColor = indicatorColor.withValues(
           alpha: isDark ? 0.45 : 0.22,
@@ -349,66 +406,40 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                   ],
                 ),
 
-                // 3. Selector de Múltiples Citas (Píldoras táctiles horizontales + Dots)
+                // 3. Selector de Múltiples Citas a ancho completo con auto-centrado
                 if (hasMultipleReferences) ...[
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      // Píldoras horizontales con scroll elástico
-                      Expanded(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          physics: const BouncingScrollPhysics(),
-                          child: Row(
-                            children: widget.references.asMap().entries.map((entry) {
-                              final idx = entry.key;
-                              final item = entry.value;
-                              final isSelected = _activeIndex == idx;
-                              return _ReferencePill(
-                                label: item.label,
-                                isSelected: isSelected,
-                                activeGradient: activeGradient,
-                                neutralGradient: neutralGradient,
-                                borderColor: borderColor,
-                                indicatorColor: indicatorColor,
-                                canvasColor: canvasColor,
-                                isDark: isDark,
-                                onTap: () => _onPillTap(idx),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Dots de paginación visual estilo iOS
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(widget.references.length, (dotIdx) {
-                          final isCurrent = _activeIndex == dotIdx;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeOutCubic,
-                            margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                            width: isCurrent ? 14.0 : 5.0,
-                            height: 5.0,
-                            decoration: BoxDecoration(
-                              color: isCurrent
-                                  ? indicatorColor
-                                  : indicatorColor.withValues(alpha: 0.22),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: widget.references.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final item = entry.value;
+                        final isSelected = _activeIndex == idx;
+                        return _ReferencePill(
+                          key: _pillKeys[idx],
+                          label: item.label,
+                          isSelected: isSelected,
+                          activeGradient: activeGradient,
+                          neutralGradient: neutralGradient,
+                          borderColor: borderColor,
+                          indicatorColor: indicatorColor,
+                          canvasColor: canvasColor,
+                          isDark: isDark,
+                          fontSize: pillFontSize,
+                          horizontalPadding: pillHorizontalPadding,
+                          verticalPadding: pillVerticalPadding,
+                          onTap: () => _onPillTap(idx),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ],
 
                 const SizedBox(height: 12),
 
-                // 4. Contenido del Panel (Adaptable y con altura intrínseca elástica)
+                // 4. Contenido del Panel con Altura Intrínseca Dinámica (Cero hueco abajo)
                 if (hasReferences)
                   _buildReferencesContent(
                     context: context,
@@ -474,7 +505,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     );
   }
 
-  /// Construye el visor de versículos para referencias bíblicas
+  /// Construye el visor de versículos con altura intrínseca adaptativa
   Widget _buildReferencesContent({
     required BuildContext context,
     required double screenHeight,
@@ -483,7 +514,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
   }) {
     final maxContentHeight = (screenHeight * 0.48).clamp(200.0, 480.0);
 
-    // Caso 1 cita: Render directo sin la sobrecarga del PageView
+    // Caso 1 cita: Render directo con auto-ajuste de altura (cero espacio vacío)
     if (!hasMultiple) {
       final currentVerses = _cachedVerses[0] ?? [];
       if (currentVerses.isEmpty && _isLoading) {
@@ -504,6 +535,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
           primary: false,
           physics: const BouncingScrollPhysics(),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: currentVerses,
           ),
@@ -511,38 +543,59 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
       );
     }
 
-    // Caso múltiples citas: PageView horizontal suave sincronizado con las píldoras
-    return SizedBox(
-      height: maxContentHeight,
-      child: PageView.builder(
-        controller: _pageController,
-        physics: const BouncingScrollPhysics(),
-        itemCount: widget.references.length,
-        onPageChanged: (idx) {
-          HapticFeedback.selectionClick();
-          setState(() => _activeIndex = idx);
-          _loadCurrentIndex(idx);
-        },
-        itemBuilder: (ctx, idx) {
-          final currentVerses = _cachedVerses[idx] ?? [];
-          if (currentVerses.isEmpty) {
-            return const Center(
-              child: SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2.2),
+    // Caso múltiples citas: PageView con altura intrínseca dinámica por página activa
+    final activeMeasuredHeight = _pageHeights[_activeIndex];
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: SizedBox(
+        height: (activeMeasuredHeight != null)
+            ? activeMeasuredHeight.clamp(60.0, maxContentHeight)
+            : 110.0,
+        child: PageView.builder(
+          controller: _pageController,
+          physics: const BouncingScrollPhysics(),
+          itemCount: widget.references.length,
+          onPageChanged: (idx) {
+            HapticFeedback.selectionClick();
+            setState(() => _activeIndex = idx);
+            _scrollToPill(idx);
+            _loadCurrentIndex(idx);
+          },
+          itemBuilder: (ctx, idx) {
+            final currentVerses = _cachedVerses[idx] ?? [];
+            if (currentVerses.isEmpty) {
+              return const Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.2),
+                ),
+              );
+            }
+            return SingleChildScrollView(
+              primary: false,
+              physics: const BouncingScrollPhysics(),
+              child: _MeasureSize(
+                onChange: (size) {
+                  if (size.height > 0 && _pageHeights[idx] != size.height) {
+                    if (mounted) {
+                      setState(() {
+                        _pageHeights[idx] = size.height;
+                      });
+                    }
+                  }
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: currentVerses,
+                ),
               ),
             );
-          }
-          return SingleChildScrollView(
-            primary: false,
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: currentVerses,
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -567,25 +620,25 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
           text: HTML.toTextSpan(
             context,
             widget.rawHtmlContent ?? '',
-              defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+            defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                  fontFamily: readPrefs.currentFontFamily,
+                  fontWeight: FontWeight.normal,
+                  height: 1.5,
+                  fontSize: contentFontSize,
+                  color: indicatorColor.withValues(alpha: 0.92),
+                ),
+            overrideStyle: {
+              'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
                     fontFamily: readPrefs.currentFontFamily,
-                    fontWeight: FontWeight.normal,
-                    height: 1.5,
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
                     fontSize: contentFontSize,
-                    color: indicatorColor.withValues(alpha: 0.92),
+                    color: indicatorColor,
                   ),
-              overrideStyle: {
-                'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      fontFamily: readPrefs.currentFontFamily,
-                      fontWeight: FontWeight.bold,
-                      fontStyle: FontStyle.italic,
-                      fontSize: contentFontSize,
-                      color: indicatorColor,
-                    ),
-              },
-            ),
+            },
           ),
         ),
+      ),
     );
   }
 }
@@ -663,7 +716,7 @@ class _CircleIconButtonState extends State<_CircleIconButton> {
   }
 }
 
-/// Píldora de Selección Táctil para Múltiples Citas
+/// Píldora de Selección Táctil para Múltiples Citas con Dimensiones Accesibles
 class _ReferencePill extends StatelessWidget {
   final String label;
   final bool isSelected;
@@ -673,6 +726,9 @@ class _ReferencePill extends StatelessWidget {
   final Color indicatorColor;
   final Color canvasColor;
   final bool isDark;
+  final double fontSize;
+  final double horizontalPadding;
+  final double verticalPadding;
   final VoidCallback onTap;
 
   const _ReferencePill({
@@ -685,6 +741,9 @@ class _ReferencePill extends StatelessWidget {
     required this.indicatorColor,
     required this.canvasColor,
     required this.isDark,
+    required this.fontSize,
+    required this.horizontalPadding,
+    required this.verticalPadding,
     required this.onTap,
   }) : super(key: key);
 
@@ -692,21 +751,24 @@ class _ReferencePill extends StatelessWidget {
   Widget build(BuildContext context) {
     final textColor = isSelected
         ? (isDark ? canvasColor : Colors.white)
-        : indicatorColor.withValues(alpha: 0.80);
+        : indicatorColor.withValues(alpha: 0.85);
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedScale(
-          scale: isSelected ? 1.03 : 0.97,
+          scale: isSelected ? 1.02 : 0.98,
           duration: const Duration(milliseconds: 160),
           curve: Curves.easeOutCubic,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6.5),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: verticalPadding,
+            ),
             decoration: BoxDecoration(
               gradient: isSelected ? activeGradient : neutralGradient,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: isSelected
                     ? (isDark ? indicatorColor.withValues(alpha: 0.6) : Colors.transparent)
@@ -716,7 +778,7 @@ class _ReferencePill extends StatelessWidget {
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.10),
+                        color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.12),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -726,8 +788,8 @@ class _ReferencePill extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                fontSize: fontSize,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                 color: textColor,
                 letterSpacing: -0.2,
               ),
