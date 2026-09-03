@@ -566,6 +566,7 @@ class BiblePageController extends GetxController {
                                     radius: const Radius.circular(8),
                                     thumbColor: indicatorColor.withValues(alpha: 0.30),
                                     child: SingleChildScrollView(
+                                      primary: false,
                                       physics: const BouncingScrollPhysics(),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -969,15 +970,12 @@ class BiblePageController extends GetxController {
                                     ),
                                   );
                                 }
-                                return RawScrollbar(
-                                  radius: const Radius.circular(8),
-                                  thumbColor: indicatorColor.withValues(alpha: 0.30),
-                                  child: SingleChildScrollView(
-                                    physics: const BouncingScrollPhysics(),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: currentVerses,
-                                    ),
+                                return SingleChildScrollView(
+                                  primary: false,
+                                  physics: const BouncingScrollPhysics(),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: currentVerses,
                                   ),
                                 );
                               },
@@ -992,6 +990,7 @@ class BiblePageController extends GetxController {
                               maxHeight: MediaQuery.of(context).size.height * 0.35,
                             ),
                             child: SingleChildScrollView(
+                              primary: false,
                               physics: const BouncingScrollPhysics(),
                               child: RichText(
                                 textAlign: TextAlign.left,
