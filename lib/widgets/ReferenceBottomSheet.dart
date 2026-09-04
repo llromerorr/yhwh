@@ -134,7 +134,6 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
   late final AnimationController _springController;
   Animation<double>? _springAnimation;
   double _dragOffset = 0.0;
-  bool _dragStartedAtTop = false;
 
   @override
   void initState() {
@@ -195,12 +194,6 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
       if (_dragOffset > 0) {
         setState(() {
           _dragOffset = math.max(0.0, _dragOffset + dy * 0.6);
-        });
-      } else if (!_isExpanded && dy < -5) {
-        // En la parte superior del panel SÍ se permite elevar a pantalla amplia
-        HapticFeedback.mediumImpact();
-        setState(() {
-          _isExpanded = true;
         });
       }
     }
@@ -416,27 +409,20 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Tirador táctil superior estilo Apple con micro-animación de ancho y soporte para tap
+                      // Tirador visual superior
                       Center(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            setState(() => _isExpanded = !_isExpanded);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              curve: Curves.easeOutCubic,
-                              width: _isExpanded ? 52 : 38,
-                              height: 4.5,
-                              decoration: BoxDecoration(
-                                color: indicatorColor.withValues(
-                                  alpha: isDark ? 0.40 : 0.28,
-                                ),
-                                borderRadius: BorderRadius.circular(3),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeOutCubic,
+                            width: _isExpanded ? 52 : 38,
+                            height: 4.5,
+                            decoration: BoxDecoration(
+                              color: indicatorColor.withValues(
+                                alpha: isDark ? 0.40 : 0.28,
                               ),
+                              borderRadius: BorderRadius.circular(3),
                             ),
                           ),
                         ),
@@ -682,49 +668,6 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
     );
   }
 
-  /// Envuelve el scroll con detector de sobre-desplazamiento en el tope (offset 0) para activar el cierre elástico
-  Widget _buildScrollableWithOverscrollDismiss({
-    required bool canScroll,
-    required Widget child,
-  }) {
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification is ScrollStartNotification) {
-          // Solo se permite activar el cierre elástico si el gesto comenzó estando ya en el tope superior (offset <= 0)
-          _dragStartedAtTop = (notification.metrics.pixels <= 0.0);
-        } else if (notification is OverscrollNotification && notification.overscroll < 0) {
-          // El scroll ya estaba en el tope al iniciar este gesto y el usuario vuelve a arrastrar hacia abajo
-          if (_dragStartedAtTop) {
-            _springController.stop();
-            setState(() {
-              _dragOffset += (-notification.overscroll) * 0.55;
-            });
-          }
-        } else if (notification is ScrollUpdateNotification) {
-          // Si el panel ya se estaba desplazando hacia abajo y el usuario rectifica hacia arriba
-          if (_dragOffset > 0 && notification.scrollDelta != null && notification.scrollDelta! > 0) {
-            setState(() {
-              _dragOffset = math.max(0.0, _dragOffset - notification.scrollDelta! * 0.6);
-            });
-          }
-        } else if (notification is ScrollEndNotification) {
-          if (_dragOffset > 0) {
-            _finishDrag(velocity: notification.dragDetails?.primaryVelocity ?? 0.0);
-          }
-          _dragStartedAtTop = false;
-        }
-        return false;
-      },
-      child: SingleChildScrollView(
-        primary: false,
-        physics: canScroll
-            ? const ClampingScrollPhysics()
-            : const NeverScrollableScrollPhysics(),
-        child: child,
-      ),
-    );
-  }
-
   /// Construye el visor de versículos con altura estable y elevación elástica
   Widget _buildReferencesContent({
     required BuildContext context,
@@ -753,7 +696,6 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
           ),
         );
       }
-      final canScroll = (_singleRefHeight ?? 0) > maxContentHeight;
       final targetHeight = (_singleRefHeight != null)
           ? _singleRefHeight!.clamp(70.0, maxContentHeight)
           : maxContentHeight;
@@ -764,8 +706,9 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
         alignment: Alignment.topCenter,
         child: SizedBox(
           height: targetHeight,
-          child: _buildScrollableWithOverscrollDismiss(
-            canScroll: canScroll,
+          child: SingleChildScrollView(
+            primary: false,
+            physics: const BouncingScrollPhysics(),
             child: _MeasureSize(
               onChange: (size) {
                 if (size.height > 0 && _singleRefHeight != size.height) {
@@ -815,9 +758,9 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
                 ),
               );
             }
-            final canScroll = (_pageHeights[idx] ?? 0) > maxContentHeight;
-            return _buildScrollableWithOverscrollDismiss(
-              canScroll: canScroll,
+            return SingleChildScrollView(
+              primary: false,
+              physics: const BouncingScrollPhysics(),
               child: _MeasureSize(
                 onChange: (size) {
                   if (size.height > 0) {
@@ -850,7 +793,6 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
     final compactMaxContentHeight = (safeScreenHeight * 0.38).clamp(160.0, 320.0);
     final expandedMaxContentHeight = (safeScreenHeight * 0.68).clamp(280.0, safeScreenHeight - 160.0);
     final maxContentHeight = _isExpanded ? expandedMaxContentHeight : compactMaxContentHeight;
-    final canScroll = (_htmlNoteHeight ?? 0) > maxContentHeight;
     final targetHeight = (_htmlNoteHeight != null)
         ? _htmlNoteHeight!.clamp(70.0, maxContentHeight)
         : maxContentHeight;
@@ -861,8 +803,9 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
       alignment: Alignment.topCenter,
       child: SizedBox(
         height: targetHeight,
-        child: _buildScrollableWithOverscrollDismiss(
-          canScroll: canScroll,
+        child: SingleChildScrollView(
+          primary: false,
+          physics: const BouncingScrollPhysics(),
           child: _MeasureSize(
             onChange: (size) {
               if (size.height > 0 && _htmlNoteHeight != size.height) {
