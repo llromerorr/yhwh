@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -98,7 +99,7 @@ class ReferenceBottomSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isDismissible: true,
-      enableDrag: true,
+      enableDrag: false,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.transparent,
@@ -117,23 +118,38 @@ class ReferenceBottomSheet extends StatefulWidget {
   State<ReferenceBottomSheet> createState() => _ReferenceBottomSheetState();
 }
 
-class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
+class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
+    with SingleTickerProviderStateMixin {
   int _activeIndex = 0;
   late final PageController _pageController;
   final Map<int, List<Widget>> _cachedVerses = {};
   final Map<int, double> _pageHeights = {};
-  double _groupMaxHeight = 0.0;
   double? _singleRefHeight;
   double? _htmlNoteHeight;
   bool _isExpanded = false;
   late final List<GlobalKey> _pillKeys;
   bool _isLoading = false;
 
+  // Cinemática elástica (Rubber-Band Physics)
+  late final AnimationController _springController;
+  Animation<double>? _springAnimation;
+  double _dragOffset = 0.0;
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
     _pillKeys = List.generate(widget.references.length, (_) => GlobalKey());
+    _springController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+    )..addListener(() {
+        if (_springAnimation != null) {
+          setState(() {
+            _dragOffset = _springAnimation!.value;
+          });
+        }
+      });
     if (widget.references.isNotEmpty) {
       _loadCurrentIndex(0);
     }
@@ -142,7 +158,84 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
   @override
   void dispose() {
     _pageController.dispose();
+    _springController.dispose();
     super.dispose();
+  }
+
+  void _handleDragStart(DragStartDetails details) {
+    _springController.stop();
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    final dy = details.delta.dy;
+    if (dy > 0) {
+      // Arrastre hacia abajo con resistencia elástica progresiva (Rubber-band)
+      setState(() {
+        _dragOffset += dy * 0.55;
+      });
+    } else if (dy < 0) {
+      // Arrastre hacia arriba
+      if (_dragOffset > 0) {
+        setState(() {
+          _dragOffset = math.max(0.0, _dragOffset + dy * 0.6);
+        });
+      } else if (!_isExpanded && dy < -5) {
+        // Tirón hacia arriba en modo compacto: eleva a pantalla amplia
+        HapticFeedback.mediumImpact();
+        setState(() {
+          _isExpanded = true;
+        });
+      }
+    }
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0.0;
+    // Cierre deliberado: arrastre amplio (> 100 px) o lanzamiento rápido hacia abajo (> 800 px/s)
+    if (_dragOffset > 100 || velocity > 800) {
+      _dismissSheet();
+    } else if (_isExpanded && (velocity > 380 || _dragOffset > 45)) {
+      // Si está expandido y tira hacia abajo, contraer al modo compacto
+      HapticFeedback.lightImpact();
+      setState(() {
+        _isExpanded = false;
+        _dragOffset = 0.0;
+      });
+    } else {
+      // Rebote elástico de vuelta a la posición original
+      _bounceBack();
+    }
+  }
+
+  void _bounceBack() {
+    if (_dragOffset == 0.0) return;
+    HapticFeedback.lightImpact();
+    _springAnimation = Tween<double>(
+      begin: _dragOffset,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _springController,
+      curve: Curves.easeOutBack,
+    ));
+    _springController.duration = const Duration(milliseconds: 260);
+    _springController.forward(from: 0.0);
+  }
+
+  void _dismissSheet() {
+    final screenHeight = MediaQuery.of(context).size.height;
+    _springAnimation = Tween<double>(
+      begin: _dragOffset,
+      end: screenHeight - _dragOffset + 150,
+    ).animate(CurvedAnimation(
+      parent: _springController,
+      curve: Curves.easeInCubic,
+    ));
+    _springController.duration = const Duration(milliseconds: 180);
+    _springController.forward(from: 0.0).then((_) {
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    });
   }
 
   Future<void> _loadCurrentIndex(int index) async {
@@ -162,14 +255,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
 
   void _onPageMeasured(int idx, double measuredHeight) {
     if (measuredHeight <= 0) return;
-    _pageHeights[idx] = measuredHeight;
-    // Solo crece, nunca se encoge durante el swipe horizontal para garantizar estabilidad visual absoluta
-    if (measuredHeight > _groupMaxHeight) {
-      if (mounted) {
-        setState(() {
-          _groupMaxHeight = measuredHeight;
-        });
-      }
+    if (_pageHeights[idx] != measuredHeight) {
+      _pageHeights[idx] = measuredHeight;
     }
   }
 
@@ -307,28 +394,12 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1 y 2. Zona Superior Interactiva (Tirador + Header) con soporte de gesto vertical (Detents)
+                // 1 y 2. Zona Superior Interactiva (Tirador + Header) con soporte de cinemática elástica
                 GestureDetector(
                   behavior: HitTestBehavior.translucent,
-                  onVerticalDragEnd: (details) {
-                    if (details.primaryVelocity != null) {
-                      if (details.primaryVelocity! < -180) {
-                        // Deslizar arriba -> Elevar panel para lectura cómoda
-                        if (!_isExpanded) {
-                          HapticFeedback.mediumImpact();
-                          setState(() => _isExpanded = true);
-                        }
-                      } else if (details.primaryVelocity! > 180) {
-                        // Deslizar abajo -> Recoger al modo compacto o cerrar
-                        if (_isExpanded) {
-                          HapticFeedback.lightImpact();
-                          setState(() => _isExpanded = false);
-                        } else {
-                          Navigator.pop(context);
-                        }
-                      }
-                    }
-                  },
+                  onVerticalDragStart: _handleDragStart,
+                  onVerticalDragUpdate: _handleDragUpdate,
+                  onVerticalDragEnd: _handleDragEnd,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -516,66 +587,59 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
           ),
         );
 
-        return GlassContainer(
-          enableAcrylic: readPrefs.enableAcrylicEffect,
-          blur: isDark
-              ? ControlCenterVisualConfig.darkBlurSigma
-              : ControlCenterVisualConfig.lightBlurSigma,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border(
-            top: BorderSide(
-              color: topBorderColor,
-              width: 1.5,
+        return AnimatedBuilder(
+          animation: _springController,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, _dragOffset),
+              child: child,
+            );
+          },
+          child: GlassContainer(
+            enableAcrylic: readPrefs.enableAcrylicEffect,
+            blur: isDark
+                ? ControlCenterVisualConfig.darkBlurSigma
+                : ControlCenterVisualConfig.lightBlurSigma,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+            border: Border(
+              top: BorderSide(
+                color: topBorderColor,
+                width: 1.5,
+              ),
             ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-              blurRadius: 28,
-              offset: const Offset(0, -6),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                blurRadius: 28,
+                offset: const Offset(0, -6),
+              ),
+            ],
+            gradient: readPrefs.enableAcrylicEffect
+                ? (isDark
+                    ? LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelTopAlpha),
+                          canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelBottomAlpha),
+                        ],
+                      )
+                    : LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelTopAlpha),
+                          Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelBottomAlpha),
+                        ],
+                      ))
+                : null,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onVerticalDragStart: _handleDragStart,
+              onVerticalDragUpdate: _handleDragUpdate,
+              onVerticalDragEnd: _handleDragEnd,
+              child: sheetContent,
             ),
-          ],
-          gradient: readPrefs.enableAcrylicEffect
-              ? (isDark
-                  ? LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelTopAlpha),
-                        canvasColor.withValues(alpha: ControlCenterVisualConfig.darkPanelBottomAlpha),
-                      ],
-                    )
-                  : LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelTopAlpha),
-                        Colors.white.withValues(alpha: ControlCenterVisualConfig.lightPanelBottomAlpha),
-                      ],
-                    ))
-              : null,
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onVerticalDragEnd: (details) {
-              if (details.primaryVelocity != null) {
-                if (details.primaryVelocity! < -160) {
-                  // Deslizar arriba en cualquier parte del panel -> Expandir
-                  if (!_isExpanded) {
-                    HapticFeedback.mediumImpact();
-                    setState(() => _isExpanded = true);
-                  }
-                } else if (details.primaryVelocity! > 160) {
-                  // Deslizar abajo en cualquier parte del panel -> Recoger o cerrar
-                  if (_isExpanded) {
-                    HapticFeedback.lightImpact();
-                    setState(() => _isExpanded = false);
-                  } else {
-                    Navigator.pop(context);
-                  }
-                }
-              }
-            },
-            child: sheetContent,
           ),
         );
       },
@@ -589,8 +653,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     required Color indicatorColor,
     required bool hasMultiple,
   }) {
-    final compactMaxContentHeight = (screenHeight * 0.42).clamp(180.0, 380.0);
-    final expandedMaxContentHeight = (screenHeight * 0.74).clamp(360.0, 680.0);
+    final compactMaxContentHeight = (screenHeight * 0.44).clamp(240.0, 390.0);
+    final expandedMaxContentHeight = (screenHeight * 0.78).clamp(420.0, 720.0);
     final maxContentHeight = _isExpanded ? expandedMaxContentHeight : compactMaxContentHeight;
 
     // Caso 1 cita: Render directo con auto-ajuste de altura y elevación al scrollear
@@ -609,45 +673,33 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
         );
       }
       final canScroll = (_singleRefHeight ?? 0) > maxContentHeight;
+      final targetHeight = (_singleRefHeight != null)
+          ? _singleRefHeight!.clamp(70.0, maxContentHeight)
+          : maxContentHeight;
+
       return AnimatedSize(
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOutCubic,
         alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxContentHeight),
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (!_isExpanded && notification is ScrollUpdateNotification) {
-                if (notification.scrollDelta != null && notification.scrollDelta! > 8) {
-                  HapticFeedback.selectionClick();
-                  setState(() => _isExpanded = true);
-                }
-              } else if (notification is OverscrollNotification && notification.overscroll < -12) {
-                if (_isExpanded) {
-                  HapticFeedback.lightImpact();
-                  setState(() => _isExpanded = false);
-                } else {
-                  Navigator.pop(context);
-                }
-              }
-              return false;
-            },
-            child: SingleChildScrollView(
-              primary: false,
-              physics: canScroll ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
-              child: _MeasureSize(
-                onChange: (size) {
-                  if (size.height > 0 && _singleRefHeight != size.height) {
-                    if (mounted) {
-                      setState(() => _singleRefHeight = size.height);
-                    }
+        child: SizedBox(
+          height: targetHeight,
+          child: SingleChildScrollView(
+            primary: false,
+            physics: canScroll
+                ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+                : const NeverScrollableScrollPhysics(),
+            child: _MeasureSize(
+              onChange: (size) {
+                if (size.height > 0 && _singleRefHeight != size.height) {
+                  if (mounted) {
+                    setState(() => _singleRefHeight = size.height);
                   }
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: currentVerses,
-                ),
+                }
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: currentVerses,
               ),
             ),
           ),
@@ -655,10 +707,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
       );
     }
 
-    // Caso múltiples citas: PageView con altura uniforme para todo el grupo (cero efecto acordeón)
-    final targetHeight = (_groupMaxHeight > 0)
-        ? _groupMaxHeight.clamp(60.0, maxContentHeight)
-        : (_pageHeights[_activeIndex]?.clamp(60.0, maxContentHeight) ?? 110.0);
+    // Caso múltiples citas: Altura 100% uniforme y estable en todo el carrusel (cero saltos visuales)
+    final targetHeight = maxContentHeight;
 
     return AnimatedSize(
       duration: const Duration(milliseconds: 260),
@@ -688,38 +738,21 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
               );
             }
             final canScroll = (_pageHeights[idx] ?? 0) > maxContentHeight;
-            return NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                // Al scrollear hacia abajo en un pasaje largo, el panel se levanta suavemente
-                if (!_isExpanded && notification is ScrollUpdateNotification) {
-                  if (notification.scrollDelta != null && notification.scrollDelta! > 8) {
-                    HapticFeedback.selectionClick();
-                    setState(() => _isExpanded = true);
+            return SingleChildScrollView(
+              primary: false,
+              physics: canScroll
+                  ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+                  : const NeverScrollableScrollPhysics(),
+              child: _MeasureSize(
+                onChange: (size) {
+                  if (size.height > 0) {
+                    _onPageMeasured(idx, size.height);
                   }
-                } else if (notification is OverscrollNotification && notification.overscroll < -12) {
-                  if (_isExpanded) {
-                    HapticFeedback.lightImpact();
-                    setState(() => _isExpanded = false);
-                  } else {
-                    Navigator.pop(context);
-                  }
-                }
-                return false;
-              },
-              child: SingleChildScrollView(
-                primary: false,
-                physics: canScroll ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
-                child: _MeasureSize(
-                  onChange: (size) {
-                    if (size.height > 0) {
-                      _onPageMeasured(idx, size.height);
-                    }
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: currentVerses,
-                  ),
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: currentVerses,
                 ),
               ),
             );
@@ -737,67 +770,54 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     required Color indicatorColor,
     required double contentFontSize,
   }) {
-    final compactMaxContentHeight = (screenHeight * 0.38).clamp(150.0, 320.0);
-    final expandedMaxContentHeight = (screenHeight * 0.70).clamp(320.0, 620.0);
+    final compactMaxContentHeight = (screenHeight * 0.40).clamp(180.0, 340.0);
+    final expandedMaxContentHeight = (screenHeight * 0.74).clamp(340.0, 640.0);
     final maxContentHeight = _isExpanded ? expandedMaxContentHeight : compactMaxContentHeight;
     final canScroll = (_htmlNoteHeight ?? 0) > maxContentHeight;
+    final targetHeight = (_htmlNoteHeight != null)
+        ? _htmlNoteHeight!.clamp(70.0, maxContentHeight)
+        : maxContentHeight;
 
     return AnimatedSize(
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
       alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxContentHeight),
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            if (!_isExpanded && notification is ScrollUpdateNotification) {
-              if (notification.scrollDelta != null && notification.scrollDelta! > 8) {
-                HapticFeedback.selectionClick();
-                setState(() => _isExpanded = true);
-              }
-            } else if (notification is OverscrollNotification && notification.overscroll < -12) {
-              if (_isExpanded) {
-                HapticFeedback.lightImpact();
-                setState(() => _isExpanded = false);
-              } else {
-                Navigator.pop(context);
-              }
-            }
-            return false;
-          },
-          child: SingleChildScrollView(
-            primary: false,
-            physics: canScroll ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
-            child: _MeasureSize(
-              onChange: (size) {
-                if (size.height > 0 && _htmlNoteHeight != size.height) {
-                  if (mounted) {
-                    setState(() => _htmlNoteHeight = size.height);
-                  }
+      child: SizedBox(
+        height: targetHeight,
+        child: SingleChildScrollView(
+          primary: false,
+          physics: canScroll
+              ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+              : const NeverScrollableScrollPhysics(),
+          child: _MeasureSize(
+            onChange: (size) {
+              if (size.height > 0 && _htmlNoteHeight != size.height) {
+                if (mounted) {
+                  setState(() => _htmlNoteHeight = size.height);
                 }
-              },
-              child: RichText(
-                textAlign: TextAlign.left,
-                text: HTML.toTextSpan(
-                  context,
-                  widget.rawHtmlContent ?? '',
-                  defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+              }
+            },
+            child: RichText(
+              textAlign: TextAlign.left,
+              text: HTML.toTextSpan(
+                context,
+                widget.rawHtmlContent ?? '',
+                defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      fontFamily: readPrefs.currentFontFamily,
+                      fontWeight: FontWeight.normal,
+                      height: 1.5,
+                      fontSize: contentFontSize,
+                      color: indicatorColor.withValues(alpha: 0.92),
+                    ),
+                overrideStyle: {
+                  'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
                         fontFamily: readPrefs.currentFontFamily,
-                        fontWeight: FontWeight.normal,
-                        height: 1.5,
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.italic,
                         fontSize: contentFontSize,
-                        color: indicatorColor.withValues(alpha: 0.92),
+                        color: indicatorColor,
                       ),
-                  overrideStyle: {
-                    'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
-                          fontFamily: readPrefs.currentFontFamily,
-                          fontWeight: FontWeight.bold,
-                          fontStyle: FontStyle.italic,
-                          fontSize: contentFontSize,
-                          color: indicatorColor,
-                        ),
-                  },
-                ),
+                },
               ),
             ),
           ),
