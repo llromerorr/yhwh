@@ -566,21 +566,27 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
 
                 const SizedBox(height: 12),
 
-                // 4. Contenido del Panel con Altura Intrínseca Dinámica (Cero hueco abajo)
+                // 4. Contenido del Panel con Altura Intrínseca Dinámica (Cero hueco abajo y cero overflow)
                 if (hasReferences)
-                  _buildReferencesContent(
-                    context: context,
-                    screenHeight: screenHeight,
-                    indicatorColor: indicatorColor,
-                    hasMultiple: hasMultipleReferences,
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: _buildReferencesContent(
+                      context: context,
+                      screenHeight: screenHeight,
+                      indicatorColor: indicatorColor,
+                      hasMultiple: hasMultipleReferences,
+                    ),
                   )
                 else if (isHtmlNote)
-                  _buildHtmlNoteContent(
-                    context: context,
-                    screenHeight: screenHeight,
-                    readPrefs: readPrefs,
-                    indicatorColor: indicatorColor,
-                    contentFontSize: contentFontSize,
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: _buildHtmlNoteContent(
+                      context: context,
+                      screenHeight: screenHeight,
+                      readPrefs: readPrefs,
+                      indicatorColor: indicatorColor,
+                      contentFontSize: contentFontSize,
+                    ),
                   ),
               ],
             ),
@@ -646,6 +652,45 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
     );
   }
 
+  /// Envuelve el scroll con detector de sobre-desplazamiento en el tope (offset 0) para activar el cierre elástico
+  Widget _buildScrollableWithOverscrollDismiss({
+    required bool canScroll,
+    required Widget child,
+  }) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is OverscrollNotification && notification.overscroll < 0) {
+          // El scroll ya está en el tope superior (offset 0) y el usuario vuelve a arrastrar hacia abajo
+          _springController.stop();
+          setState(() {
+            _dragOffset += (-notification.overscroll) * 0.55;
+          });
+        } else if (notification is ScrollUpdateNotification) {
+          // Si el panel ya se estaba desplazando hacia abajo y el usuario rectifica hacia arriba
+          if (_dragOffset > 0 && notification.scrollDelta != null && notification.scrollDelta! > 0) {
+            setState(() {
+              _dragOffset = math.max(0.0, _dragOffset - notification.scrollDelta! * 0.6);
+            });
+          }
+        } else if (notification is ScrollEndNotification) {
+          if (_dragOffset > 0) {
+            _handleDragEnd(DragEndDetails(
+              primaryVelocity: notification.dragDetails?.primaryVelocity ?? 0.0,
+            ));
+          }
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        primary: false,
+        physics: canScroll
+            ? const ClampingScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
+        child: child,
+      ),
+    );
+  }
+
   /// Construye el visor de versículos con altura estable y elevación elástica
   Widget _buildReferencesContent({
     required BuildContext context,
@@ -653,8 +698,10 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
     required Color indicatorColor,
     required bool hasMultiple,
   }) {
-    final compactMaxContentHeight = (screenHeight * 0.44).clamp(240.0, 390.0);
-    final expandedMaxContentHeight = (screenHeight * 0.78).clamp(420.0, 720.0);
+    final mediaQuery = MediaQuery.of(context);
+    final safeScreenHeight = screenHeight - mediaQuery.padding.top - mediaQuery.padding.bottom;
+    final compactMaxContentHeight = (safeScreenHeight * 0.42).clamp(200.0, 360.0);
+    final expandedMaxContentHeight = (safeScreenHeight * 0.70).clamp(300.0, safeScreenHeight - 160.0);
     final maxContentHeight = _isExpanded ? expandedMaxContentHeight : compactMaxContentHeight;
 
     // Caso 1 cita: Render directo con auto-ajuste de altura y elevación al scrollear
@@ -683,11 +730,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
         alignment: Alignment.topCenter,
         child: SizedBox(
           height: targetHeight,
-          child: SingleChildScrollView(
-            primary: false,
-            physics: canScroll
-                ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
-                : const NeverScrollableScrollPhysics(),
+          child: _buildScrollableWithOverscrollDismiss(
+            canScroll: canScroll,
             child: _MeasureSize(
               onChange: (size) {
                 if (size.height > 0 && _singleRefHeight != size.height) {
@@ -738,11 +782,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
               );
             }
             final canScroll = (_pageHeights[idx] ?? 0) > maxContentHeight;
-            return SingleChildScrollView(
-              primary: false,
-              physics: canScroll
-                  ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
-                  : const NeverScrollableScrollPhysics(),
+            return _buildScrollableWithOverscrollDismiss(
+              canScroll: canScroll,
               child: _MeasureSize(
                 onChange: (size) {
                   if (size.height > 0) {
@@ -770,8 +811,10 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
     required Color indicatorColor,
     required double contentFontSize,
   }) {
-    final compactMaxContentHeight = (screenHeight * 0.40).clamp(180.0, 340.0);
-    final expandedMaxContentHeight = (screenHeight * 0.74).clamp(340.0, 640.0);
+    final mediaQuery = MediaQuery.of(context);
+    final safeScreenHeight = screenHeight - mediaQuery.padding.top - mediaQuery.padding.bottom;
+    final compactMaxContentHeight = (safeScreenHeight * 0.38).clamp(160.0, 320.0);
+    final expandedMaxContentHeight = (safeScreenHeight * 0.68).clamp(280.0, safeScreenHeight - 160.0);
     final maxContentHeight = _isExpanded ? expandedMaxContentHeight : compactMaxContentHeight;
     final canScroll = (_htmlNoteHeight ?? 0) > maxContentHeight;
     final targetHeight = (_htmlNoteHeight != null)
@@ -784,11 +827,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
       alignment: Alignment.topCenter,
       child: SizedBox(
         height: targetHeight,
-        child: SingleChildScrollView(
-          primary: false,
-          physics: canScroll
-              ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
-              : const NeverScrollableScrollPhysics(),
+        child: _buildScrollableWithOverscrollDismiss(
+          canScroll: canScroll,
           child: _MeasureSize(
             onChange: (size) {
               if (size.height > 0 && _htmlNoteHeight != size.height) {
