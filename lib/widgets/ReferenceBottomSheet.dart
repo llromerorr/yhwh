@@ -174,13 +174,29 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
         _dragOffset += dy * 0.55;
       });
     } else if (dy < 0) {
-      // Arrastre hacia arriba
+      // Arrastre hacia arriba: solo reduce el offset si ya estaba jalado hacia abajo
+      if (_dragOffset > 0) {
+        setState(() {
+          _dragOffset = math.max(0.0, _dragOffset + dy * 0.6);
+        });
+      }
+      // Desde el cuerpo del texto NUNCA se amplía el panel
+    }
+  }
+
+  void _handleHeaderDragUpdate(DragUpdateDetails details) {
+    final dy = details.delta.dy;
+    if (dy > 0) {
+      setState(() {
+        _dragOffset += dy * 0.55;
+      });
+    } else if (dy < 0) {
       if (_dragOffset > 0) {
         setState(() {
           _dragOffset = math.max(0.0, _dragOffset + dy * 0.6);
         });
       } else if (!_isExpanded && dy < -5) {
-        // Tirón hacia arriba en modo compacto: eleva a pantalla amplia
+        // En la parte superior del panel SÍ se permite elevar a pantalla amplia
         HapticFeedback.mediumImpact();
         setState(() {
           _isExpanded = true;
@@ -189,8 +205,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
     }
   }
 
-  void _handleDragEnd(DragEndDetails details) {
-    final velocity = details.primaryVelocity ?? 0.0;
+  void _finishDrag({double velocity = 0.0}) {
     // Cierre deliberado: arrastre amplio (> 100 px) o lanzamiento rápido hacia abajo (> 800 px/s)
     if (_dragOffset > 100 || velocity > 800) {
       _dismissSheet();
@@ -205,6 +220,10 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
       // Rebote elástico de vuelta a la posición original
       _bounceBack();
     }
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    _finishDrag(velocity: details.primaryVelocity ?? 0.0);
   }
 
   void _bounceBack() {
@@ -398,7 +417,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
                 GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   onVerticalDragStart: _handleDragStart,
-                  onVerticalDragUpdate: _handleDragUpdate,
+                  onVerticalDragUpdate: _handleHeaderDragUpdate,
                   onVerticalDragEnd: _handleDragEnd,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -533,8 +552,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
                   ),
                 ),
 
-                // 3. Selector de Múltiples Citas a ancho completo con auto-centrado
-                if (hasMultipleReferences) ...[
+                // 3. Selector de Citas a ancho completo con auto-centrado (siempre visible si hay referencias para identificar qué cita se lee)
+                if (hasReferences) ...[
                   const SizedBox(height: 12),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -674,9 +693,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
           }
         } else if (notification is ScrollEndNotification) {
           if (_dragOffset > 0) {
-            _handleDragEnd(DragEndDetails(
-              primaryVelocity: notification.dragDetails?.primaryVelocity ?? 0.0,
-            ));
+            _finishDrag(velocity: notification.dragDetails?.primaryVelocity ?? 0.0);
           }
         }
         return false;
