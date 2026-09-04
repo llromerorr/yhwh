@@ -123,6 +123,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
   final Map<int, List<Widget>> _cachedVerses = {};
   final Map<int, double> _pageHeights = {};
   double _groupMaxHeight = 0.0;
+  double? _singleRefHeight;
+  double? _htmlNoteHeight;
   bool _isExpanded = false;
   late final List<GlobalKey> _pillKeys;
   bool _isLoading = false;
@@ -330,19 +332,28 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Tirador táctil superior estilo Apple con micro-animación de ancho
+                      // Tirador táctil superior estilo Apple con micro-animación de ancho y soporte para tap
                       Center(
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeOutCubic,
-                          width: _isExpanded ? 52 : 38,
-                          height: 4.5,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: indicatorColor.withValues(
-                              alpha: isDark ? 0.35 : 0.22,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            setState(() => _isExpanded = !_isExpanded);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOutCubic,
+                              width: _isExpanded ? 52 : 38,
+                              height: 4.5,
+                              decoration: BoxDecoration(
+                                color: indicatorColor.withValues(
+                                  alpha: isDark ? 0.40 : 0.28,
+                                ),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(3),
                           ),
                         ),
                       ),
@@ -543,8 +554,29 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                       ],
                     ))
               : null,
-          color: readPrefs.enableAcrylicEffect ? null : canvasColor,
-          child: sheetContent,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onVerticalDragEnd: (details) {
+              if (details.primaryVelocity != null) {
+                if (details.primaryVelocity! < -160) {
+                  // Deslizar arriba en cualquier parte del panel -> Expandir
+                  if (!_isExpanded) {
+                    HapticFeedback.mediumImpact();
+                    setState(() => _isExpanded = true);
+                  }
+                } else if (details.primaryVelocity! > 160) {
+                  // Deslizar abajo en cualquier parte del panel -> Recoger o cerrar
+                  if (_isExpanded) {
+                    HapticFeedback.lightImpact();
+                    setState(() => _isExpanded = false);
+                  } else {
+                    Navigator.pop(context);
+                  }
+                }
+              }
+            },
+            child: sheetContent,
+          ),
         );
       },
     );
@@ -576,6 +608,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
           ),
         );
       }
+      final canScroll = (_singleRefHeight ?? 0) > maxContentHeight;
       return AnimatedSize(
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOutCubic,
@@ -585,20 +618,36 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
           child: NotificationListener<ScrollNotification>(
             onNotification: (notification) {
               if (!_isExpanded && notification is ScrollUpdateNotification) {
-                if (notification.scrollDelta != null && notification.scrollDelta! > 12) {
+                if (notification.scrollDelta != null && notification.scrollDelta! > 8) {
                   HapticFeedback.selectionClick();
                   setState(() => _isExpanded = true);
+                }
+              } else if (notification is OverscrollNotification && notification.overscroll < -12) {
+                if (_isExpanded) {
+                  HapticFeedback.lightImpact();
+                  setState(() => _isExpanded = false);
+                } else {
+                  Navigator.pop(context);
                 }
               }
               return false;
             },
             child: SingleChildScrollView(
               primary: false,
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: currentVerses,
+              physics: canScroll ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
+              child: _MeasureSize(
+                onChange: (size) {
+                  if (size.height > 0 && _singleRefHeight != size.height) {
+                    if (mounted) {
+                      setState(() => _singleRefHeight = size.height);
+                    }
+                  }
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: currentVerses,
+                ),
               ),
             ),
           ),
@@ -638,20 +687,28 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                 ),
               );
             }
+            final canScroll = (_pageHeights[idx] ?? 0) > maxContentHeight;
             return NotificationListener<ScrollNotification>(
               onNotification: (notification) {
                 // Al scrollear hacia abajo en un pasaje largo, el panel se levanta suavemente
                 if (!_isExpanded && notification is ScrollUpdateNotification) {
-                  if (notification.scrollDelta != null && notification.scrollDelta! > 12) {
+                  if (notification.scrollDelta != null && notification.scrollDelta! > 8) {
                     HapticFeedback.selectionClick();
                     setState(() => _isExpanded = true);
+                  }
+                } else if (notification is OverscrollNotification && notification.overscroll < -12) {
+                  if (_isExpanded) {
+                    HapticFeedback.lightImpact();
+                    setState(() => _isExpanded = false);
+                  } else {
+                    Navigator.pop(context);
                   }
                 }
                 return false;
               },
               child: SingleChildScrollView(
                 primary: false,
-                physics: const BouncingScrollPhysics(),
+                physics: canScroll ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
                 child: _MeasureSize(
                   onChange: (size) {
                     if (size.height > 0) {
@@ -683,6 +740,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     final compactMaxContentHeight = (screenHeight * 0.38).clamp(150.0, 320.0);
     final expandedMaxContentHeight = (screenHeight * 0.70).clamp(320.0, 620.0);
     final maxContentHeight = _isExpanded ? expandedMaxContentHeight : compactMaxContentHeight;
+    final canScroll = (_htmlNoteHeight ?? 0) > maxContentHeight;
 
     return AnimatedSize(
       duration: const Duration(milliseconds: 260),
@@ -693,37 +751,53 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
         child: NotificationListener<ScrollNotification>(
           onNotification: (notification) {
             if (!_isExpanded && notification is ScrollUpdateNotification) {
-              if (notification.scrollDelta != null && notification.scrollDelta! > 12) {
+              if (notification.scrollDelta != null && notification.scrollDelta! > 8) {
                 HapticFeedback.selectionClick();
                 setState(() => _isExpanded = true);
+              }
+            } else if (notification is OverscrollNotification && notification.overscroll < -12) {
+              if (_isExpanded) {
+                HapticFeedback.lightImpact();
+                setState(() => _isExpanded = false);
+              } else {
+                Navigator.pop(context);
               }
             }
             return false;
           },
           child: SingleChildScrollView(
             primary: false,
-            physics: const BouncingScrollPhysics(),
-            child: RichText(
-              textAlign: TextAlign.left,
-              text: HTML.toTextSpan(
-                context,
-                widget.rawHtmlContent ?? '',
-                defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      fontFamily: readPrefs.currentFontFamily,
-                      fontWeight: FontWeight.normal,
-                      height: 1.5,
-                      fontSize: contentFontSize,
-                      color: indicatorColor.withValues(alpha: 0.92),
-                    ),
-                overrideStyle: {
-                  'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
+            physics: canScroll ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
+            child: _MeasureSize(
+              onChange: (size) {
+                if (size.height > 0 && _htmlNoteHeight != size.height) {
+                  if (mounted) {
+                    setState(() => _htmlNoteHeight = size.height);
+                  }
+                }
+              },
+              child: RichText(
+                textAlign: TextAlign.left,
+                text: HTML.toTextSpan(
+                  context,
+                  widget.rawHtmlContent ?? '',
+                  defaultTextStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
                         fontFamily: readPrefs.currentFontFamily,
-                        fontWeight: FontWeight.bold,
-                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.normal,
+                        height: 1.5,
                         fontSize: contentFontSize,
-                        color: indicatorColor,
+                        color: indicatorColor.withValues(alpha: 0.92),
                       ),
-                },
+                  overrideStyle: {
+                    'em': Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          fontFamily: readPrefs.currentFontFamily,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: FontStyle.italic,
+                          fontSize: contentFontSize,
+                          color: indicatorColor,
+                        ),
+                  },
+                ),
               ),
             ),
           ),
