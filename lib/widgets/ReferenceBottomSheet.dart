@@ -134,6 +134,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
   late final AnimationController _springController;
   Animation<double>? _springAnimation;
   double _dragOffset = 0.0;
+  bool _dragStartedAtTop = false;
 
   @override
   void initState() {
@@ -206,16 +207,9 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
   }
 
   void _finishDrag({double velocity = 0.0}) {
-    // Cierre deliberado: arrastre amplio (> 100 px) o lanzamiento rápido hacia abajo (> 800 px/s)
-    if (_dragOffset > 100 || velocity > 800) {
+    // Cierre deliberado: arrastre amplio (> 90 px) o lanzamiento rápido hacia abajo (> 750 px/s)
+    if (_dragOffset > 90 || velocity > 750) {
       _dismissSheet();
-    } else if (_isExpanded && (velocity > 380 || _dragOffset > 45)) {
-      // Si está expandido y tira hacia abajo, contraer al modo compacto
-      HapticFeedback.lightImpact();
-      setState(() {
-        _isExpanded = false;
-        _dragOffset = 0.0;
-      });
     } else {
       // Rebote elástico de vuelta a la posición original
       _bounceBack();
@@ -515,6 +509,23 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
 
                           const SizedBox(width: 8),
 
+                          // Botón Maximizar / Restaurar tamaño estilo ventana
+                          _CircleIconButton(
+                            tooltip: _isExpanded ? 'Restaurar tamaño' : 'Maximizar',
+                            icon: _isExpanded
+                                ? Icons.close_fullscreen_rounded
+                                : Icons.open_in_full_rounded,
+                            iconColor: indicatorColor.withValues(alpha: 0.90),
+                            gradient: neutralGradient,
+                            borderColor: borderColor,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              setState(() => _isExpanded = !_isExpanded);
+                            },
+                          ),
+
+                          const SizedBox(width: 8),
+
                           // Botón de acción icónico flotante (Sin texto, 100% universal)
                           if (hasReferences)
                             _CircleIconButton(
@@ -678,12 +689,17 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
   }) {
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification is OverscrollNotification && notification.overscroll < 0) {
-          // El scroll ya está en el tope superior (offset 0) y el usuario vuelve a arrastrar hacia abajo
-          _springController.stop();
-          setState(() {
-            _dragOffset += (-notification.overscroll) * 0.55;
-          });
+        if (notification is ScrollStartNotification) {
+          // Solo se permite activar el cierre elástico si el gesto comenzó estando ya en el tope superior (offset <= 0)
+          _dragStartedAtTop = (notification.metrics.pixels <= 0.0);
+        } else if (notification is OverscrollNotification && notification.overscroll < 0) {
+          // El scroll ya estaba en el tope al iniciar este gesto y el usuario vuelve a arrastrar hacia abajo
+          if (_dragStartedAtTop) {
+            _springController.stop();
+            setState(() {
+              _dragOffset += (-notification.overscroll) * 0.55;
+            });
+          }
         } else if (notification is ScrollUpdateNotification) {
           // Si el panel ya se estaba desplazando hacia abajo y el usuario rectifica hacia arriba
           if (_dragOffset > 0 && notification.scrollDelta != null && notification.scrollDelta! > 0) {
@@ -695,6 +711,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet>
           if (_dragOffset > 0) {
             _finishDrag(velocity: notification.dragDetails?.primaryVelocity ?? 0.0);
           }
+          _dragStartedAtTop = false;
         }
         return false;
       },
