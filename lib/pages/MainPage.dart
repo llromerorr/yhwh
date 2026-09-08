@@ -7,6 +7,7 @@ import 'package:yhwh/controllers/MainPageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 import 'package:yhwh/pages/BiblePage.dart';
 import 'package:yhwh/pages/ContactPage.dart'; // Import original recuperado
+import 'package:yhwh/pages/ReadPreferences.dart';
 import 'package:yhwh/widgets/BibleNavigationFloatingButtons.dart';
 import 'package:yhwh/widgets/GlassContainer.dart';
 
@@ -69,34 +70,52 @@ class MainPage extends StatelessWidget {
                     ),
                   ],
                             
-                  onTap: controller.bottomNavigationBarOnTap,
+                  onTap: (index) {
+                    HapticFeedback.selectionClick();
+                    controller.bottomNavigationBarOnTap(index);
+                  },
                 );
 
                 return GlassContainer(
                   enableAcrylic: readPrefs.enableAcrylicEffect,
-                  blur: isDark ? 23.0 : 19.0,
+                  blur: isDark ? ControlCenterVisualConfig.darkBlurSigma : ControlCenterVisualConfig.lightBlurSigma,
                   border: Border(
                     top: BorderSide(
                       color: topBorderColor,
                       width: 1.5,
                     ),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                      blurRadius: 28,
+                      offset: const Offset(0, -6),
+                    ),
+                  ],
                   gradient: readPrefs.enableAcrylicEffect
                       ? (isDark
                           ? LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Theme.of(context).canvasColor.withValues(alpha: 0.45),
-                                Theme.of(context).canvasColor.withValues(alpha: 0.25),
+                                Theme.of(context).canvasColor.withValues(
+                                      alpha: ControlCenterVisualConfig.darkPanelTopAlpha,
+                                    ),
+                                Theme.of(context).canvasColor.withValues(
+                                      alpha: ControlCenterVisualConfig.darkPanelBottomAlpha,
+                                    ),
                               ],
                             )
                           : LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.white.withValues(alpha: 0.70),
-                                Colors.white.withValues(alpha: 0.40),
+                                Colors.white.withValues(
+                                      alpha: ControlCenterVisualConfig.lightPanelTopAlpha,
+                                    ),
+                                Colors.white.withValues(
+                                      alpha: ControlCenterVisualConfig.lightPanelBottomAlpha,
+                                    ),
                               ],
                             ))
                       : null,

@@ -89,23 +89,42 @@ class BiblePage extends StatelessWidget {
                     
                           flexibleSpace: GlassContainer(
                             enableAcrylic: readPrefs.enableAcrylicEffect,
-                            blur: Theme.of(context).brightness == Brightness.dark ? 23.0 : 19.0,
+                            blur: Theme.of(context).brightness == Brightness.dark
+                                ? ControlCenterVisualConfig.darkBlurSigma
+                                : ControlCenterVisualConfig.lightBlurSigma,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                  alpha: Theme.of(context).brightness == Brightness.dark ? 0.35 : 0.08,
+                                ),
+                                blurRadius: 24,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                             gradient: readPrefs.enableAcrylicEffect
                                 ? (Theme.of(context).brightness == Brightness.dark
                                     ? LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
                                         colors: [
-                                          Theme.of(context).canvasColor.withValues(alpha: 0.45),
-                                          Theme.of(context).canvasColor.withValues(alpha: 0.25),
+                                          Theme.of(context).canvasColor.withValues(
+                                                alpha: ControlCenterVisualConfig.darkPanelTopAlpha,
+                                              ),
+                                          Theme.of(context).canvasColor.withValues(
+                                                alpha: ControlCenterVisualConfig.darkPanelBottomAlpha,
+                                              ),
                                         ],
                                       )
                                     : LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
                                         colors: [
-                                          Colors.white.withValues(alpha: 0.70),
-                                          Colors.white.withValues(alpha: 0.40),
+                                          Colors.white.withValues(
+                                                alpha: ControlCenterVisualConfig.lightPanelBottomAlpha,
+                                              ),
+                                          Colors.white.withValues(
+                                                alpha: ControlCenterVisualConfig.lightPanelTopAlpha,
+                                              ),
                                         ],
                                       ))
                                 : null,
