@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 /// Contenedor de Cristal Acrílico Esmerilado Universal (Estilo iOS 18 / macOS Sonoma / Fluent 2)
@@ -58,7 +58,10 @@ class GlassContainer extends StatelessWidget {
     if (!enableAcrylic || blur <= 0) {
       return Container(
         margin: margin,
-        child: content,
+        child: ClipRRect(
+          borderRadius: effectiveRadius,
+          child: content,
+        ),
       );
     }
 

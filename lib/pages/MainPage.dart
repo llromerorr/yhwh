@@ -6,7 +6,6 @@ import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/MainPageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 import 'package:yhwh/pages/BiblePage.dart';
-import 'package:animate_do/animate_do.dart' as animateDo;
 import 'package:yhwh/pages/ContactPage.dart'; // Import original recuperado
 import 'package:yhwh/widgets/GlassContainer.dart';
 
@@ -24,14 +23,13 @@ class MainPage extends StatelessWidget {
       body: GetBuilder<MainPageController>(
         init: MainPageController(),
         builder: (controller) {
-          switch (controller.mainPagetabIndex) {
-            case 0:
-              return BiblePage();
-            case 1:
-              return const ContactPage(); // Regresamos al ContactPage
-            default:
-              return animateDo.FadeIn(child: const Center(child: Text("En desarrollo")), duration: const Duration(milliseconds: 150));
-          }        
+          return IndexedStack(
+            index: controller.mainPagetabIndex,
+            children: [
+              BiblePage(),
+              const ContactPage(),
+            ],
+          );
         },
       ),
 

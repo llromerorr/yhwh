@@ -67,14 +67,14 @@ class BiblePage extends StatelessWidget {
                 builder: (biblePageController) => GetBuilder<ReadPreferencesController>(
                   init: ReadPreferencesController(),
                   builder: (readPrefs) => AnimatedScale(
-                    scale: biblePageController.isBottomSheetOpen ? 0.0 : 1.0,
+                    scale: 1.0,
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeInOut,
                     child: AnimatedOpacity(
-                      opacity: biblePageController.isBottomSheetOpen ? 0.0 : 1.0,
+                      opacity: 1.0,
                       duration: const Duration(milliseconds: 200),
                       child: IgnorePointer(
-                        ignoring: biblePageController.isBottomSheetOpen,
+                        ignoring: false,
                         child: Padding(
                           padding: EdgeInsets.fromLTRB(
                             12,

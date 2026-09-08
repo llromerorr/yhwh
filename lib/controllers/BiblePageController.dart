@@ -57,8 +57,9 @@ class BiblePageController extends GetxController {
 
   @override
   void onReady() async {
-    scrollOffset = await getStorage.read('scrollOffset') ?? 0;
-    autoScrollController = AutoScrollController(initialScrollOffset: scrollOffset);
+    final savedOffset = getStorage.read('scrollOffset');
+    scrollOffset = (savedOffset is num) ? savedOffset.toDouble() : 0.0;
+    autoScrollController = AutoScrollController();
 
     bookNumber = getStorage.read("bookNumber") ?? 1;
     chapterNumber = getStorage.read("chapterNumber") ?? 1;
@@ -73,17 +74,29 @@ class BiblePageController extends GetxController {
     await updateVerseList();
     isScreenReady = true;
     update();
+
+    // Restauramos el scroll una vez que los versículos están listos en pantalla
+    if (scrollOffset > 0) {
+      Future.delayed(const Duration(milliseconds: 60), () {
+        if (autoScrollController != null && autoScrollController!.hasClients) {
+          autoScrollController!.jumpTo(scrollOffset);
+        }
+      });
+    }
+
     super.onReady();
   }
 
-  bool scrollNotification(notification) {
-    if(notification is ScrollEndNotification){
-      // Save scroll offset
-      scrollOffset = autoScrollController!.offset;
-      getStorage.write('scrollOffset', scrollOffset);
+  bool scrollNotification(ScrollNotification notification) {
+    // Exactamente como querías: cuando se detiene el scroll, se guarda
+    if (notification is ScrollEndNotification) {
+      if (autoScrollController != null && autoScrollController!.hasClients) {
+        scrollOffset = autoScrollController!.offset;
+        getStorage.write('scrollOffset', scrollOffset);
+      }
     }
 
-    return true;
+    return false;
   }
 
   void onVerseTap(int index){
@@ -160,6 +173,8 @@ class BiblePageController extends GetxController {
 
 
   void nextChapter() async {
+    scrollOffset = 0.0;
+    getStorage.write('scrollOffset', 0.0);
     autoScrollController!.animateTo(0, duration: Duration(milliseconds: 500), curve: Curves.easeOut);
 
     if (chapterNumber < namesAndChapters[bookNumber - 1][1]) {
@@ -187,6 +202,8 @@ class BiblePageController extends GetxController {
   }
 
   void previusChapter() async {
+    scrollOffset = 0.0;
+    getStorage.write('scrollOffset', 0.0);
     autoScrollController!.animateTo(0, duration: Duration(milliseconds: 500), curve: Curves.easeOut);
     
     if (chapterNumber > 1) {
@@ -221,6 +238,8 @@ class BiblePageController extends GetxController {
   }
 
   void setReference(int bookNumber, int chapterNumber, int verseNumber) async {
+    scrollOffset = 0.0;
+    getStorage.write('scrollOffset', 0.0);
     this.bookNumber = bookNumber;
     this.chapterNumber = chapterNumber;
     this.verseNumber = verseNumber;
@@ -236,6 +255,8 @@ class BiblePageController extends GetxController {
   }
 
   void setReferenceSafeScroll(int bookNumber, int chapterNumber, int verseNumber) async{
+    scrollOffset = 0.0;
+    getStorage.write('scrollOffset', 0.0);
     this.bookNumber = bookNumber;
     this.chapterNumber = chapterNumber;
     this.verseNumber = verseNumber;
