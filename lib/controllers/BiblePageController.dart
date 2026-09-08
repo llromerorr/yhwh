@@ -53,14 +53,6 @@ class BiblePageController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-  }
-
-  @override
-  void onReady() async {
-    final savedOffset = getStorage.read('scrollOffset');
-    scrollOffset = (savedOffset is num) ? savedOffset.toDouble() : 0.0;
-    autoScrollController = AutoScrollController();
-
     bookNumber = getStorage.read("bookNumber") ?? 1;
     chapterNumber = getStorage.read("chapterNumber") ?? 1;
     verseNumber = getStorage.read("verseNumber") ?? 1;
@@ -70,10 +62,18 @@ class BiblePageController extends GetxController {
     fontLetterSeparation = getStorage.read("fontLetterSeparation") ?? 0;
     fontFamily = getStorage.read("fontFamily") ?? "Crimson Text";
     isJustified = getStorage.read("isJustified") ?? false;
+  }
+
+  @override
+  void onReady() async {
+    final savedOffset = getStorage.read('scrollOffset');
+    scrollOffset = (savedOffset is num) ? savedOffset.toDouble() : 0.0;
+    autoScrollController = AutoScrollController();
 
     await updateVerseList();
     isScreenReady = true;
     update();
+    update(['floatingActionButton']);
 
     // Restauramos el scroll una vez que los versículos están listos en pantalla
     if (scrollOffset > 0) {
@@ -199,6 +199,7 @@ class BiblePageController extends GetxController {
     selectionMode = false;
     await updateVerseList();
     update();
+    update(['floatingActionButton']);
   }
 
   void previusChapter() async {
@@ -230,6 +231,7 @@ class BiblePageController extends GetxController {
     selectionMode = false;
     await updateVerseList();
     update();
+    update(['floatingActionButton']);
   }
 
   void referenceButtonOnTap(){
@@ -250,6 +252,7 @@ class BiblePageController extends GetxController {
     versesSelected = [];
     await updateVerseList();
     update();
+    update(['floatingActionButton']);
     
     autoScrollController!.scrollToIndex(verseNumber - 1, duration: Duration(milliseconds: 500), preferPosition: AutoScrollPosition.begin);
   }
@@ -267,6 +270,7 @@ class BiblePageController extends GetxController {
     versesSelected = [];
     await updateVerseList();
     update();
+    update(['floatingActionButton']);
     
     autoScrollController!.scrollToIndex(verseNumber - 1, duration: Duration(milliseconds: 500), preferPosition: AutoScrollPosition.begin);
     autoScrollController!.scrollToIndex(verseNumber - 1, duration: Duration(milliseconds: 500), preferPosition: AutoScrollPosition.begin);

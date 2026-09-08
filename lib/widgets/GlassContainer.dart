@@ -18,6 +18,7 @@ class GlassContainer extends StatelessWidget {
   final double? height;
   final BoxConstraints? constraints;
   final bool enableAcrylic;
+  final bool useGrouped;
 
   const GlassContainer({
     Key? key,
@@ -34,6 +35,7 @@ class GlassContainer extends StatelessWidget {
     this.height,
     this.constraints,
     this.enableAcrylic = true,
+    this.useGrouped = true,
   }) : super(key: key);
 
   @override
@@ -65,18 +67,27 @@ class GlassContainer extends StatelessWidget {
       );
     }
 
+    final imageFilter = ImageFilter.blur(
+      sigmaX: blur,
+      sigmaY: blur,
+      tileMode: TileMode.mirror,
+    );
+
+    final filterWidget = useGrouped
+        ? BackdropFilter.grouped(
+            filter: imageFilter,
+            child: content,
+          )
+        : BackdropFilter(
+            filter: imageFilter,
+            child: content,
+          );
+
     return Container(
       margin: margin,
       child: ClipRRect(
         borderRadius: effectiveRadius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: blur,
-            sigmaY: blur,
-            tileMode: TileMode.mirror,
-          ),
-          child: content,
-        ),
+        child: filterWidget,
       ),
     );
   }
