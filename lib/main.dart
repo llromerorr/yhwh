@@ -10,6 +10,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:yhwh/classes/hiveManagers/HighlighterManager.dart';
 
+final BackdropKey _globalBackdropKey = BackdropKey();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -52,7 +54,10 @@ void main() async {
     themeMode: ThemeMode.light,
     theme: initialTheme,
     darkTheme: AppTheme.dark,
-    builder: (context, child) => ScrollConfiguration(behavior: MyBehavior(), child: child!), // remove the glow effect.
+    builder: (context, child) => BackdropGroup(
+      backdropKey: _globalBackdropKey,
+      child: ScrollConfiguration(behavior: MyBehavior(), child: child!), // remove the glow effect.
+    ),
   ));
 }
 

@@ -73,7 +73,7 @@ class GlassContainer extends StatelessWidget {
         tileMode: TileMode.mirror,
       );
 
-      final filterWidget = BackdropFilter(
+      final filterWidget = BackdropFilter.grouped(
         filter: imageFilter,
         child: content,
       );
