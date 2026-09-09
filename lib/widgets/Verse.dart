@@ -154,9 +154,10 @@ class Verse extends StatelessWidget {
                               painter: _ModernHighlightPainter(
                                 textSpan: textSpan,
                                 highlightColor: resolvedColorHighlight,
-                                radius: 8.0,
+                                isJustified: this.isJustified,
+                                radius: 7.0,
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 4.0, vertical: 0.0),
+                                    horizontal: 5.0, vertical: 0.5),
                               ),
                               child: RichText(
                                 softWrap: true,
@@ -403,89 +404,100 @@ class Verse extends StatelessWidget {
 
 class _ModernHighlightPainter extends CustomPainter {
   final TextSpan textSpan;
-  final Color highlightColor; // Pásale aquí el color con .withOpacity(0.5)
+  final Color highlightColor;
+  final bool isJustified;
   final double radius;
   final EdgeInsets padding;
 
   _ModernHighlightPainter({
     required this.textSpan,
     required this.highlightColor,
-    this.radius = 8.0,
-    this.padding = const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+    this.isJustified = false,
+    this.radius = 7.0,
+    this.padding = const EdgeInsets.symmetric(horizontal: 5.0, vertical: 0.5),
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (highlightColor == Colors.transparent || highlightColor.a == 0.0) return;
+
     final textPainter = TextPainter(
       text: textSpan,
       textDirection: TextDirection.ltr,
-      textAlign: TextAlign.start,
-    )..layout(minWidth: 0, maxWidth: size.width);
+      textAlign: isJustified ? TextAlign.justify : TextAlign.start,
+    )..layout(minWidth: isJustified ? size.width : 0.0, maxWidth: size.width);
 
-    // Configura el Paint.
-    // IMPORTANTE: El color ya debe venir con la transparencia deseada
-    // o se la aplicas aquí: highlightColor.withOpacity(0.3)
+    final lines = textPainter.computeLineMetrics();
+    if (lines.isEmpty) return;
+
     final paint = Paint()
       ..color = highlightColor
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
 
-    final lines = textPainter.computeLineMetrics();
-    if (lines.isEmpty) return;
-
     final List<Rect> rects = [];
     final double left = -padding.left;
+    final double maxHighlightWidth = size.width + padding.horizontal;
 
-    // 1) Calculamos los rectángulos (igual que antes)
-    for (final line in lines) {
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
       if (line.width <= 0) {
         rects.add(Rect.zero);
         continue;
       }
 
-      final double targetWidth = line.width + padding.horizontal;
-      final double maxWidthAllowed = size.width - left;
-      final double width = targetWidth.clamp(0.0, maxWidthAllowed);
+      // En modo justificado, toda línea intermedia se extiende exactamente de margen a margen.
+      // La última línea del versículo concluye naturalmente donde termina el texto.
+      final bool isFirst = i == 0;
+      final bool isLastLine = i == lines.length - 1;
+      final double targetWidth = (isJustified && !isLastLine)
+          ? maxHighlightWidth
+          : (line.width + padding.horizontal);
 
-      // TRUCO PRO: Agregamos un pequeñísimo overlap (0.5) vertical
-      // para asegurar que el Path se fusione y no queden líneas finas blancas
-      // por el anti-aliasing entre renglones.
-      final double trueTextHeight = line.ascent + line.descent;
-      final double top = line.baseline - line.ascent - padding.top;
-      final double height = trueTextHeight + padding.vertical + 0.5;
+      final double width = targetWidth.clamp(0.0, maxHighlightWidth);
+
+      // Límites verticales estrictamente acotados al espacio del versículo:
+      // En la primera línea, el tope no debe invadir el versículo superior (top >= 0.0)
+      final double lineTop = line.baseline - line.ascent;
+      final double top = isFirst ? (lineTop < 0.0 ? 0.0 : lineTop) : (lineTop - 0.5);
+
+      // En la última línea, el fondo no debe invadir el versículo inferior (bottom <= size.height)
+      final double lineBottom = line.baseline + line.descent;
+      final double bottom = isLastLine ? (lineBottom > size.height ? size.height : lineBottom) : (lineBottom + 0.5);
+
+      final double height = (bottom - top).clamp(0.0, size.height);
 
       rects.add(Rect.fromLTWH(left, top, width, height));
     }
 
-    // 2) Creamos un ÚNICO Path
+    // Construcción del Path continuo sin muescas dentadas en bordes compartidos
     final Path fullPath = Path();
 
-    for (int i = 0; i < lines.length; i++) {
+    for (int i = 0; i < rects.length; i++) {
       final Rect rect = rects[i];
       if (rect == Rect.zero) continue;
 
       final bool isFirst = i == 0;
-      final bool isLast = i == lines.length - 1;
+      final bool isLast = i == rects.length - 1;
 
       final double right = rect.right;
       final double prevRight = i > 0 ? rects[i - 1].right : right;
-      final double nextRight =
-          i < lines.length - 1 ? rects[i + 1].right : right;
+      final double nextRight = i < rects.length - 1 ? rects[i + 1].right : right;
 
+      // Esquinas izquierdas: rectas en uniones interiores, redondeadas en extremos superior e inferior
       final Radius topLeft = isFirst ? Radius.circular(radius) : Radius.zero;
       final Radius bottomLeft = isLast ? Radius.circular(radius) : Radius.zero;
 
-      Radius topRight = Radius.zero;
-      Radius bottomRight = Radius.zero;
+      // Esquinas derechas: se redondean en extremos o si sobresalen significativamente (> 2.0px)
+      // Evita muescas ("scallops") entre líneas adyacentes de ancho idéntico en texto justificado
+      final Radius topRight = (isFirst || right > prevRight + 2.0)
+          ? Radius.circular(radius)
+          : Radius.zero;
 
-      if (isFirst || right >= prevRight) {
-        topRight = Radius.circular(radius);
-      }
-      if (isLast || right >= nextRight) {
-        bottomRight = Radius.circular(radius);
-      }
+      final Radius bottomRight = (isLast || right > nextRight + 2.0)
+          ? Radius.circular(radius)
+          : Radius.zero;
 
-      // EN LUGAR DE DIBUJAR, AGREGAMOS AL PATH
       fullPath.addRRect(
         RRect.fromRectAndCorners(
           rect,
@@ -497,11 +509,16 @@ class _ModernHighlightPainter extends CustomPainter {
       );
     }
 
-    // 3) Dibujamos el Path completo UNA SOLA VEZ
-    // Esto hace que la opacidad sea uniforme en toda la figura
+    // Dibujado unificado del Path completo en un solo pase homogéneo
     canvas.drawPath(fullPath, paint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _ModernHighlightPainter oldDelegate) {
+    return oldDelegate.textSpan != textSpan ||
+        oldDelegate.highlightColor != highlightColor ||
+        oldDelegate.isJustified != isJustified ||
+        oldDelegate.radius != radius ||
+        oldDelegate.padding != padding;
+  }
 }

@@ -188,7 +188,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
         final contentFontSize = (baseFontSize - 2).clamp(13.0, 32.0);
         final pillFontSize = (baseFontSize * 0.80).clamp(13.0, 30.0);
         final pillHorizontalPadding = (pillFontSize * 0.85).clamp(12.0, 26.0);
-        final pillVerticalPadding = (pillFontSize * 0.42).clamp(6.0, 16.0);
+        final pillVerticalPadding = (pillFontSize * 0.24).clamp(3.5, 5.5);
 
         final topBorderColor = indicatorColor.withValues(
           alpha: isDark ? 0.45 : 0.22,
@@ -483,7 +483,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
-                        clipBehavior: Clip.none,
+                        clipBehavior: Clip.antiAlias,
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                         child: Row(
                           children: widget.references.asMap().entries.map((entry) {
