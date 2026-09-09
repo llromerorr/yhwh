@@ -14,6 +14,7 @@ import 'package:yhwh/pages/ReadPreferences.dart';
 import 'package:yhwh/widgets/ChapterFooter.dart';
 import 'package:yhwh/widgets/GlassContainer.dart';
 import 'package:yhwh/widgets/Verse.dart';
+import 'package:yhwh/widgets/VerseSkeleton.dart';
 
 class BiblePage extends StatelessWidget {
 
@@ -240,66 +241,74 @@ class BiblePage extends StatelessWidget {
                           )
                         ),
                     
-                        // Verses list
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (BuildContext buildContext, int index){
-                              return AutoScrollTag(
-                                key: ValueKey(index),
-                                controller: biblePageController.autoScrollController!,
-                                index: index,
-                    
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: dynamicPadding),
-                                  child: Verse(
-                                    highlight: biblePageController.versesRawList[index].highlight!,
-                                    selected: biblePageController.versesSelected.contains(index + 1),
-                                    verseNumber: index + 1,
-                                    title: biblePageController.versesRawList[index].title!,
-                                    text: biblePageController.versesRawList[index].text!,
-                                    colorHighlight: biblePageController.versesRawList[index].colorHighlight!,
-                                    colorNumber: Theme.of(context).indicatorColor.withAlpha(180),
-                                    colorText: Theme.of(context).indicatorColor,
-                                    fontSize: biblePageController.fontSize,
-                                    fontHeight: biblePageController.fontHeight,
-                                    fontLetterSeparation: biblePageController.fontLetterSeparation,
-                                    fontFamily: biblePageController.fontFamily,
-                                    isJustified: biblePageController.isJustified,
-                                    isFirstVerseShowed: (index == 0) ? true : false,                    
-                                    onTap: ( ) {
-                                      biblePageController.onVerseTap(index + 1);
-                                    },
-                    
-                                    onLongPress: (){
-                                      biblePageController.onVerseLongPress(index + 1);
-                                    },
-
-                                    onFootnoteTap: (String footnote) {
-                                      biblePageController.onFootnoteTap(book: biblePageController.bookNumber, chapter: biblePageController.chapterNumber, verse: index + 1, footnote: footnote, context: context);
-                                    },
-                    
-                                    onReferenceTap: (int book, int chapter, int verse_from, int verse_to){
-                                      biblePageController.onReferenceTap(
-                                        book: book, 
-                                        chapter: chapter, 
-                                        verse_from: verse_from, 
-                                        verse_to: verse_to, 
-                                        context: context
-                                      );
-                                    },
+                        // Versículos o Skeleton durante la carga asíncrona
+                        if (!biblePageController.isScreenReady || biblePageController.versesRawList.isEmpty)
+                          SliverToBoxAdapter(
+                            child: VerseSkeletonList(
+                              horizontalPadding: dynamicPadding,
+                            ),
+                          )
+                        else ...[
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (BuildContext buildContext, int index){
+                                return AutoScrollTag(
+                                  key: ValueKey(index),
+                                  controller: biblePageController.autoScrollController!,
+                                  index: index,
+                      
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: dynamicPadding),
+                                    child: Verse(
+                                      highlight: biblePageController.versesRawList[index].highlight!,
+                                      selected: biblePageController.versesSelected.contains(index + 1),
+                                      verseNumber: index + 1,
+                                      title: biblePageController.versesRawList[index].title!,
+                                      text: biblePageController.versesRawList[index].text!,
+                                      colorHighlight: biblePageController.versesRawList[index].colorHighlight!,
+                                      colorNumber: Theme.of(context).indicatorColor.withAlpha(180),
+                                      colorText: Theme.of(context).indicatorColor,
+                                      fontSize: biblePageController.fontSize,
+                                      fontHeight: biblePageController.fontHeight,
+                                      fontLetterSeparation: biblePageController.fontLetterSeparation,
+                                      fontFamily: biblePageController.fontFamily,
+                                      isJustified: biblePageController.isJustified,
+                                      isFirstVerseShowed: (index == 0) ? true : false,                    
+                                      onTap: ( ) {
+                                        biblePageController.onVerseTap(index + 1);
+                                      },
+                      
+                                      onLongPress: (){
+                                        biblePageController.onVerseLongPress(index + 1);
+                                      },
+  
+                                      onFootnoteTap: (String footnote) {
+                                        biblePageController.onFootnoteTap(book: biblePageController.bookNumber, chapter: biblePageController.chapterNumber, verse: index + 1, footnote: footnote, context: context);
+                                      },
+                      
+                                      onReferenceTap: (int book, int chapter, int verse_from, int verse_to){
+                                        biblePageController.onReferenceTap(
+                                          book: book, 
+                                          chapter: chapter, 
+                                          verse_from: verse_from, 
+                                          verse_to: verse_to, 
+                                          context: context
+                                        );
+                                      },
+                                    ),
                                   ),
-                                )
-                              );
-                            },
-                    
-                            childCount: biblePageController.versesRawList.length,
+                                );
+                              },
+                      
+                              childCount: biblePageController.versesRawList.length,
+                            ),
                           ),
-                        ),
-                    
-                        // Chapter footer
-                        ChapterFooter(
-                          bibleVersion: biblePageController.bibleVersion,
-                        )
+                      
+                          // Chapter footer
+                          ChapterFooter(
+                            bibleVersion: biblePageController.bibleVersion,
+                          ),
+                        ],
                     
                       ],
                     ),

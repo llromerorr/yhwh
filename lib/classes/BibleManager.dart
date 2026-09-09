@@ -19,10 +19,6 @@ class BibleManager{
   }
 
   Future<List<String>> getChapter({required int book, required int chapter}) async {
-    return getChapterSync(book: book, chapter: chapter);
-  }
-
-  List<String> getChapterSync({required int book, required int chapter}) {
     List<String> output = [];
 
     for(int i = 0; i < valuesOfBooks[book - 1][chapter - 1]; i++)

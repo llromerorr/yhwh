@@ -67,42 +67,14 @@ class BiblePageController extends GetxController {
     scrollOffset = (savedOffset is num) ? savedOffset.toDouble() : 0.0;
     autoScrollController = AutoScrollController(initialScrollOffset: scrollOffset);
 
-    // Carga síncrona en memoria para que el primer frame tenga versículos y barras acrílicas reales
-    _loadVersesInitial();
-    isScreenReady = true;
+    // Carga asíncrona oficial desde el inicio
+    _loadInitialData();
   }
 
-  void _loadVersesInitial() {
-    List<String> verses = BibleManager().getChapterSync(book: bookNumber, chapter: chapterNumber);
-    versesRawList = [];
-
-    for (int index = 0; index < valuesOfBooks[bookNumber - 1][chapterNumber - 1]; index++) {
-      versesRawList.add(
-        VerseRaw(
-          verseNumber: index + 1,
-          selected: false,
-          colorNumber: Colors.transparent,
-          colorText: Colors.transparent,
-          fontFamily: "",
-          text: verses[index],
-          title: rvr60_titles.containsKey('$bookNumber:$chapterNumber:${index + 1}') == true
-              ? rvr60_titles['$bookNumber:$chapterNumber:${index + 1}']
-              : "",
-          fontSize: fontSize,
-          fontHeight: fontHeight,
-          fontLetterSeparation: fontLetterSeparation,
-          highlight: false,
-          colorHighlight: Colors.transparent,
-          isJustified: isJustified,
-        ),
-      );
-    }
-  }
-
-  @override
-  void onReady() async {
-    // Sincronizar resaltados de Hive si existen
+  Future<void> _loadInitialData() async {
+    isScreenReady = false;
     await updateVerseList();
+    isScreenReady = true;
     update();
     update(['floatingActionButton']);
 
@@ -113,7 +85,10 @@ class BiblePageController extends GetxController {
         }
       });
     }
+  }
 
+  @override
+  void onReady() {
     super.onReady();
   }
 
