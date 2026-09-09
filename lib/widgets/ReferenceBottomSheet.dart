@@ -64,7 +64,7 @@ class ReferenceBottomSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isDismissible: true,
-      enableDrag: true,
+      enableDrag: false,
       isScrollControlled: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
@@ -93,6 +93,15 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
   double _slideDirection = 1.0;
   double _horizontalDragDelta = 0.0;
   ScrollController? _activeScrollController;
+  bool _isDismissing = false;
+
+  void _safeCloseSheet() {
+    if (_isDismissing) return;
+    _isDismissing = true;
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   void initState() {
@@ -174,12 +183,12 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
 
         // Escalabilidad tipográfica calculada de forma armónica para todas las edades y modos visuales
         final baseFontSize = readPrefs.currentFontSize;
-        final headerFontSize = (baseFontSize * 0.90).clamp(16.0, 24.0);
-        final badgeFontSize = (baseFontSize * 0.72).clamp(11.0, 18.0);
-        final contentFontSize = (baseFontSize - 2).clamp(13.0, 30.0);
-        final pillFontSize = (baseFontSize * 0.68).clamp(13.5, 22.0);
-        final pillHorizontalPadding = (baseFontSize * 0.50).clamp(11.0, 20.0);
-        final pillVerticalPadding = (baseFontSize * 0.28).clamp(6.0, 12.0);
+        final headerFontSize = (baseFontSize * 0.90).clamp(16.0, 26.0);
+        final badgeFontSize = (baseFontSize * 0.72).clamp(12.0, 22.0);
+        final contentFontSize = (baseFontSize - 2).clamp(13.0, 32.0);
+        final pillFontSize = (baseFontSize * 0.80).clamp(13.0, 30.0);
+        final pillHorizontalPadding = (pillFontSize * 0.85).clamp(12.0, 26.0);
+        final pillVerticalPadding = (pillFontSize * 0.42).clamp(6.0, 16.0);
 
         final topBorderColor = indicatorColor.withValues(
           alpha: isDark ? 0.45 : 0.22,
@@ -255,7 +264,9 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
             ? const Color(0xFFE5C064)
             : const Color(0xFFE36414);
 
-        final minRequiredHeight = hasReferences ? 175.0 : 125.0;
+        final minRequiredHeight = hasReferences
+            ? (160.0 + pillFontSize * 1.6).clamp(175.0, 250.0)
+            : 125.0;
         final double minSize = (minRequiredHeight / screenHeight).clamp(0.20, 0.35);
         final double compactSize = 0.44.clamp(minSize + 0.05, 0.60);
         const double expandedSize = 0.85;
@@ -268,10 +279,15 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
           maxChildSize: expandedSize,
           snap: true,
           snapSizes: [compactSize],
+          shouldCloseOnMinExtent: false,
           builder: (BuildContext sheetContext, ScrollController scrollController) {
-            Widget sheetContent = SafeArea(
-              top: false,
-              child: Padding(
+            Widget sheetContent = MediaQuery(
+              data: MediaQuery.of(sheetContext).copyWith(
+                textScaler: TextScaler.noScaling,
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
                 padding: EdgeInsets.fromLTRB(
                   screenWidth < 360 ? 14 : 18,
                   8,
@@ -314,7 +330,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                                 curve: Curves.easeOutCubic,
                               );
                             } else {
-                              Navigator.of(context).pop();
+                              _safeCloseSheet();
                             }
                           } else {
                             // Arrastre suave: snap por umbral de posición
@@ -326,7 +342,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                                 curve: Curves.easeOutCubic,
                               );
                             } else if (currentSize < (compactSize + minSize) / 2) {
-                              Navigator.of(context).pop();
+                              _safeCloseSheet();
                             } else {
                               _sheetController.animateTo(
                                 compactSize,
@@ -424,7 +440,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
 
                               const SizedBox(width: 8),
 
-                              // Botón de acción icónico flotante (Sin texto, 100% universal)
+                              // Botón de acción icónico flotante ('Ir al versículo' si hay citas, o 'Cerrar' si es nota explicativa)
                               if (hasReferences)
                                 _CircleIconButton(
                                   tooltip: 'Ir al versículo',
@@ -434,8 +450,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                                   borderColor: borderColor,
                                   onTap: () {
                                     HapticFeedback.mediumImpact();
-                                    Navigator.pop(context);
                                     final currentRef = widget.references[_activeIndex];
+                                    _safeCloseSheet();
                                     widget.onNavigate(
                                       currentRef.book,
                                       currentRef.chapter,
@@ -452,7 +468,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                                   borderColor: borderColor,
                                   onTap: () {
                                     HapticFeedback.lightImpact();
-                                    Navigator.pop(context);
+                                    _safeCloseSheet();
                                   },
                                 ),
                             ],
@@ -467,6 +483,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
+                        clipBehavior: Clip.none,
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                         child: Row(
                           children: widget.references.asMap().entries.map((entry) {
                             final idx = entry.key;
@@ -483,6 +501,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                               canvasColor: canvasColor,
                               isDark: isDark,
                               fontSize: pillFontSize,
+                              fontFamily: readPrefs.currentFontFamily,
                               horizontalPadding: pillHorizontalPadding,
                               verticalPadding: pillVerticalPadding,
                               onTap: () => _onPillTap(idx),
@@ -517,7 +536,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                   ],
                 ),
               ),
-            );
+            ),
+          );
 
             return GlassContainer(
               enableAcrylic: readPrefs.enableAcrylicEffect,
@@ -803,6 +823,7 @@ class _ReferencePill extends StatelessWidget {
   final Color canvasColor;
   final bool isDark;
   final double fontSize;
+  final String fontFamily;
   final double horizontalPadding;
   final double verticalPadding;
   final VoidCallback onTap;
@@ -818,6 +839,7 @@ class _ReferencePill extends StatelessWidget {
     required this.canvasColor,
     required this.isDark,
     required this.fontSize,
+    required this.fontFamily,
     required this.horizontalPadding,
     required this.verticalPadding,
     required this.onTap,
@@ -830,7 +852,7 @@ class _ReferencePill extends StatelessWidget {
         : indicatorColor.withValues(alpha: 0.85);
 
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedScale(
@@ -844,7 +866,7 @@ class _ReferencePill extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               gradient: isSelected ? activeGradient : neutralGradient,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(100),
               border: Border.all(
                 color: isSelected
                     ? (isDark ? indicatorColor.withValues(alpha: 0.6) : Colors.transparent)
@@ -863,7 +885,9 @@ class _ReferencePill extends StatelessWidget {
             ),
             child: Text(
               label,
+              textScaler: TextScaler.noScaling,
               style: TextStyle(
+                fontFamily: fontFamily,
                 fontSize: fontSize,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                 color: textColor,

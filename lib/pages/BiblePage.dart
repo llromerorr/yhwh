@@ -36,20 +36,31 @@ class BiblePage extends StatelessWidget {
 
     return GetBuilder<BiblePageController>(
       init: BiblePageController(),
-      builder: (mainController) => WillPopScope(
-        onWillPop: () {
-          BiblePageController onWillPopBiblePageController = Get.put(BiblePageController());
-          MainPageController onWillPopMainPageController = Get.put(MainPageController());
-          
-          if(onWillPopBiblePageController.selectionMode){
-            onWillPopBiblePageController.cancelSelectionModeOnTap();
-          }
-          
-          else {
-            onWillPopMainPageController.bottomNavigationBarOnTap(0);
+      builder: (mainController) => PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+
+          if (Get.isRegistered<BiblePageController>()) {
+            final bibleCtrl = Get.find<BiblePageController>();
+            if (bibleCtrl.selectionMode) {
+              bibleCtrl.cancelSelectionModeOnTap();
+              return;
+            }
           }
 
-          return Future.value(true);
+          if (Get.isRegistered<MainPageController>()) {
+            final mainCtrl = Get.find<MainPageController>();
+            if (mainCtrl.mainPagetabIndex != 0) {
+              mainCtrl.bottomNavigationBarOnTap(0);
+              return;
+            }
+          }
+
+          // Estamos en la raíz principal de la app.
+          // En lugar de hacer pop() de la ruta raíz (que vacía la pila y deja la pantalla en negro),
+          // invocamos SystemNavigator.pop() para enviar la app limpiamente a segundo plano en Android.
+          await SystemNavigator.pop();
         },
 
         child: GetBuilder<ReadPreferencesController>(
