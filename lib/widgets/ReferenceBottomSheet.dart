@@ -66,6 +66,7 @@ class ReferenceBottomSheet extends StatefulWidget {
       isDismissible: true,
       enableDrag: true,
       isScrollControlled: true,
+      elevation: 0,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.transparent,
       builder: (ctx) => ReferenceBottomSheet(
@@ -85,20 +86,18 @@ class ReferenceBottomSheet extends StatefulWidget {
 
 class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
   int _activeIndex = 0;
-  late final PageController _pageController;
   late final DraggableScrollableController _sheetController;
   final Map<int, List<Widget>> _cachedVerses = {};
   late final List<GlobalKey> _pillKeys;
   bool _isLoading = false;
-
-  // Evita doble-scroll cuando un pill tap dispara onPageChanged
-  bool _isPillTapInProgress = false;
+  double _slideDirection = 1.0;
+  double _horizontalDragDelta = 0.0;
+  ScrollController? _activeScrollController;
 
   @override
   void initState() {
     super.initState();
     _sheetController = DraggableScrollableController();
-    _pageController = PageController();
     _pillKeys = List.generate(widget.references.length, (_) => GlobalKey());
     if (widget.references.isNotEmpty) {
       _loadCurrentIndex(0);
@@ -108,7 +107,6 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
   @override
   void dispose() {
     _sheetController.dispose();
-    _pageController.dispose();
     super.dispose();
   }
 
@@ -127,20 +125,26 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     }
   }
 
-  void _onPillTap(int index) {
+  void _switchToReference(int index, {double direction = 1.0}) {
     if (_activeIndex == index) return;
-    HapticFeedback.lightImpact();
-    _isPillTapInProgress = true;
-    setState(() => _activeIndex = index);
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-    ).then((_) {
-      _isPillTapInProgress = false;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _slideDirection = direction;
+      _activeIndex = index;
     });
+    if (_activeScrollController != null &&
+        _activeScrollController!.hasClients &&
+        _activeScrollController!.offset > 0) {
+      _activeScrollController!.jumpTo(0.0);
+    }
     _scrollToPill(index);
     _loadCurrentIndex(index);
+  }
+
+  void _onPillTap(int index) {
+    if (_activeIndex == index) return;
+    final double dir = index > _activeIndex ? 1.0 : -1.0;
+    _switchToReference(index, direction: dir);
   }
 
   void _scrollToPill(int index) {
@@ -278,128 +282,183 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Tirador visual superior + Encabezado
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Tirador visual superior (drag handle)
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-                            child: Container(
-                              width: 38,
-                              height: 4.5,
-                              decoration: BoxDecoration(
-                                color: indicatorColor.withValues(
-                                  alpha: isDark ? 0.40 : 0.28,
+                    // Tirador visual superior + Encabezado interactivo con soporte de arrastre vertical
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onVerticalDragUpdate: (details) {
+                        if (_sheetController.isAttached) {
+                          final double delta = -details.delta.dy;
+                          final double deltaSize = _sheetController.pixelsToSize(delta);
+                          final double targetSize = (_sheetController.size + deltaSize).clamp(minSize, expandedSize);
+                          _sheetController.jumpTo(targetSize);
+                        }
+                      },
+                      onVerticalDragEnd: (details) {
+                        if (_sheetController.isAttached) {
+                          final double velocity = -(details.primaryVelocity ?? 0.0);
+                          final double currentSize = _sheetController.size;
+
+                          if (velocity > 350) {
+                            // Fling hacia arriba -> expandir al máximo
+                            _sheetController.animateTo(
+                              expandedSize,
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeOutCubic,
+                            );
+                          } else if (velocity < -350) {
+                            // Fling hacia abajo
+                            if (currentSize > compactSize + 0.08) {
+                              _sheetController.animateTo(
+                                compactSize,
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeOutCubic,
+                              );
+                            } else {
+                              Navigator.of(context).pop();
+                            }
+                          } else {
+                            // Arrastre suave: snap por umbral de posición
+                            final double midPoint = (compactSize + expandedSize) / 2;
+                            if (currentSize > midPoint) {
+                              _sheetController.animateTo(
+                                expandedSize,
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOutCubic,
+                              );
+                            } else if (currentSize < (compactSize + minSize) / 2) {
+                              Navigator.of(context).pop();
+                            } else {
+                              _sheetController.animateTo(
+                                compactSize,
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOutCubic,
+                              );
+                            }
+                          }
+                        }
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Tirador visual superior (drag handle)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 8),
+                              child: Container(
+                                width: 38,
+                                height: 4.5,
+                                decoration: BoxDecoration(
+                                  color: indicatorColor.withValues(
+                                    alpha: isDark ? 0.40 : 0.28,
+                                  ),
+                                  borderRadius: BorderRadius.circular(3),
                                 ),
-                                borderRadius: BorderRadius.circular(3),
                               ),
                             ),
                           ),
-                        ),
 
-                        // Barra de Encabezado: [Icono Contexto + Cita] <----> [Botón Icónico de Acción]
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Icono de contexto visual sutil
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: hasReferences
-                                    ? indicatorColor.withValues(alpha: isDark ? 0.12 : 0.08)
-                                    : accentColor.withValues(alpha: isDark ? 0.15 : 0.12),
-                                border: Border.all(
-                                    color: hasReferences
-                                        ? borderColor
-                                        : accentColor.withValues(alpha: isDark ? 0.35 : 0.25),
-                                  width: 1.0,
-                                ),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  hasReferences
-                                      ? Icons.auto_stories_rounded
-                                      : Icons.format_quote_rounded,
-                                  size: 18,
-                                  color: hasReferences ? indicatorColor : accentColor,
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 10),
-
-                            // Título principal con badge en negrita
-                            Expanded(
-                              child: RichText(
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                text: TextSpan(
-                                  text: widget.title,
-                                  style: TextStyle(
-                                    fontFamily: readPrefs.currentFontFamily,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: headerFontSize,
-                                    color: indicatorColor,
-                                    letterSpacing: -0.3,
+                          // Barra de Encabezado: [Icono Contexto + Cita] <----> [Botón Icónico de Acción]
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Icono de contexto visual sutil
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: hasReferences
+                                      ? indicatorColor.withValues(alpha: isDark ? 0.12 : 0.08)
+                                      : accentColor.withValues(alpha: isDark ? 0.15 : 0.12),
+                                  border: Border.all(
+                                      color: hasReferences
+                                          ? borderColor
+                                          : accentColor.withValues(alpha: isDark ? 0.35 : 0.25),
+                                    width: 1.0,
                                   ),
-                                  children: [
-                                    if (cleanBadge.isNotEmpty) ...[
-                                      const TextSpan(text: ' '),
-                                      TextSpan(
-                                        text: '[$cleanBadge]',
-                                        style: TextStyle(
-                                          fontFamily: readPrefs.currentFontFamily,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: badgeFontSize,
-                                          color: accentColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    hasReferences
+                                        ? Icons.auto_stories_rounded
+                                        : Icons.format_quote_rounded,
+                                    size: 18,
+                                    color: hasReferences ? indicatorColor : accentColor,
+                                  ),
                                 ),
                               ),
-                            ),
 
-                            const SizedBox(width: 8),
+                              const SizedBox(width: 10),
 
-                            // Botón de acción icónico flotante (Sin texto, 100% universal)
-                            if (hasReferences)
-                              _CircleIconButton(
-                                tooltip: 'Ir al versículo',
-                                icon: Icons.open_in_new_rounded,
-                                iconColor: isDark ? canvasColor : Colors.white,
-                                gradient: activeGradient,
-                                borderColor: borderColor,
-                                onTap: () {
-                                  HapticFeedback.mediumImpact();
-                                  Navigator.pop(context);
-                                  final currentRef = widget.references[_activeIndex];
-                                  widget.onNavigate(
-                                    currentRef.book,
-                                    currentRef.chapter,
-                                    currentRef.verseFrom,
-                                  );
-                                },
-                              )
-                            else
-                              _CircleIconButton(
-                                tooltip: 'Cerrar',
-                                icon: Icons.close_rounded,
-                                iconColor: indicatorColor,
-                                gradient: neutralGradient,
-                                borderColor: borderColor,
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  Navigator.pop(context);
-                                },
+                              // Título principal con badge en negrita
+                              Expanded(
+                                child: RichText(
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  text: TextSpan(
+                                    text: widget.title,
+                                    style: TextStyle(
+                                      fontFamily: readPrefs.currentFontFamily,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: headerFontSize,
+                                      color: indicatorColor,
+                                      letterSpacing: -0.3,
+                                    ),
+                                    children: [
+                                      if (cleanBadge.isNotEmpty) ...[
+                                        const TextSpan(text: ' '),
+                                        TextSpan(
+                                          text: '[$cleanBadge]',
+                                          style: TextStyle(
+                                            fontFamily: readPrefs.currentFontFamily,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: badgeFontSize,
+                                            color: accentColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ),
-                          ],
-                        ),
-                      ],
+
+                              const SizedBox(width: 8),
+
+                              // Botón de acción icónico flotante (Sin texto, 100% universal)
+                              if (hasReferences)
+                                _CircleIconButton(
+                                  tooltip: 'Ir al versículo',
+                                  icon: Icons.open_in_new_rounded,
+                                  iconColor: isDark ? canvasColor : Colors.white,
+                                  gradient: activeGradient,
+                                  borderColor: borderColor,
+                                  onTap: () {
+                                    HapticFeedback.mediumImpact();
+                                    Navigator.pop(context);
+                                    final currentRef = widget.references[_activeIndex];
+                                    widget.onNavigate(
+                                      currentRef.book,
+                                      currentRef.chapter,
+                                      currentRef.verseFrom,
+                                    );
+                                  },
+                                )
+                              else
+                                _CircleIconButton(
+                                  tooltip: 'Cerrar',
+                                  icon: Icons.close_rounded,
+                                  iconColor: indicatorColor,
+                                  gradient: neutralGradient,
+                                  borderColor: borderColor,
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
 
                     // 3. Selector de Citas a ancho completo con auto-centrado
@@ -466,7 +525,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
               blur: isDark
                   ? ControlCenterVisualConfig.darkBlurSigma
                   : ControlCenterVisualConfig.lightBlurSigma,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
               border: Border(
                 top: BorderSide(
                   color: topBorderColor,
@@ -474,11 +533,12 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                 ),
               ),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                  blurRadius: 28,
-                  offset: const Offset(0, -6),
-                ),
+                if (readPrefs.enableShadows)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                    blurRadius: 28,
+                    offset: const Offset(0, -6),
+                  ),
               ],
               gradient: readPrefs.enableAcrylicEffect
                   ? (isDark
@@ -515,6 +575,8 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     required Color indicatorColor,
     required bool hasMultiple,
   }) {
+    _activeScrollController = scrollController;
+
     if (!hasMultiple) {
       final currentVerses = _cachedVerses[0] ?? [];
       if (currentVerses.isEmpty && _isLoading) {
@@ -541,43 +603,77 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
       );
     }
 
-    // Caso múltiples citas: PageView para alternar citas, con la activa vinculada al scrollController
-    return PageView.builder(
-      controller: _pageController,
-      physics: const PageScrollPhysics(),
-      itemCount: widget.references.length,
-      onPageChanged: (idx) {
-        if (_isPillTapInProgress) return;
-        HapticFeedback.selectionClick();
-        setState(() => _activeIndex = idx);
-        _scrollToPill(idx);
-        _loadCurrentIndex(idx);
-      },
-      itemBuilder: (ctx, idx) {
-        final currentVerses = _cachedVerses[idx] ?? [];
-        if (currentVerses.isEmpty) {
-          return const Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2.2),
-            ),
-          );
+    // Caso múltiples citas: GestureDetector horizontal sin PageView bloqueante,
+    // garantizando que el SingleChildScrollView y su ScrollPosition se mantengan 100% activos y fluidos.
+    final currentVerses = _cachedVerses[_activeIndex] ?? [];
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragStart: (_) => _horizontalDragDelta = 0.0,
+      onHorizontalDragUpdate: (details) => _horizontalDragDelta += details.delta.dx,
+      onHorizontalDragEnd: (details) {
+        final double vx = details.primaryVelocity ?? 0.0;
+        if (vx < -220 || _horizontalDragDelta < -50) {
+          if (_activeIndex < widget.references.length - 1) {
+            _switchToReference(_activeIndex + 1, direction: 1.0);
+          }
+        } else if (vx > 220 || _horizontalDragDelta > 50) {
+          if (_activeIndex > 0) {
+            _switchToReference(_activeIndex - 1, direction: -1.0);
+          }
         }
-        return SingleChildScrollView(
-          key: ValueKey('verse_page_$idx'),
-          controller: (idx == _activeIndex) ? scrollController : null,
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ...currentVerses,
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
+        _horizontalDragDelta = 0.0;
       },
+      child: SingleChildScrollView(
+        controller: scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+            return Stack(
+              alignment: Alignment.topLeft,
+              children: <Widget>[
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            );
+          },
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: Offset(_slideDirection * 0.12, 0.0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          ),
+          child: KeyedSubtree(
+            key: ValueKey('verse_content_$_activeIndex'),
+            child: currentVerses.isEmpty && _isLoading
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 36),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2.2),
+                      ),
+                    ),
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...currentVerses,
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -589,6 +685,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     required Color indicatorColor,
     required double contentFontSize,
   }) {
+    _activeScrollController = scrollController;
     return SingleChildScrollView(
       controller: scrollController,
       physics: const AlwaysScrollableScrollPhysics(),

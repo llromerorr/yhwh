@@ -36,7 +36,7 @@ class BiblePageController extends GetxController {
   List<VerseRaw> versesRawList = [];
   List<int> versesSelected = [];
 
-  double fontSize = 22.0;
+  double fontSize = 20.0;
   double fontHeight = 1.55;
   double fontLetterSeparation = 0.0;
   String fontFamily = "Crimson Text";
@@ -57,7 +57,7 @@ class BiblePageController extends GetxController {
     chapterNumber = getStorage.read("chapterNumber") ?? 1;
     verseNumber = getStorage.read("verseNumber") ?? 1;
     
-    fontSize = getStorage.read("fontSize") ?? 22.0;
+    fontSize = getStorage.read("fontSize") ?? 20.0;
     fontHeight = getStorage.read("fontHeight") ?? 1.55;
     fontLetterSeparation = getStorage.read("fontLetterSeparation") ?? 0;
     fontFamily = getStorage.read("fontFamily") ?? "Crimson Text";

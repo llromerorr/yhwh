@@ -179,14 +179,6 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                   width: 1.5,
                 ),
               ),
-              boxShadow: [
-                if (controller.enableShadows)
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                    blurRadius: 28,
-                    offset: const Offset(0, -6),
-                  ),
-              ],
             ),
             child: SafeArea(
               top: false,
@@ -333,7 +325,6 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                       enableShadows: controller.enableShadows,
                                       onTap: () {
                                         if (controller.isJustified) {
-                                          HapticFeedback.mediumImpact();
                                           controller.setJustified(false);
                                         }
                                       },
@@ -366,7 +357,6 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                       enableShadows: controller.enableShadows,
                                       onTap: () {
                                         if (!controller.isJustified) {
-                                          HapticFeedback.mediumImpact();
                                           controller.setJustified(true);
                                         }
                                       },
@@ -509,6 +499,14 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                 ? ControlCenterVisualConfig.darkBlurSigma
                 : ControlCenterVisualConfig.lightBlurSigma,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            boxShadow: [
+              if (controller.enableShadows)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                  blurRadius: 28,
+                  offset: const Offset(0, -6),
+                ),
+            ],
             child: panelContent,
           );
 
@@ -553,7 +551,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(300.0),
                                   child: controller.enableAcrylicEffect
-                                      ? BackdropFilter(
+                                      ? BackdropFilter.grouped(
                                           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12, tileMode: TileMode.mirror),
                                           child: _buildToastCard(context, controller, indicatorColor, isDark),
                                         )
@@ -697,56 +695,100 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
 
 class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
   static const double sliderHeight = 140.0;
+  static const double pointsPerLevel = 18.0;
+
   bool _isPressed = false;
-
-  double _dragStartY = 0.0;
-  int _dragStartIndex = 2;
   bool _hasMoved = false;
+  double _dragAccumulator = 0.0;
 
-  // 18 píxeles de desplazamiento vertical por cada nivel
-  static const double pixelsPerStep = 18.0;
+  void _handleTapDown(TapDownDetails details) {
+    setState(() => _isPressed = true);
+    _hasMoved = false;
+    _dragAccumulator = 0.0;
+    // Sin vibración al presionar: solo respuesta visual (escala elástica)
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    setState(() => _isPressed = false);
+    if (!_hasMoved) {
+      final int currentIndex = widget.controller.currentFontLevelIndex;
+      final int maxIndex = ReadPreferencesController.fontLevels.length - 1;
+      int targetIndex = currentIndex;
+
+      // Toque en mitad superior sube un nivel; toque en mitad inferior baja un nivel
+      if (details.localPosition.dy < sliderHeight / 2) {
+        if (currentIndex < maxIndex) targetIndex = currentIndex + 1;
+      } else {
+        if (currentIndex > 0) targetIndex = currentIndex - 1;
+      }
+
+      if (targetIndex != currentIndex) {
+        HapticFeedback.selectionClick();
+        widget.controller.setFontSizeByIndex(targetIndex);
+      }
+    }
+  }
+
+  void _handleTapCancel() {
+    setState(() => _isPressed = false);
+  }
 
   void _handleDragStart(DragStartDetails details) {
     setState(() {
       _isPressed = true;
       _hasMoved = false;
     });
-    _dragStartY = details.globalPosition.dy;
-    _dragStartIndex = widget.controller.currentFontLevelIndex;
-    HapticFeedback.lightImpact();
+    _dragAccumulator = 0.0;
+    // Sin vibración al iniciar el arrastre: solo cuando cambie de muesca/nivel
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
-    double totalDeltaY = _dragStartY - details.globalPosition.dy; // Desplazar hacia arriba suma niveles
-    if (totalDeltaY.abs() > 4) {
+    // dy negativo es arrastrar hacia arriba (aumentar nivel), positivo hacia abajo
+    final double dy = -details.delta.dy;
+    _dragAccumulator += dy;
+
+    if (_dragAccumulator.abs() > 3.0) {
       _hasMoved = true;
     }
 
-    int stepOffset = (totalDeltaY / pixelsPerStep).round();
-    int targetIndex = (_dragStartIndex + stepOffset).clamp(0, ReadPreferencesController.fontLevels.length - 1);
+    int currentIndex = widget.controller.currentFontLevelIndex;
+    final int maxIndex = ReadPreferencesController.fontLevels.length - 1;
+    bool changed = false;
 
-    if (targetIndex != widget.controller.currentFontLevelIndex) {
-      // Vibración háptica real y nítida
-      if (targetIndex == 0 || targetIndex == ReadPreferencesController.fontLevels.length - 1) {
-        HapticFeedback.mediumImpact(); // Tope mínimo o máximo
-      } else {
-        HapticFeedback.lightImpact(); // Salto de nivel
-      }
-      widget.controller.setFontSizeByIndex(targetIndex);
+    while (_dragAccumulator >= pointsPerLevel && currentIndex < maxIndex) {
+      currentIndex++;
+      _dragAccumulator -= pointsPerLevel;
+      changed = true;
+    }
+
+    while (_dragAccumulator <= -pointsPerLevel && currentIndex > 0) {
+      currentIndex--;
+      _dragAccumulator += pointsPerLevel;
+      changed = true;
+    }
+
+    // Drenar exceso en los límites para que al invertir dirección la respuesta sea inmediata
+    if (currentIndex >= maxIndex && _dragAccumulator > 0) {
+      _dragAccumulator = 0.0;
+    } else if (currentIndex <= 0 && _dragAccumulator < 0) {
+      _dragAccumulator = 0.0;
+    }
+
+    if (changed) {
+      // Única vibración: micro-tick nítido de notch (iOS selectionClick)
+      HapticFeedback.selectionClick();
+      widget.controller.setFontSizeByIndex(currentIndex);
     }
   }
 
-  void _handleTapUp(TapUpDetails details) {
+  void _handleDragEnd(DragEndDetails details) {
     setState(() => _isPressed = false);
-    if (!_hasMoved) {
-      HapticFeedback.lightImpact();
-      // Toque en mitad superior: +1 nivel; toque en mitad inferior: -1 nivel
-      if (details.localPosition.dy < sliderHeight / 2) {
-        widget.controller.stepUpFontSize();
-      } else {
-        widget.controller.stepDownFontSize();
-      }
-    }
+    _dragAccumulator = 0.0;
+  }
+
+  void _handleDragCancel() {
+    setState(() => _isPressed = false);
+    _dragAccumulator = 0.0;
   }
 
   @override
@@ -822,41 +864,24 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
               },
             ),
 
-            // ICONO Y TEXTO CON EFECTO DE COLOR INVERSO DINÁMICO
+            // ICONO CON EFECTO DE COLOR INVERSO DINÁMICO (ESTILO CONTROL CENTER iOS)
             Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Indicador de nivel superior en escala de puntos
-                    Text(
-                      '${widget.controller.currentFontSize.toInt()}',
-                      style: TextStyle(
-                        fontFamily: 'SF Pro Display',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                        color: targetFill >= 0.85 
-                            ? (isDark ? widget.canvasColor : Colors.white) 
-                            : (isDark ? widget.indicatorColor.withValues(alpha: 0.85) : const Color(0xff27272A)),
-                      ),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 14.0),
+                  child: AnimatedScale(
+                    scale: _isPressed ? 1.08 : 1.0,
+                    duration: const Duration(milliseconds: 140),
+                    curve: Curves.easeOutBack,
+                    child: Icon(
+                      Icons.text_fields_rounded,
+                      size: 26,
+                      color: targetFill >= 0.30
+                          ? (isDark ? widget.canvasColor : Colors.white)
+                          : (isDark ? widget.indicatorColor : const Color(0xff27272A)),
                     ),
-
-                    // Icono Tt inferior
-                    AnimatedScale(
-                      scale: _isPressed ? 1.08 : 1.0,
-                      duration: const Duration(milliseconds: 140),
-                      curve: Curves.easeOutBack,
-                      child: Icon(
-                        Icons.text_fields_rounded,
-                        size: 26,
-                        color: targetFill >= 0.30
-                            ? (isDark ? widget.canvasColor : Colors.white)
-                            : (isDark ? widget.indicatorColor : const Color(0xff27272A)),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -866,16 +891,14 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
     );
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onVerticalDragStart: _handleDragStart,
       onVerticalDragUpdate: _handleDragUpdate,
-      onVerticalDragEnd: (_) => setState(() => _isPressed = false),
-      onVerticalDragCancel: () => setState(() => _isPressed = false),
-      onTapDown: (_) {
-        setState(() => _isPressed = true);
-        HapticFeedback.lightImpact();
-      },
+      onVerticalDragEnd: _handleDragEnd,
+      onVerticalDragCancel: _handleDragCancel,
+      onTapDown: _handleTapDown,
       onTapUp: _handleTapUp,
-      onTapCancel: () => setState(() => _isPressed = false),
+      onTapCancel: _handleTapCancel,
       child: AnimatedScale(
         scale: _isPressed ? 0.96 : 1.0,
         duration: const Duration(milliseconds: 160),

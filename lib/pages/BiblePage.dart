@@ -182,12 +182,12 @@ class BiblePage extends StatelessWidget {
                                                   ? '${intToAbreviatura[biblePageController.bookNumber]} ${biblePageController.chapterNumber}'
                                                   : '${intToBook[biblePageController.bookNumber]} ${biblePageController.chapterNumber}',
                                                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                                    fontFamily: biblePageController.fontFamily,
-                                                    letterSpacing: biblePageController.fontLetterSeparation,
+                                                    fontFamily: readPreferencesController.currentFontFamily,
+                                                    letterSpacing: readPreferencesController.fontLetterSeparation,
                                                     fontWeight: FontWeight.bold,
-                                                    height: biblePageController.fontHeight,
-                                                    fontSize: biblePageController.fontSize,
-                                                    color: Theme.of(context).indicatorColor
+                                                    height: 1.1,
+                                                    fontSize: readPreferencesController.currentFontSize,
+                                                    color: Theme.of(context).indicatorColor,
                                                   ),
                                                 )
                                               ),

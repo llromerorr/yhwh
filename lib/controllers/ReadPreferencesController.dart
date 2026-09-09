@@ -12,11 +12,11 @@ class ReadPreferencesController extends GetxController {
   GetStorage getStorage = GetStorage();
 
   String currentThemeName = 'Blanco';
-  String currentFontFamily = 'Roboto';
+  String currentFontFamily = 'Crimson Text';
   bool enableAcrylicEffect = false;
   bool enableShadows = true;
   
-  double currentFontSize = 22.0;
+  double currentFontSize = 20.0;
   bool isJustified = false;
   bool keepScreenOn = false;
 
@@ -66,6 +66,8 @@ class ReadPreferencesController extends GetxController {
   }
 
   bool get isVisualImpaired => currentFontSize >= 28.0;
+  double get fontLetterSeparation => getStorage.read('fontLetterSeparation') ?? 0.0;
+  double get fontHeight => getStorage.read('fontHeight') ?? 1.55;
 
   // Sistema de notificación HUD estilo cápsula iOS / Dynamic Island
   String? toastMessage;
@@ -76,7 +78,7 @@ class ReadPreferencesController extends GetxController {
   void onInit() {
     super.onInit();
     currentThemeName = getStorage.read('currentTheme') ?? 'Blanco'; 
-    currentFontFamily = getStorage.read('fontFamily') ?? 'Roboto';
+    currentFontFamily = getStorage.read('fontFamily') ?? 'Crimson Text';
     enableAcrylicEffect = getStorage.read('enableAcrylicEffect') ?? false;
     enableShadows = getStorage.read('enableShadows') ?? true;
     
@@ -258,7 +260,7 @@ class ReadPreferencesController extends GetxController {
   }
 
   void cycleFontFamily() {
-    const fontList = ['Roboto', 'Lato', 'Crimson Text', 'Atkinson Hyperlegible'];
+    const fontList = ['Crimson Text', 'Lato', 'Atkinson Hyperlegible', 'Roboto'];
     int currentIndex = fontList.indexOf(currentFontFamily);
     if (currentIndex == -1) currentIndex = 0;
     int nextIndex = (currentIndex + 1) % fontList.length;
