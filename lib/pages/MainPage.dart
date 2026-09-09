@@ -35,9 +35,7 @@ class MainPage extends StatelessWidget {
             ),
 
             floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-            floatingActionButton: controller.mainPagetabIndex == 0
-                ? const BibleNavigationFloatingButtons()
-                : null,
+            floatingActionButton: const BibleNavigationFloatingButtons(),
 
             bottomNavigationBar: GetBuilder<ReadPreferencesController>(
               init: ReadPreferencesController(),

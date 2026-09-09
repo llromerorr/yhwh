@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
+import 'package:yhwh/controllers/MainPageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
 import 'package:yhwh/pages/ReadPreferences.dart';
 import 'package:yhwh/widgets/GlassContainer.dart';
@@ -12,66 +13,75 @@ class BibleNavigationFloatingButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<BiblePageController>(
-      id: 'floatingActionButton',
-      init: BiblePageController(),
-      builder: (biblePageController) => GetBuilder<ReadPreferencesController>(
-        init: ReadPreferencesController(),
-        builder: (readPrefs) {
-          final isDark = Theme.of(context).brightness == Brightness.dark;
-          final indicatorColor = Theme.of(context).indicatorColor;
-          final canvasColor = Theme.of(context).canvasColor;
-          final borderColor = indicatorColor.withValues(
-            alpha: isDark ? 0.18 : 0.14,
-          );
-          final blur = isDark
-              ? ControlCenterVisualConfig.darkBlurSigma
-              : ControlCenterVisualConfig.lightBlurSigma;
+    return GetBuilder<MainPageController>(
+      init: MainPageController(),
+      builder: (mainController) => GetBuilder<BiblePageController>(
+        id: 'floatingActionButton',
+        init: BiblePageController(),
+        builder: (biblePageController) => GetBuilder<ReadPreferencesController>(
+          init: ReadPreferencesController(),
+          builder: (readPrefs) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final indicatorColor = Theme.of(context).indicatorColor;
+            final canvasColor = Theme.of(context).canvasColor;
+            final borderColor = indicatorColor.withValues(
+              alpha: isDark ? 0.18 : 0.14,
+            );
+            final blur = isDark
+                ? ControlCenterVisualConfig.darkBlurSigma
+                : ControlCenterVisualConfig.lightBlurSigma;
 
-          final neutralGradient = isDark
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    indicatorColor.withValues(
-                      alpha: readPrefs.enableAcrylicEffect
-                          ? ControlCenterVisualConfig.darkButtonTopAlpha
-                          : 0.15,
-                    ),
-                    indicatorColor.withValues(
-                      alpha: readPrefs.enableAcrylicEffect
-                          ? ControlCenterVisualConfig.darkButtonBottomAlpha
-                          : 0.05,
-                    ),
-                  ],
-                )
-              : LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    readPrefs.enableAcrylicEffect
-                        ? Colors.white.withValues(
-                            alpha: ControlCenterVisualConfig.lightButtonTopAlpha,
-                          )
-                        : const Color(0xFFFFFFFF),
-                    readPrefs.enableAcrylicEffect
-                        ? Colors.white.withValues(
-                            alpha: ControlCenterVisualConfig.lightButtonBottomAlpha,
-                          )
-                        : const Color(0xFFE2E4EA),
-                  ],
-                );
+            final neutralGradient = isDark
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      indicatorColor.withValues(
+                        alpha: readPrefs.enableAcrylicEffect
+                            ? ControlCenterVisualConfig.darkButtonTopAlpha
+                            : 0.15,
+                      ),
+                      indicatorColor.withValues(
+                        alpha: readPrefs.enableAcrylicEffect
+                            ? ControlCenterVisualConfig.darkButtonBottomAlpha
+                            : 0.05,
+                      ),
+                    ],
+                  )
+                : LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      readPrefs.enableAcrylicEffect
+                          ? Colors.white.withValues(
+                              alpha: ControlCenterVisualConfig.lightButtonTopAlpha,
+                            )
+                          : const Color(0xFFFFFFFF),
+                      readPrefs.enableAcrylicEffect
+                          ? Colors.white.withValues(
+                              alpha: ControlCenterVisualConfig.lightButtonBottomAlpha,
+                            )
+                          : const Color(0xFFE2E4EA),
+                    ],
+                  );
 
-          return AnimatedScale(
-            scale: 1.0,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            child: AnimatedOpacity(
-              opacity: 1.0,
-              duration: const Duration(milliseconds: 200),
-              child: IgnorePointer(
-                ignoring: false,
-                child: Padding(
+            final isVisible = mainController.mainPagetabIndex == 0 &&
+                !biblePageController.isBottomSheetOpen;
+
+            return AnimatedSlide(
+              offset: isVisible ? Offset.zero : const Offset(0, 0.6),
+              duration: const Duration(milliseconds: 220),
+              curve: isVisible ? Curves.easeOutCubic : Curves.easeInCubic,
+              child: AnimatedScale(
+                scale: isVisible ? 1.0 : 0.7,
+                duration: const Duration(milliseconds: 220),
+                curve: isVisible ? Curves.easeOutCubic : Curves.easeInCubic,
+                child: AnimatedOpacity(
+                  opacity: isVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 180),
+                  child: IgnorePointer(
+                    ignoring: !isVisible,
+                    child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -148,10 +158,12 @@ class BibleNavigationFloatingButtons extends StatelessWidget {
                 ),
               ),
             ),
-          );
-        },
-      ),
-    );
+          ),
+        );
+      },
+    ),
+  ),
+);
   }
 }
 
