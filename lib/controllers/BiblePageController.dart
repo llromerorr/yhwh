@@ -62,20 +62,50 @@ class BiblePageController extends GetxController {
     fontLetterSeparation = getStorage.read("fontLetterSeparation") ?? 0;
     fontFamily = getStorage.read("fontFamily") ?? "Crimson Text";
     isJustified = getStorage.read("isJustified") ?? false;
+
+    final savedOffset = getStorage.read('scrollOffset');
+    scrollOffset = (savedOffset is num) ? savedOffset.toDouble() : 0.0;
+    autoScrollController = AutoScrollController(initialScrollOffset: scrollOffset);
+
+    // Carga síncrona en memoria para que el primer frame tenga versículos y barras acrílicas reales
+    _loadVersesInitial();
+    isScreenReady = true;
+  }
+
+  void _loadVersesInitial() {
+    List<String> verses = BibleManager().getChapterSync(book: bookNumber, chapter: chapterNumber);
+    versesRawList = [];
+
+    for (int index = 0; index < valuesOfBooks[bookNumber - 1][chapterNumber - 1]; index++) {
+      versesRawList.add(
+        VerseRaw(
+          verseNumber: index + 1,
+          selected: false,
+          colorNumber: Colors.transparent,
+          colorText: Colors.transparent,
+          fontFamily: "",
+          text: verses[index],
+          title: rvr60_titles.containsKey('$bookNumber:$chapterNumber:${index + 1}') == true
+              ? rvr60_titles['$bookNumber:$chapterNumber:${index + 1}']
+              : "",
+          fontSize: fontSize,
+          fontHeight: fontHeight,
+          fontLetterSeparation: fontLetterSeparation,
+          highlight: false,
+          colorHighlight: Colors.transparent,
+          isJustified: isJustified,
+        ),
+      );
+    }
   }
 
   @override
   void onReady() async {
-    final savedOffset = getStorage.read('scrollOffset');
-    scrollOffset = (savedOffset is num) ? savedOffset.toDouble() : 0.0;
-    autoScrollController = AutoScrollController();
-
+    // Sincronizar resaltados de Hive si existen
     await updateVerseList();
-    isScreenReady = true;
     update();
     update(['floatingActionButton']);
 
-    // Restauramos el scroll una vez que los versículos están listos en pantalla
     if (scrollOffset > 0) {
       Future.delayed(const Duration(milliseconds: 60), () {
         if (autoScrollController != null && autoScrollController!.hasClients) {

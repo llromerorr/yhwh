@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:yhwh/controllers/BiblePageController.dart';
 import 'package:yhwh/controllers/ReadPreferencesController.dart';
@@ -13,14 +12,14 @@ import 'package:yhwh/widgets/GlassContainer.dart';
 abstract class ControlCenterVisualConfig {
   // --- 1. BANDEJA DEL PANEL (FONDO PRINCIPAL) ---
   /// Opacidad superior del fondo en Modo Claro (0.0 = 100% transparente, 1.0 = sólido)
-  static const double lightPanelTopAlpha = 0.9;
+  static const double lightPanelTopAlpha = 0.85;
   /// Opacidad inferior del fondo en Modo Claro
-  static const double lightPanelBottomAlpha = 0;
+  static const double lightPanelBottomAlpha = 0.40;
 
   /// Opacidad superior del fondo en Modo Oscuro / OLED
-  static const double darkPanelTopAlpha = 0;
+  static const double darkPanelTopAlpha = 0.35;
   /// Opacidad inferior del fondo en Modo Oscuro / OLED
-  static const double darkPanelBottomAlpha = 0;
+  static const double darkPanelBottomAlpha = 0.15;
 
   // --- 2. BOTONES Y MÓDULOS EN REPOSO ---
   /// Opacidad superior de los botones en Modo Claro
@@ -181,11 +180,12 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                 ),
               ),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                  blurRadius: 28,
-                  offset: const Offset(0, -6),
-                ),
+                if (controller.enableShadows)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                    blurRadius: 28,
+                    offset: const Offset(0, -6),
+                  ),
               ],
             ),
             child: SafeArea(
@@ -219,6 +219,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           canvasColor: canvasColor,
                           borderColor: borderColor,
                           enableLiquidGlass: controller.enableAcrylicEffect,
+                          enableShadows: controller.enableShadows,
                         ),
                       ),
 
@@ -240,6 +241,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                     gradient: neutralGradient,
                                     borderColor: borderColor,
                                     enableLiquidGlass: controller.enableAcrylicEffect,
+                                    enableShadows: controller.enableShadows,
                                     child: AnimatedSwitcher(
                                       duration: const Duration(milliseconds: 250),
                                       transitionBuilder: (child, anim) => ScaleTransition(
@@ -267,6 +269,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                     gradient: neutralGradient,
                                     borderColor: borderColor,
                                     enableLiquidGlass: controller.enableAcrylicEffect,
+                                    enableShadows: controller.enableShadows,
                                     child: AnimatedSwitcher(
                                       duration: const Duration(milliseconds: 250),
                                       transitionBuilder: (child, anim) => ScaleTransition(
@@ -311,7 +314,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                   width: 1.2,
                                 ),
                                 boxShadow: [
-                                  if (isDark && !controller.enableAcrylicEffect)
+                                  if (controller.enableShadows && isDark && !controller.enableAcrylicEffect)
                                     BoxShadow(
                                       color: Colors.black.withValues(alpha: 0.40),
                                       blurRadius: 10,
@@ -327,6 +330,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                       height: 56,
                                       margin: const EdgeInsets.all(4),
                                       enableLiquidGlass: controller.enableAcrylicEffect,
+                                      enableShadows: controller.enableShadows,
                                       onTap: () {
                                         if (controller.isJustified) {
                                           HapticFeedback.mediumImpact();
@@ -359,6 +363,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                                       height: 56,
                                       margin: const EdgeInsets.all(4),
                                       enableLiquidGlass: controller.enableAcrylicEffect,
+                                      enableShadows: controller.enableShadows,
                                       onTap: () {
                                         if (!controller.isJustified) {
                                           HapticFeedback.mediumImpact();
@@ -430,6 +435,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           isActive: controller.enableAcrylicEffect,
                           borderColor: controller.enableAcrylicEffect ? Colors.transparent : borderColor,
                           enableLiquidGlass: controller.enableAcrylicEffect,
+                          enableShadows: controller.enableShadows,
                           child: AnimatedScale(
                             scale: controller.enableAcrylicEffect ? 1.08 : 1.0,
                             duration: const Duration(milliseconds: 180),
@@ -446,7 +452,33 @@ class ReadPreferencesControlCenter extends StatelessWidget {
 
                       const SizedBox(width: 12),
 
-                      // BOTÓN 3: Restablecer valores iniciales
+                      // TOGGLE 3: Sombras / Relieve 3D (Ícono de capas / layers)
+                      Expanded(
+                        child: _BouncyControlModule(
+                          height: 56,
+                          onTap: controller.toggleShadows,
+                          gradient: controller.enableShadows ? activeGradient : neutralGradient,
+                          isActive: controller.enableShadows,
+                          borderColor: controller.enableShadows ? Colors.transparent : borderColor,
+                          enableLiquidGlass: controller.enableAcrylicEffect,
+                          enableShadows: controller.enableShadows,
+                          child: AnimatedScale(
+                            scale: controller.enableShadows ? 1.08 : 1.0,
+                            duration: const Duration(milliseconds: 180),
+                            child: Icon(
+                              controller.enableShadows
+                                  ? Icons.layers_rounded
+                                  : Icons.layers_clear_rounded,
+                              size: 26,
+                              color: controller.enableShadows ? activeIconColor : inactiveIconColor,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      // BOTÓN 4: Restablecer valores iniciales
                       Expanded(
                         child: _BouncyControlModule(
                           height: 56,
@@ -454,6 +486,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
                           gradient: neutralGradient,
                           borderColor: borderColor,
                           enableLiquidGlass: controller.enableAcrylicEffect,
+                          enableShadows: controller.enableShadows,
                           child: Icon(
                             Icons.restart_alt_rounded,
                             size: 26,
@@ -471,6 +504,7 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           // EFECTO DE CRISTAL ACRÍLICO UNIFICADO (GlassContainer Nativo con aceleración en GPU)
           Widget finalPanel = GlassContainer(
             enableAcrylic: controller.enableAcrylicEffect,
+            enableShadows: controller.enableShadows,
             blur: isDark
                 ? ControlCenterVisualConfig.darkBlurSigma
                 : ControlCenterVisualConfig.lightBlurSigma,
@@ -555,18 +589,20 @@ class ReadPreferencesControlCenter extends StatelessWidget {
           width: 1.5,
         ),
         boxShadow: [
-          if (!isDark) ...[
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ] else ...[
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.50),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
+          if (controller.enableShadows) ...[
+            if (!isDark) ...[
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ] else ...[
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.50),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ],
         ],
       ),
@@ -641,6 +677,7 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
   final Color canvasColor;
   final Color borderColor;
   final bool enableLiquidGlass;
+  final bool enableShadows;
 
   const _FontSizeCapsuleSlider({
     Key? key,
@@ -651,6 +688,7 @@ class _FontSizeCapsuleSlider extends StatefulWidget {
     required this.canvasColor,
     required this.borderColor,
     this.enableLiquidGlass = false,
+    this.enableShadows = true,
   }) : super(key: key);
 
   @override
@@ -730,28 +768,30 @@ class _FontSizeCapsuleSliderState extends State<_FontSizeCapsuleSlider> {
           width: 1.2,
         ),
         boxShadow: [
-          if (!isDark) ...[
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-            BoxShadow(
-              color: Colors.white.withValues(alpha: widget.enableLiquidGlass ? 0.35 : 0.95),
-              blurRadius: 2,
-              offset: const Offset(0, -1),
-            ),
-          ] else ...[
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.06),
-              blurRadius: 1,
-              offset: const Offset(0, -1),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.45),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
+          if (widget.enableShadows) ...[
+            if (!isDark) ...[
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: widget.enableLiquidGlass ? 0.35 : 0.95),
+                blurRadius: 2,
+                offset: const Offset(0, -1),
+              ),
+            ] else ...[
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.06),
+                blurRadius: 1,
+                offset: const Offset(0, -1),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ],
         ],
       ),
@@ -857,6 +897,7 @@ class _BouncyControlModule extends StatefulWidget {
   final double height;
   final EdgeInsetsGeometry? margin;
   final bool enableLiquidGlass;
+  final bool enableShadows;
 
   const _BouncyControlModule({
     Key? key,
@@ -869,6 +910,7 @@ class _BouncyControlModule extends StatefulWidget {
     this.height = 64.0,
     this.margin,
     this.enableLiquidGlass = false,
+    this.enableShadows = true,
   }) : super(key: key);
 
   @override
@@ -911,7 +953,7 @@ class _BouncyControlModuleState extends State<_BouncyControlModule> {
               width: 1.2,
             ),
             boxShadow: [
-              if (!isTransparent) ...[
+              if (widget.enableShadows && !isTransparent) ...[
                 if (widget.isActive) ...[
                   // Botón Activo: Sombra profunda y relieve 3D táctil
                   BoxShadow(

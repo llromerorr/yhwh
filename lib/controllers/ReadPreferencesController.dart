@@ -14,6 +14,7 @@ class ReadPreferencesController extends GetxController {
   String currentThemeName = 'Blanco';
   String currentFontFamily = 'Roboto';
   bool enableAcrylicEffect = false;
+  bool enableShadows = true;
   
   double currentFontSize = 22.0;
   bool isJustified = false;
@@ -77,6 +78,7 @@ class ReadPreferencesController extends GetxController {
     currentThemeName = getStorage.read('currentTheme') ?? 'Blanco'; 
     currentFontFamily = getStorage.read('fontFamily') ?? 'Roboto';
     enableAcrylicEffect = getStorage.read('enableAcrylicEffect') ?? false;
+    enableShadows = getStorage.read('enableShadows') ?? true;
     
     currentFontSize = getStorage.read('fontSize') ?? 20.0;
     isJustified = getStorage.read('isJustified') ?? false;
@@ -289,12 +291,27 @@ class ReadPreferencesController extends GetxController {
     );
   }
 
+  void toggleShadowsEffect(bool value) {
+    enableShadows = value;
+    getStorage.write('enableShadows', value);
+    update();
+  }
+
+  void toggleShadows() {
+    toggleShadowsEffect(!enableShadows);
+    showToast(
+      enableShadows ? "Sombras activadas" : "Sombras desactivadas",
+      enableShadows ? Icons.layers_rounded : Icons.layers_clear_rounded,
+    );
+  }
+
   void resetToDefaults() {
     setTheme('Blanco');
     setFontFamily('Roboto');
     setFontSize(22.0);
     setJustified(false);
     toggleAcrylicEffect(false);
+    toggleShadowsEffect(true);
     setKeepScreenOn(false);
     showToast("Ajustes restablecidos", Icons.restart_alt_rounded);
   }

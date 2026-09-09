@@ -27,6 +27,7 @@ class FloatingWidget extends StatelessWidget {
             child: SafeArea(
               child: GlassContainer(
                 enableAcrylic: readPrefs.enableAcrylicEffect,
+                enableShadows: readPrefs.enableShadows,
                 blur: isDark ? 23.0 : 19.0,
                 borderRadius: BorderRadius.circular(24.0),
                 border: Border.all(

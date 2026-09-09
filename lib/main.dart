@@ -8,6 +8,7 @@ import 'package:yhwh/models/highlighterOrderItem.dart';
 import 'package:yhwh/pages/MainPage.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:yhwh/classes/hiveManagers/HighlighterManager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,9 @@ void main() async {
   Hive..init(appDocumentDir.path)
       .. registerAdapter(HighlighterItemAdapter())
       .. registerAdapter(HighlighterOrderItemAdapter());
+
+  // Pre-cargar cajas de resaltado para disponibilidad inmediata en el primer frame
+  await HighlighterManager.initBoxes();
 
   // evitar el cambio de orientacion de la aplicacion
   SystemChrome.setPreferredOrientations([

@@ -31,39 +31,33 @@ class BibleNavigationFloatingButtons extends StatelessWidget {
                 ? ControlCenterVisualConfig.darkBlurSigma
                 : ControlCenterVisualConfig.lightBlurSigma;
 
-            final neutralGradient = isDark
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      indicatorColor.withValues(
-                        alpha: readPrefs.enableAcrylicEffect
-                            ? ControlCenterVisualConfig.darkButtonTopAlpha
-                            : 0.15,
-                      ),
-                      indicatorColor.withValues(
-                        alpha: readPrefs.enableAcrylicEffect
-                            ? ControlCenterVisualConfig.darkButtonBottomAlpha
-                            : 0.05,
-                      ),
-                    ],
-                  )
-                : LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      readPrefs.enableAcrylicEffect
-                          ? Colors.white.withValues(
-                              alpha: ControlCenterVisualConfig.lightButtonTopAlpha,
-                            )
-                          : const Color(0xFFFFFFFF),
-                      readPrefs.enableAcrylicEffect
-                          ? Colors.white.withValues(
-                              alpha: ControlCenterVisualConfig.lightButtonBottomAlpha,
-                            )
-                          : const Color(0xFFE2E4EA),
-                    ],
-                  );
+            final neutralGradient = readPrefs.enableAcrylicEffect
+                ? (isDark
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          indicatorColor.withValues(
+                            alpha: ControlCenterVisualConfig.darkButtonTopAlpha,
+                          ),
+                          indicatorColor.withValues(
+                            alpha: ControlCenterVisualConfig.darkButtonBottomAlpha,
+                          ),
+                        ],
+                      )
+                    : LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(
+                            alpha: ControlCenterVisualConfig.lightButtonTopAlpha,
+                          ),
+                          Colors.white.withValues(
+                            alpha: ControlCenterVisualConfig.lightButtonBottomAlpha,
+                          ),
+                        ],
+                      ))
+                : null;
 
             final isVisible = mainController.mainPagetabIndex == 0 &&
                 !biblePageController.isBottomSheetOpen;
@@ -114,6 +108,7 @@ class BibleNavigationFloatingButtons extends StatelessWidget {
                                 indicatorColor: indicatorColor,
                                 canvasColor: canvasColor,
                                 enableAcrylic: readPrefs.enableAcrylicEffect,
+                                enableShadows: readPrefs.enableShadows,
                                 blur: blur,
                                 isDark: isDark,
                               ),
@@ -137,6 +132,7 @@ class BibleNavigationFloatingButtons extends StatelessWidget {
                                 indicatorColor: indicatorColor,
                                 canvasColor: canvasColor,
                                 enableAcrylic: readPrefs.enableAcrylicEffect,
+                                enableShadows: readPrefs.enableShadows,
                                 blur: blur,
                                 isDark: isDark,
                               ),
@@ -177,6 +173,7 @@ class _BouncyNavigationButton extends StatefulWidget {
   final Color indicatorColor;
   final Color canvasColor;
   final bool enableAcrylic;
+  final bool enableShadows;
   final double blur;
   final bool isDark;
 
@@ -190,6 +187,7 @@ class _BouncyNavigationButton extends StatefulWidget {
     required this.indicatorColor,
     required this.canvasColor,
     required this.enableAcrylic,
+    required this.enableShadows,
     required this.blur,
     required this.isDark,
   }) : super(key: key);
@@ -219,23 +217,28 @@ class _BouncyNavigationButtonState extends State<_BouncyNavigationButton> {
           curve: Curves.easeOutBack,
           child: GlassContainer(
             enableAcrylic: widget.enableAcrylic,
+            enableShadows: widget.enableShadows,
             blur: widget.blur,
             width: 45.0,
             height: 45.0,
             borderRadius: BorderRadius.circular(30.0),
             border: Border.all(
-              color: widget.borderColor,
+              color: widget.enableAcrylic
+                  ? widget.borderColor
+                  : widget.indicatorColor.withValues(
+                      alpha: widget.isDark ? 0.35 : 0.20,
+                    ),
               width: 1.0,
             ),
-            gradient: widget.gradient,
+            gradient: widget.enableAcrylic ? widget.gradient : null,
             color: widget.enableAcrylic ? null : widget.canvasColor,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(
-                  alpha: widget.isDark ? 0.30 : 0.08,
+                  alpha: widget.isDark ? 0.35 : 0.12,
                 ),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                blurRadius: widget.enableAcrylic ? 8 : 10,
+                offset: const Offset(0, 3),
               ),
             ],
             child: Center(

@@ -462,6 +462,7 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
 
             return GlassContainer(
               enableAcrylic: readPrefs.enableAcrylicEffect,
+              enableShadows: readPrefs.enableShadows,
               blur: isDark
                   ? ControlCenterVisualConfig.darkBlurSigma
                   : ControlCenterVisualConfig.lightBlurSigma,

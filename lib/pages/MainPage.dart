@@ -17,10 +17,9 @@ class MainPage extends StatelessWidget {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     Get.lazyPut(() => BiblePageController());
 
-    return BackdropGroup(
-      child: GetBuilder<MainPageController>(
-        init: MainPageController(),
-        builder: (controller) {
+    return GetBuilder<MainPageController>(
+      init: MainPageController(),
+      builder: (controller) {
           return Scaffold(
             extendBody: true,
             extendBodyBehindAppBar: true,
@@ -76,6 +75,7 @@ class MainPage extends StatelessWidget {
 
                 return GlassContainer(
                   enableAcrylic: readPrefs.enableAcrylicEffect,
+                  enableShadows: readPrefs.enableShadows,
                   blur: isDark ? ControlCenterVisualConfig.darkBlurSigma : ControlCenterVisualConfig.lightBlurSigma,
                   border: Border(
                     top: BorderSide(
@@ -124,7 +124,6 @@ class MainPage extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
+      );
   }
 }

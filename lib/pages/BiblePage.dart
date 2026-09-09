@@ -14,7 +14,6 @@ import 'package:yhwh/pages/ReadPreferences.dart';
 import 'package:yhwh/widgets/ChapterFooter.dart';
 import 'package:yhwh/widgets/GlassContainer.dart';
 import 'package:yhwh/widgets/Verse.dart';
-import 'package:animate_do/animate_do.dart' as animateDo;
 
 class BiblePage extends StatelessWidget {
 
@@ -36,7 +35,7 @@ class BiblePage extends StatelessWidget {
 
     return GetBuilder<BiblePageController>(
       init: BiblePageController(),
-      builder: (mainController) => !mainController.isScreenReady ? Center(child: CircularProgressIndicator(color: Theme.of(context).indicatorColor)) : WillPopScope(
+      builder: (mainController) => WillPopScope(
         onWillPop: () {
           BiblePageController onWillPopBiblePageController = Get.put(BiblePageController());
           MainPageController onWillPopMainPageController = Get.put(MainPageController());
@@ -52,11 +51,9 @@ class BiblePage extends StatelessWidget {
           return Future.value(true);
         },
 
-        child: animateDo.FadeIn(
-          duration: const Duration(milliseconds: 150),
-          child: GetBuilder<ReadPreferencesController>(
-            init: ReadPreferencesController(),
-            builder: (readPrefs) => GetBuilder<BiblePageController>(
+        child: GetBuilder<ReadPreferencesController>(
+          init: ReadPreferencesController(),
+          builder: (readPrefs) => GetBuilder<BiblePageController>(
               init: BiblePageController(),
               builder: (biblePageController) => NotificationListener<ScrollNotification>(
                   onNotification: biblePageController.scrollNotification,
@@ -89,6 +86,7 @@ class BiblePage extends StatelessWidget {
                     
                           flexibleSpace: GlassContainer(
                             enableAcrylic: readPrefs.enableAcrylicEffect,
+                            enableShadows: readPrefs.enableShadows,
                             blur: Theme.of(context).brightness == Brightness.dark
                                 ? ControlCenterVisualConfig.darkBlurSigma
                                 : ControlCenterVisualConfig.lightBlurSigma,
@@ -310,7 +308,6 @@ class BiblePage extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      );
+        );
   }
 }
