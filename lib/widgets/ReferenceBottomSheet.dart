@@ -94,12 +94,61 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
   double _horizontalDragDelta = 0.0;
   ScrollController? _activeScrollController;
   bool _isDismissing = false;
+  double? _dragStartSheetSize;
 
   void _safeCloseSheet() {
     if (_isDismissing) return;
     _isDismissing = true;
     if (mounted) {
       Navigator.of(context).pop();
+    }
+  }
+
+  void _handleFlingOrSnap({
+    required double velocity,
+    required double currentSize,
+    required double compactSize,
+    required double minSize,
+    required double expandedSize,
+  }) {
+    if (_isDismissing || !_sheetController.isAttached) return;
+
+    if (velocity > 350) {
+      // Fling hacia arriba -> expandir al máximo
+      _sheetController.animateTo(
+        expandedSize,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      );
+    } else if (velocity < -350) {
+      // Fling hacia abajo
+      if (currentSize > compactSize + 0.08) {
+        _sheetController.animateTo(
+          compactSize,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        _safeCloseSheet();
+      }
+    } else {
+      // Arrastre suave: snap por umbral de posición
+      final double midPoint = (compactSize + expandedSize) / 2;
+      if (currentSize > midPoint) {
+        _sheetController.animateTo(
+          expandedSize,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+        );
+      } else if (currentSize < (compactSize + minSize) / 2) {
+        _safeCloseSheet();
+      } else {
+        _sheetController.animateTo(
+          compactSize,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+        );
+      }
     }
   }
 
@@ -160,14 +209,18 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
     if (index < 0 || index >= _pillKeys.length) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final keyContext = _pillKeys[index].currentContext;
-      if (keyContext != null) {
-        Scrollable.ensureVisible(
-          keyContext,
-          alignment: 0.5,
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOutCubic,
-        );
-      }
+      if (keyContext == null) return;
+      final scrollable = Scrollable.maybeOf(keyContext);
+      if (scrollable == null) return;
+      // Si no hay overflow (todo el contenido cabe en el viewport),
+      // no hay nada que centrar: dejar offset en 0.
+      if (scrollable.position.maxScrollExtent <= 0) return;
+      Scrollable.ensureVisible(
+        keyContext,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
     });
   }
 
@@ -301,6 +354,11 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                     // Tirador visual superior + Encabezado interactivo con soporte de arrastre vertical
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
+                      onVerticalDragStart: (_) {
+                        if (_sheetController.isAttached) {
+                          _dragStartSheetSize = _sheetController.size;
+                        }
+                      },
                       onVerticalDragUpdate: (details) {
                         if (_sheetController.isAttached) {
                           final double delta = -details.delta.dy;
@@ -313,48 +371,25 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                         if (_sheetController.isAttached) {
                           final double velocity = -(details.primaryVelocity ?? 0.0);
                           final double currentSize = _sheetController.size;
-
-                          if (velocity > 350) {
-                            // Fling hacia arriba -> expandir al máximo
-                            _sheetController.animateTo(
-                              expandedSize,
-                              duration: const Duration(milliseconds: 250),
-                              curve: Curves.easeOutCubic,
-                            );
-                          } else if (velocity < -350) {
-                            // Fling hacia abajo
-                            if (currentSize > compactSize + 0.08) {
-                              _sheetController.animateTo(
-                                compactSize,
-                                duration: const Duration(milliseconds: 250),
-                                curve: Curves.easeOutCubic,
-                              );
-                            } else {
-                              _safeCloseSheet();
-                            }
-                          } else {
-                            // Arrastre suave: snap por umbral de posición
-                            final double midPoint = (compactSize + expandedSize) / 2;
-                            if (currentSize > midPoint) {
-                              _sheetController.animateTo(
-                                expandedSize,
-                                duration: const Duration(milliseconds: 220),
-                                curve: Curves.easeOutCubic,
-                              );
-                            } else if (currentSize < (compactSize + minSize) / 2) {
-                              _safeCloseSheet();
-                            } else {
-                              _sheetController.animateTo(
-                                compactSize,
-                                duration: const Duration(milliseconds: 220),
-                                curve: Curves.easeOutCubic,
-                              );
-                            }
-                          }
+                          final double sizeForDecision = (velocity.abs() > 350)
+                              ? (_dragStartSheetSize ?? currentSize)
+                              : currentSize;
+                          _handleFlingOrSnap(
+                            velocity: velocity,
+                            currentSize: sizeForDecision,
+                            compactSize: compactSize,
+                            minSize: minSize,
+                            expandedSize: expandedSize,
+                          );
+                          _dragStartSheetSize = null;
                         }
+                      },
+                      onVerticalDragCancel: () {
+                        _dragStartSheetSize = null;
                       },
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           // Tirador visual superior (drag handle)
                           Center(
@@ -473,64 +508,97 @@ class _ReferenceBottomSheetState extends State<ReferenceBottomSheet> {
                                 ),
                             ],
                           ),
+
+                          // Selector de Citas a ancho completo con auto-centrado (integrado a la zona táctil)
+                          if (hasReferences) ...[
+                            const SizedBox(height: 10),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              clipBehavior: Clip.antiAlias,
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                              child: Row(
+                                children: widget.references.asMap().entries.map((entry) {
+                                  final idx = entry.key;
+                                  final item = entry.value;
+                                  final isSelected = _activeIndex == idx;
+                                  return _ReferencePill(
+                                    key: _pillKeys[idx],
+                                    label: item.label,
+                                    isSelected: isSelected,
+                                    activeGradient: activeGradient,
+                                    neutralGradient: neutralGradient,
+                                    borderColor: borderColor,
+                                    indicatorColor: indicatorColor,
+                                    canvasColor: canvasColor,
+                                    isDark: isDark,
+                                    fontSize: pillFontSize,
+                                    fontFamily: readPrefs.currentFontFamily,
+                                    horizontalPadding: pillHorizontalPadding,
+                                    verticalPadding: pillVerticalPadding,
+                                    onTap: () => _onPillTap(idx),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+
+                          const SizedBox(height: 10),
                         ],
                       ),
                     ),
 
-                    // 3. Selector de Citas a ancho completo con auto-centrado
-                    if (hasReferences) ...[
-                      const SizedBox(height: 10),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        clipBehavior: Clip.antiAlias,
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                        child: Row(
-                          children: widget.references.asMap().entries.map((entry) {
-                            final idx = entry.key;
-                            final item = entry.value;
-                            final isSelected = _activeIndex == idx;
-                            return _ReferencePill(
-                              key: _pillKeys[idx],
-                              label: item.label,
-                              isSelected: isSelected,
-                              activeGradient: activeGradient,
-                              neutralGradient: neutralGradient,
-                              borderColor: borderColor,
-                              indicatorColor: indicatorColor,
-                              canvasColor: canvasColor,
-                              isDark: isDark,
-                              fontSize: pillFontSize,
-                              fontFamily: readPrefs.currentFontFamily,
-                              horizontalPadding: pillHorizontalPadding,
-                              verticalPadding: pillVerticalPadding,
-                              onTap: () => _onPillTap(idx),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 10),
-
-                    // 4. Contenido del Panel conectado al scrollController
-                    if (hasReferences)
+                    // 4. Contenido del Panel conectado al scrollController con cierre diferido por inercia
+                    if (hasReferences || isHtmlNote)
                       Expanded(
-                        child: _buildReferencesContent(
-                          context: context,
-                          scrollController: scrollController,
-                          indicatorColor: indicatorColor,
-                          hasMultiple: hasMultipleReferences,
-                        ),
-                      )
-                    else if (isHtmlNote)
-                      Expanded(
-                        child: _buildHtmlNoteContent(
-                          context: context,
-                          scrollController: scrollController,
-                          readPrefs: readPrefs,
-                          indicatorColor: indicatorColor,
-                          contentFontSize: contentFontSize,
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (notification) {
+                            if (_isDismissing) return false;
+                            if (notification.metrics.axis == Axis.vertical &&
+                                _sheetController.isAttached) {
+                              if (notification is ScrollStartNotification &&
+                                  notification.dragDetails != null) {
+                                _dragStartSheetSize = _sheetController.size;
+                              } else if (notification is ScrollEndNotification) {
+                                if (notification.metrics.pixels <= 0.0 &&
+                                    notification.dragDetails != null) {
+                                  final double velocity = -(notification.dragDetails?.primaryVelocity ?? 0.0);
+                                  final double currentSize = _sheetController.size;
+                                  final double sizeForDecision = (velocity.abs() > 350)
+                                      ? (_dragStartSheetSize ?? currentSize)
+                                      : currentSize;
+
+                                  if (velocity < -350 || sizeForDecision < (compactSize + minSize) / 2) {
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      _handleFlingOrSnap(
+                                        velocity: velocity,
+                                        currentSize: sizeForDecision,
+                                        compactSize: compactSize,
+                                        minSize: minSize,
+                                        expandedSize: expandedSize,
+                                      );
+                                    });
+                                  }
+                                }
+                                _dragStartSheetSize = null;
+                              }
+                            }
+                            return false;
+                          },
+                          child: hasReferences
+                              ? _buildReferencesContent(
+                                  context: context,
+                                  scrollController: scrollController,
+                                  indicatorColor: indicatorColor,
+                                  hasMultiple: hasMultipleReferences,
+                                )
+                              : _buildHtmlNoteContent(
+                                  context: context,
+                                  scrollController: scrollController,
+                                  readPrefs: readPrefs,
+                                  indicatorColor: indicatorColor,
+                                  contentFontSize: contentFontSize,
+                                ),
                         ),
                       ),
                   ],
